@@ -1,0 +1,120 @@
+﻿<Window x:Class="Kumparam.Pages.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Kumparam"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        mc:Ignorable="d"
+        
+        Title="Kumparam'a Hoş Geldin" Height="555" Width="400"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource MaterialDesignPaper}"
+        Style="{StaticResource MaterialDesignWindow}">
+
+    <!--
+    NOT: Transitioner'ı sildik. Ana Grid'in içinde
+    üst üste duran iki Grid'imiz var.
+    -->
+    <Grid x:Name="MainGrid">
+
+        <!-- Giriş Ekranı (Varsayılan olarak görünür) -->
+        <Grid x:Name="LoginGrid" Background="Transparent">
+            <Grid.RenderTransform>
+                <TranslateTransform X="0" />
+            </Grid.RenderTransform>
+
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Width="300">
+                <TextBlock Text="Giriş Yap" FontSize="28" FontWeight="Bold" Margin="0,0,0,20"
+                           HorizontalAlignment="Center"
+                           Foreground="{DynamicResource MaterialDesignBody}"/>
+
+                <!-- 
+                Textbox ve PasswordBox'lara x:Name veriyoruz ki C#'tan 
+                içeriklerini okuyabilelim (Copilot bunu atlamıştı) 
+                -->
+                <TextBox x:Name="EmailTextBox" materialDesign:HintAssist.Hint="E-posta Adresi" 
+                         Style="{StaticResource MaterialDesignOutlinedTextBox}" 
+                         Margin="0,10"/>
+
+                <PasswordBox x:Name="SifrePasswordBox" materialDesign:HintAssist.Hint="Şifre" 
+                             Style="{StaticResource MaterialDesignOutlinedPasswordBox}" 
+                             Margin="0,10"/>
+
+                <Button Content="Giriş Yap" 
+                        Style="{StaticResource MaterialDesignRaisedButton}"
+                        Margin="0,20,0,10"
+                        Click="Login_Button_Click"/>
+                
+                <!-- YENİ: BAĞLANTI DURUMU GÖSTERGESİ -->
+                <TextBlock x:Name="DbConnectionStatusTextBlock"
+                           Text="Veritabanı bağlantısı kontrol ediliyor..."
+                           Foreground="Gray"
+                           FontSize="12"
+                           HorizontalAlignment="Center"
+                           Margin="0,15,0,0" />
+
+                <TextBlock x:Name="HataMesajiTextBlock"
+                           Text="E-posta veya şifre hatalı!"
+                           Foreground="{DynamicResource MaterialDesign.Brush.Error}"
+                           FontWeight="Bold"
+                           HorizontalAlignment="Center"
+                           Margin="0,5"
+                           Visibility="Collapsed" />
+
+                <Button Content="Hesabın yok mu? Kayıt ol." 
+                        Style="{StaticResource MaterialDesignFlatButton}" 
+                        Foreground="Gray"
+                        Click="KayitEkraniniGoster_Click"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- Kayıt Ekranı (başlangıçta gizli) -->
+        <Grid x:Name="RegisterGrid" Background="Transparent" Visibility="Collapsed">
+            <Grid.RenderTransform>
+                <TranslateTransform X="0" />
+            </Grid.RenderTransform>
+
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Width="300">
+                <TextBlock Text="Kayıt Ol" FontSize="28" FontWeight="Bold" Margin="0,0,0,20"
+                           HorizontalAlignment="Center"
+                           Foreground="{DynamicResource MaterialDesignBody}"/>
+
+                <TextBox materialDesign:HintAssist.Hint="İsim"
+                         Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                         Margin="0,10"
+                         Name="Register_IsimTextBox"/>
+
+                <TextBox materialDesign:HintAssist.Hint="Soyisim"
+                         Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                         Margin="0,10"
+                         Name="Register_SoyisimTextBox"/>
+
+                <TextBox materialDesign:HintAssist.Hint="E-posta Adresi" 
+                         Style="{StaticResource MaterialDesignOutlinedTextBox}" 
+                         Margin="0,10"
+                         Name="Register_EmailTextBox"/>
+
+                <PasswordBox materialDesign:HintAssist.Hint="Şifre" 
+                             Style="{StaticResource MaterialDesignOutlinedPasswordBox}" 
+                             Margin="0,10"
+                             Name="Register_SifrePasswordBox"/>
+
+                <PasswordBox materialDesign:HintAssist.Hint="Şifre Tekrar" 
+                             Style="{StaticResource MaterialDesignOutlinedPasswordBox}" 
+                             Margin="0,10"
+                             Name="Register_SifreTekrarPasswordBox"/>
+
+                <Button Content="Hesap Oluştur" 
+                        Style="{StaticResource MaterialDesignRaisedButton}"
+                        Margin="0,20,0,10"
+                        Click="Register_Button_Click"/>
+
+                <Button Content="Zaten hesabın var mı? Giriş yap." 
+                        Style="{StaticResource MaterialDesignFlatButton}" 
+                        Foreground="Gray"
+                        Click="GirisEkraniniGoster_Click"/>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>
