@@ -240,6 +240,14 @@ public partial class MainWindow : Window
         }
     }
 
+    private void PasswordAgain_KeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter)
+        {
+            Register_Button_Click(sender, e);
+        }
+    }
+
     private Task SlideAsync(UIElement fromGrid, UIElement toGrid, bool leftToRight)
     {
         var tcs = new TaskCompletionSource<bool>();

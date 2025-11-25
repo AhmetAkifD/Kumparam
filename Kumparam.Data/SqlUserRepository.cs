@@ -133,6 +133,30 @@ namespace Kumparam.Data
                 }
             }
         }
+        // SqlUserRepository.cs dosyasının içine, diğer metotların yanına ekle/güncelle:
+
+        public void AddTransaction(Transaction transaction)
+        {
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                var sql = @"INSERT INTO Transactions (UserId, Amount, Type, Category, Description, TransactionDate) 
+                            VALUES (@UserId, @Amount, @Type, @Category, @Description, @TransactionDate)";
+
+                using (var command = new SqlCommand(sql, connection))
+                {
+                    command.Parameters.AddWithValue("@UserId", transaction.UserId);
+                    command.Parameters.AddWithValue("@Amount", transaction.Amount);
+                    command.Parameters.AddWithValue("@Type", transaction.Type);
+                    command.Parameters.AddWithValue("@Category", transaction.Category ?? (object)DBNull.Value);
+                    command.Parameters.AddWithValue("@Description", transaction.Description ?? (object)DBNull.Value);
+                    command.Parameters.AddWithValue("@TransactionDate", transaction.TransactionDate);
+
+                    connection.Open();
+                    command.ExecuteNonQuery();
+                }
+            }
+        }
+        // MEVCUT GetFinancialSummary METODUNU BUNUNLA DEĞİŞTİR:
         public FinancialSummary GetFinancialSummary(Guid userId)
         {
             var summary = new FinancialSummary();
@@ -141,30 +165,81 @@ namespace Kumparam.Data
             {
                 connection.Open();
 
-                // NOT: Henüz "Transactions" (İşlemler) tablomuz olmadığı için
-                // burada gerçek sorgu yazamıyoruz. Şimdilik elle 0 veya rastgele değer dönelim.
-                // İleride buraya "SELECT SUM(Amount) FROM Transactions WHERE..." yazacağız.
+                // 1. Toplam Gelir (Income)
+                var sqlIncome = "SELECT ISNULL(SUM(Amount), 0) FROM Transactions WHERE UserId = @UserId AND Type = 'Income'";
+                using (var cmd = new SqlCommand(sqlIncome, connection))
+                {
+                    cmd.Parameters.AddWithValue("@UserId", userId);
+                    summary.MonthlyIncome = (decimal)cmd.ExecuteScalar();
+                }
 
-                // ÖRNEK (SAHTE) HESAPLAMA:
-                // Gerçek senaryoda bu değerler veritabanından gelecek.
-                summary.TotalBalance = 0; 
-                summary.MonthlyIncome = 0;
-                summary.MonthlyExpense = 0;
-                summary.SavingsGoalProgress = 0;
+                // 2. Toplam Gider (Expense)
+                var sqlExpense = "SELECT ISNULL(SUM(Amount), 0) FROM Transactions WHERE UserId = @UserId AND Type = 'Expense'";
+                using (var cmd = new SqlCommand(sqlExpense, connection))
+                {
+                    cmd.Parameters.AddWithValue("@UserId", userId);
+                    summary.MonthlyExpense = (decimal)cmd.ExecuteScalar();
+                }
 
-                /*
-                // İLERİDE YAZACAĞIMIZ KOD ŞÖYLE OLACAK:
-                var sql = @"
-                    SELECT
-                        (SELECT ISNULL(SUM(Amount), 0) FROM Transactions WHERE UserId = @UserId) as TotalBalance,
-                        (SELECT ISNULL(SUM(Amount), 0) FROM Transactions WHERE UserId = @UserId AND Type = 'Income' AND MONTH(Date) = MONTH(GETDATE())) as MonthlyIncome,
-                        (SELECT ISNULL(SUM(Amount), 0) FROM Transactions WHERE UserId = @UserId AND Type = 'Expense' AND MONTH(Date) = MONTH(GETDATE())) as MonthlyExpense
-                ";
-                // ... sorguyu çalıştır ve summary nesnesini doldur ...
-                */
+                // 3. Toplam Bakiye (Gelir - Gider)
+                summary.TotalBalance = summary.MonthlyIncome - summary.MonthlyExpense;
+
+                // 4. Tasarruf Hedefi (Örnek: Gelirin %20'sini biriktirme hedefi olsun)
+                if (summary.MonthlyIncome > 0)
+                {
+                    decimal savings = summary.TotalBalance; // Kalan para tasarruftur
+                    // Basit bir hedef mantığı: Gelirin %20'si hedefleniyor
+                    decimal goal = summary.MonthlyIncome * 0.20m; 
+                    
+                    if (goal > 0)
+                        summary.SavingsGoalProgress = (savings / goal) * 100;
+                    else
+                        summary.SavingsGoalProgress = 0;
+                        
+                    // Yüzde 100'ü geçmesin (görsel bozulmasın)
+                    if (summary.SavingsGoalProgress > 100) summary.SavingsGoalProgress = 100;
+                    if (summary.SavingsGoalProgress < 0) summary.SavingsGoalProgress = 0;
+                }
             }
-
             return summary;
         }
-    }
+        public List<Transaction> GetLastTransactions(Guid userId, int count)
+        {
+            var list = new List<Transaction>();
+    
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                // "TOP @Count" ile sadece istediğimiz kadarını (örn: 10 tane) çekiyoruz.
+                // "ORDER BY TransactionDate DESC" ile en yeniden en eskiye sıralıyoruz.
+                var sql = @"SELECT TOP (@Count) * FROM Transactions 
+                    WHERE UserId = @UserId 
+                    ORDER BY TransactionDate DESC";
+
+                using (var cmd = new SqlCommand(sql, connection))
+                {
+                    cmd.Parameters.AddWithValue("@UserId", userId);
+                    cmd.Parameters.AddWithValue("@Count", count);
+            
+                    connection.Open();
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            list.Add(new Transaction
+                            {
+                                TransactionId = (Guid)reader["TransactionId"],
+                                UserId = (Guid)reader["UserId"],
+                                Amount = (decimal)reader["Amount"],
+                                Type = (string)reader["Type"],
+                                Category = reader["Category"] != DBNull.Value ? (string)reader["Category"] : "",
+                                Description = reader["Description"] != DBNull.Value ? (string)reader["Description"] : "",
+                                TransactionDate = (DateTime)reader["TransactionDate"]
+                            });
+                        }
+                    }
+                }
+            }
+            return list;
+        }
+    } 
 }

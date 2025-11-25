@@ -27,14 +27,15 @@ public partial class DashboardWindow : Window
         this.Close();
     }
 
+    // Yeni: Metotları güncelledik, artık ID gönderiyoruz
     private void SummaryButton_Click(object sender, RoutedEventArgs e)
     {
-        MainContentArea.Content = new SummaryView();
+        MainContentArea.Content = new SummaryView(_currentUser.UserId);
     }
 
     private void IncomeExpenseButton_Click(object sender, RoutedEventArgs e)
     {
-        MainContentArea.Content = new IncomeExpenseView();
+        MainContentArea.Content = new IncomeExpenseView(_currentUser.UserId);
     }
 
     private void InvestmentsButton_Click(object sender, RoutedEventArgs e)

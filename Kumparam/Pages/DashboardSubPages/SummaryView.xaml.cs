@@ -1,5 +1,6 @@
-﻿using System.Windows.Controls;
-using System.Configuration;
+﻿using System;
+using System.Windows.Controls;
+using System.Configuration; // App.config okumak için
 using Kumparam.Core;
 using Kumparam.Data;
 
@@ -8,21 +9,15 @@ namespace Kumparam.Pages.DashboardSubPages;
 public partial class SummaryView : UserControl
 {
     private readonly IUserRepository _userRepository;
-    private readonly Guid _currentUserId; // Giriş yapan kullanıcının ID'si lazım
+    private readonly Guid _currentUserId;
 
-    // Parametresiz constructor (XAML editörü için gerekebilir ama biz alttakini kullanacağız)
-    public SummaryView()
-    {
-        InitializeComponent();
-    }
-
-    // Kullanıcı ID'si alan constructor
+    // Yeni: Kullanıcı ID'si alan constructor
     public SummaryView(Guid userId)
     {
         InitializeComponent();
         _currentUserId = userId;
 
-        // Repository'i başlat
+        // Veritabanı bağlantısını başlat
         string connectionString = ConfigurationManager.ConnectionStrings["KumparamDB"].ConnectionString;
         _userRepository = new SqlUserRepository(connectionString);
 
@@ -30,13 +25,24 @@ public partial class SummaryView : UserControl
         LoadData();
     }
 
+    // Parametresiz constructor (XAML editörü hata vermesin diye boş bırakıyoruz)
+    public SummaryView()
+    {
+        InitializeComponent();
+    }
+
     private void LoadData()
     {
-        // Veritabanından özeti çek
+        // 1. Veriyi Çek
         var summary = _userRepository.GetFinancialSummary(_currentUserId);
 
-        // Ekrana yazdır (XAML'deki TextBlock'lara x:Name vermemiz gerekecek!)
-        // Şimdilik örnek olarak:
-        // TotalBalanceText.Text = $"₺ {summary.TotalBalance:N2}";
+        // 2. Ekrana Yazdır (XAML'deki x:Name'leri kullanıyoruz)
+        TotalBalanceText.Text = $"₺ {summary.TotalBalance:N2}";
+        MonthlyIncomeText.Text = $"₺ {summary.MonthlyIncome:N2}";
+        MonthlyExpenseText.Text = $"₺ {summary.MonthlyExpense:N2}";
+        
+        // Tasarruf barı
+        SavingsProgressBar.Value = (double)summary.SavingsGoalProgress;
+        SavingsText.Text = $"%{summary.SavingsGoalProgress} Tamamlandı";
     }
 }

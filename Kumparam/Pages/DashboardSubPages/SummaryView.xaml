@@ -35,8 +35,9 @@
                         <materialDesign:PackIcon Kind="Wallet" Width="24" Height="24" Foreground="{DynamicResource PrimaryHueMidBrush}" DockPanel.Dock="Left"/>
                         <TextBlock Text="Toplam Bakiye" VerticalAlignment="Center" Margin="10,0,0,0" Opacity="0.6" FontWeight="SemiBold"/>
                     </DockPanel>
-                    <TextBlock Text="₺ 24.500" FontSize="24" FontWeight="Bold" Margin="0,10,0,0" Foreground="#2E7D32"/>
-                    <TextBlock Text="+%12 geçen aya göre" FontSize="11" Foreground="Green" Margin="0,5,0,0"/>
+                    <!-- x:Name Verdik: TotalBalanceText -->
+                    <TextBlock x:Name="TotalBalanceText" Text="₺ 0.00" FontSize="24" FontWeight="Bold" Margin="0,10,0,0" Foreground="#2E7D32"/>
+                    <TextBlock Text="Güncel durum" FontSize="11" Foreground="Green" Margin="0,5,0,0"/>
                 </StackPanel>
             </materialDesign:Card>
 
@@ -47,8 +48,9 @@
                         <materialDesign:PackIcon Kind="ArrowUpBoldCircle" Width="24" Height="24" Foreground="Green" DockPanel.Dock="Left"/>
                         <TextBlock Text="Bu Ay Gelir" VerticalAlignment="Center" Margin="10,0,0,0" Opacity="0.6" FontWeight="SemiBold"/>
                     </DockPanel>
-                    <TextBlock Text="₺ 8.200" FontSize="24" FontWeight="Bold" Margin="0,10,0,0"/>
-                    <TextBlock Text="Maaş + Freelance" FontSize="11" Opacity="0.5" Margin="0,5,0,0"/>
+                    <!-- x:Name Verdik: MonthlyIncomeText -->
+                    <TextBlock x:Name="MonthlyIncomeText" Text="₺ 0.00" FontSize="24" FontWeight="Bold" Margin="0,10,0,0"/>
+                    <TextBlock Text="Toplam giriş" FontSize="11" Opacity="0.5" Margin="0,5,0,0"/>
                 </StackPanel>
             </materialDesign:Card>
 
@@ -59,20 +61,22 @@
                         <materialDesign:PackIcon Kind="ArrowDownBoldCircle" Width="24" Height="24" Foreground="Red" DockPanel.Dock="Left"/>
                         <TextBlock Text="Bu Ay Gider" VerticalAlignment="Center" Margin="10,0,0,0" Opacity="0.6" FontWeight="SemiBold"/>
                     </DockPanel>
-                    <TextBlock Text="₺ 3.450" FontSize="24" FontWeight="Bold" Margin="0,10,0,0"/>
-                    <TextBlock Text="Limitin %45'i" FontSize="11" Opacity="0.5" Margin="0,5,0,0"/>
+                    <!-- x:Name Verdik: MonthlyExpenseText -->
+                    <TextBlock x:Name="MonthlyExpenseText" Text="₺ 0.00" FontSize="24" FontWeight="Bold" Margin="0,10,0,0"/>
+                    <TextBlock Text="Toplam çıkış" FontSize="11" Opacity="0.5" Margin="0,5,0,0"/>
                 </StackPanel>
             </materialDesign:Card>
 
-            <!-- Kart 4: Tasarruf Hedefi -->
+            <!-- Kart 4: Tasarruf Hedefi (İleride dinamik olacak) -->
             <materialDesign:Card Grid.Column="3" Style="{StaticResource DashboardCardStyle}" Margin="10,0,0,0">
                 <StackPanel>
                     <DockPanel LastChildFill="False">
                         <materialDesign:PackIcon Kind="Target" Width="24" Height="24" Foreground="Orange" DockPanel.Dock="Left"/>
-                        <TextBlock Text="Araba Hedefi" VerticalAlignment="Center" Margin="10,0,0,0" Opacity="0.6" FontWeight="SemiBold"/>
+                        <TextBlock Text="Hedef İlerlemesi" VerticalAlignment="Center" Margin="10,0,0,0" Opacity="0.6" FontWeight="SemiBold"/>
                     </DockPanel>
-                    <ProgressBar Value="65" Height="10" Margin="0,15,0,5" Foreground="Orange" Background="#EEE"/>
-                    <TextBlock Text="%65 Tamamlandı" FontSize="11" Opacity="0.5" HorizontalAlignment="Right"/>
+                    <!-- x:Name Verdik: SavingsProgressBar ve SavingsText -->
+                    <ProgressBar x:Name="SavingsProgressBar" Value="0" Height="10" Margin="0,15,0,5" Foreground="Orange" Background="#EEE"/>
+                    <TextBlock x:Name="SavingsText" Text="%0 Tamamlandı" FontSize="11" Opacity="0.5" HorizontalAlignment="Right"/>
                 </StackPanel>
             </materialDesign:Card>
         </Grid>
@@ -98,43 +102,9 @@
                         <Button Content="Tümünü Gör" Style="{StaticResource MaterialDesignFlatButton}" Height="Auto" Padding="10,5" DockPanel.Dock="Right"/>
                     </DockPanel>
 
-                    <!-- SAHTE VERİ LİSTESİ (DataGrid yerine basit StackPanel kullanıyorum şimdilik) -->
+                    <!-- Buraya ileride DataGrid veya ItemsControl gelecek. Şimdilik placeholder. -->
                     <StackPanel Grid.Row="1">
-                        <!-- İşlem 1 -->
-                        <Border BorderBrush="#EEE" BorderThickness="0,0,0,1" Padding="0,10">
-                            <DockPanel>
-                                <materialDesign:PackIcon Kind="Shopping" Foreground="Red" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                                <StackPanel VerticalAlignment="Center">
-                                    <TextBlock Text="Market Alışverişi" FontWeight="SemiBold"/>
-                                    <TextBlock Text="Migros - Gıda" FontSize="11" Opacity="0.5"/>
-                                </StackPanel>
-                                <TextBlock Text="-₺ 450.00" FontWeight="Bold" Foreground="Red" VerticalAlignment="Center" DockPanel.Dock="Right"/>
-                            </DockPanel>
-                        </Border>
-                        
-                        <!-- İşlem 2 -->
-                        <Border BorderBrush="#EEE" BorderThickness="0,0,0,1" Padding="0,10">
-                            <DockPanel>
-                                <materialDesign:PackIcon Kind="GasStation" Foreground="Red" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                                <StackPanel VerticalAlignment="Center">
-                                    <TextBlock Text="Benzin" FontWeight="SemiBold"/>
-                                    <TextBlock Text="Shell - Ulaşım" FontSize="11" Opacity="0.5"/>
-                                </StackPanel>
-                                <TextBlock Text="-₺ 1.200.00" FontWeight="Bold" Foreground="Red" VerticalAlignment="Center" DockPanel.Dock="Right"/>
-                            </DockPanel>
-                        </Border>
-
-                        <!-- İşlem 3 -->
-                        <Border Padding="0,10">
-                            <DockPanel>
-                                <materialDesign:PackIcon Kind="HandCoin" Foreground="Green" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                                <StackPanel VerticalAlignment="Center">
-                                    <TextBlock Text="Freelance Ödemesi" FontWeight="SemiBold"/>
-                                    <TextBlock Text="Upwork - Gelir" FontSize="11" Opacity="0.5"/>
-                                </StackPanel>
-                                <TextBlock Text="+₺ 3.500.00" FontWeight="Bold" Foreground="Green" VerticalAlignment="Center" DockPanel.Dock="Right"/>
-                            </DockPanel>
-                        </Border>
+                        <TextBlock Text="Henüz işlem yok." Opacity="0.5" HorizontalAlignment="Center" Margin="20"/>
                     </StackPanel>
                 </Grid>
             </materialDesign:Card>
@@ -154,7 +124,7 @@
                         <materialDesign:PackIcon Kind="ChartPie" Width="100" Height="100" 
                                                  HorizontalAlignment="Center" VerticalAlignment="Center" 
                                                  Foreground="#DDD"/>
-                        <TextBlock Text="Grafik Yakında..." 
+                        <TextBlock Text="Veri bekleniyor..." 
                                    HorizontalAlignment="Center" VerticalAlignment="Bottom" 
                                    Margin="0,0,0,40" Opacity="0.4"/>
                     </Grid>

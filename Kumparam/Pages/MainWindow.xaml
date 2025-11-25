@@ -104,7 +104,8 @@
                 <PasswordBox materialDesign:HintAssist.Hint="Şifre Tekrar" 
                              Style="{StaticResource MaterialDesignOutlinedPasswordBox}" 
                              Margin="0,10"
-                             Name="Register_SifreTekrarPasswordBox"/>
+                             Name="Register_SifreTekrarPasswordBox"
+                             KeyDown="PasswordAgain_KeyDown"/>
 
                 <Button Content="Hesap Oluştur" 
                         Style="{StaticResource MaterialDesignRaisedButton}"

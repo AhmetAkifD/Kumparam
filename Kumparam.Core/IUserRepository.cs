@@ -25,6 +25,21 @@
         bool IsConnectionSuccess(); 
         
         // YENİ: Kullanıcının finansal özetini getirir
-        FinancialSummary GetFinancialSummary(Guid userId);
+        public FinancialSummary GetFinancialSummary(Guid userId)
+        {
+            // Şimdilik veritabanında işlem tablosu olmadığı için
+            // SAHTE VERİ (Dummy Data) döndürüyoruz.
+            // İleride buraya gerçek SQL sorgusu gelecek.
+            
+            return new FinancialSummary
+            {
+                TotalBalance = 12500.50m,       // Örnek: 12.500 TL
+                MonthlyIncome = 4500.00m,       // Örnek: 4.500 TL
+                MonthlyExpense = 1200.00m,      // Örnek: 1.200 TL
+                SavingsGoalProgress = 65        // Örnek: %65
+            };
+        }
+        void AddTransaction(Transaction transaction);
+        List<Transaction> GetLastTransactions(Guid userId, int count);
     }
 }
