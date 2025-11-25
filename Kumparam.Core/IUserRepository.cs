@@ -41,5 +41,6 @@
         }
         void AddTransaction(Transaction transaction);
         List<Transaction> GetLastTransactions(Guid userId, int count);
+        List<ExpenseStat> GetExpenseStats(Guid userId);
     }
 }

@@ -241,5 +241,37 @@ namespace Kumparam.Data
             }
             return list;
         }
+        public List<ExpenseStat> GetExpenseStats(Guid userId)
+        {
+            var list = new List<ExpenseStat>();
+    
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                // Sadece 'Expense' (Gider) olanları kategoriye göre gruplayıp topluyoruz
+                var sql = @"SELECT Category, SUM(Amount) as TotalAmount 
+                    FROM Transactions 
+                    WHERE UserId = @UserId AND Type = 'Expense' 
+                    GROUP BY Category";
+
+                using (var cmd = new SqlCommand(sql, connection))
+                {
+                    cmd.Parameters.AddWithValue("@UserId", userId);
+            
+                    connection.Open();
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            list.Add(new ExpenseStat
+                            {
+                                Category = reader["Category"] != DBNull.Value ? (string)reader["Category"] : "Diğer",
+                                TotalAmount = (decimal)reader["TotalAmount"]
+                            });
+                        }
+                    }
+                }
+            }
+            return list;
+        }
     } 
 }

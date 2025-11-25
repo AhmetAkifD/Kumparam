@@ -17,7 +17,7 @@ public partial class DashboardWindow : Window
         WelcomeText.Text = _currentUser.Email;
 
         // Varsayılan sayfa: Özet Durum
-        MainContentArea.Content = new SummaryView();
+        MainContentArea.Content = new SummaryView(_currentUser.UserId);
     }
     
     private void Logout_Button_Click(object sender, RoutedEventArgs e)

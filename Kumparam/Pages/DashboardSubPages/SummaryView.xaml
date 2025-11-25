@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:lvc="clr-namespace:LiveChartsCore.SkiaSharpView.WPF;assembly=LiveChartsCore.SkiaSharpView.WPF"
              mc:Ignorable="d" 
              d:DesignHeight="650" d:DesignWidth="900"
              TextElement.Foreground="{DynamicResource MaterialDesignBody}"
@@ -116,17 +117,18 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
-                    
+
                     <TextBlock Text="Harcama Dağılımı" Style="{StaticResource HeaderTextStyle}"/>
-                    
-                    <!-- Grafik Yeri -->
+
                     <Grid Grid.Row="1">
-                        <materialDesign:PackIcon Kind="ChartPie" Width="100" Height="100" 
-                                                 HorizontalAlignment="Center" VerticalAlignment="Center" 
-                                                 Foreground="#DDD"/>
-                        <TextBlock Text="Veri bekleniyor..." 
-                                   HorizontalAlignment="Center" VerticalAlignment="Bottom" 
-                                   Margin="0,0,0,40" Opacity="0.4"/>
+                        <TextBlock x:Name="NoDataText" Text="Henüz harcama verisi yok." 
+                                   HorizontalAlignment="Center" VerticalAlignment="Center" 
+                                   Opacity="0.5" Visibility="Collapsed"/>
+
+                        <lvc:PieChart x:Name="ExpensePieChart" 
+                                      LegendPosition="Bottom"
+                                      TooltipPosition="Top">
+                        </lvc:PieChart>
                     </Grid>
                 </Grid>
             </materialDesign:Card>

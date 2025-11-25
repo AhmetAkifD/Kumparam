@@ -3,6 +3,10 @@ using System.Windows.Controls;
 using System.Configuration; // App.config okumak için
 using Kumparam.Core;
 using Kumparam.Data;
+using LiveChartsCore;
+using LiveChartsCore.SkiaSharpView;
+using LiveChartsCore.SkiaSharpView.Painting;
+using SkiaSharp;
 
 namespace Kumparam.Pages.DashboardSubPages;
 
@@ -44,5 +48,46 @@ public partial class SummaryView : UserControl
         // Tasarruf barı
         SavingsProgressBar.Value = (double)summary.SavingsGoalProgress;
         SavingsText.Text = $"%{summary.SavingsGoalProgress} Tamamlandı";
+    }
+    private void LoadChart()
+    {
+        var stats = _userRepository.GetExpenseStats(_currentUserId);
+
+        // Eğer hiç harcama yoksa boş mesajı göster
+        if (stats.Count == 0)
+        {
+            // Visibility çakışmasını önlemek için tam adını (System.Windows...) yazdık
+            ExpensePieChart.Visibility = System.Windows.Visibility.Collapsed;
+            NoDataText.Visibility = System.Windows.Visibility.Visible;
+            return;
+        }
+
+        ExpensePieChart.Visibility = System.Windows.Visibility.Visible;
+        NoDataText.Visibility = System.Windows.Visibility.Collapsed;
+
+        // Verileri LiveCharts serisine dönüştür
+        var seriesCollection = new List<ISeries>();
+
+        foreach (var item in stats)
+        {
+            seriesCollection.Add(new PieSeries<decimal>
+            {
+                Values = new decimal[] { item.TotalAmount },
+                Name = item.Category,
+                InnerRadius = 50,
+            
+                // DÜZELTME: HoverPushout buraya, serinin içine taşındı
+                HoverPushout = 10, 
+            
+                // DÜZELTME: Yüzdelik hesaplama için en güvenli yöntem "Share" kullanmaktır
+                // :P0 formatı otomatik olarak % işareti koyar ve yuvarlar (örn: %25)
+                DataLabelsFormatter = point => $"{point.StackedValue.Share:P0}", 
+            
+                DataLabelsPosition = LiveChartsCore.Measure.PolarLabelsPosition.Middle,
+                DataLabelsPaint = new SolidColorPaint(SKColors.White)
+            });
+        }
+
+        ExpensePieChart.Series = seriesCollection;
     }
 }
