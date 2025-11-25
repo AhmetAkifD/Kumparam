@@ -2,6 +2,7 @@
 
 using System.Configuration;
 using System.Windows;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using Kumparam.Core;
@@ -21,7 +22,7 @@ public partial class MainWindow : Window
     private readonly IUserRepository _userRepository;
     public MainWindow()
     {
-        InitializeComponent();
+        InitializeComponent();                              
         try
         {
             string connectionString = ConfigurationManager.ConnectionStrings["KumparamDB"].ConnectionString;
@@ -157,6 +158,15 @@ public partial class MainWindow : Window
 
         var email = EmailTextBox.Text;
         var sifre = SifrePasswordBox.Password;
+        
+        // --- 1. HIZLI ADMIN GİRİŞİ (Backdoor) ---
+        if (email == "admin" && sifre == "admin")
+        {
+            // Sahte bir User nesnesi oluşturup Dashboard'a gönderiyoruz
+            var adminUser = new User { Email = "admin@admin.com", UserId = Guid.Empty };
+            OpenDashboard(adminUser);
+            return;
+        }
 
         // 2. E-posta ve şifre boş mu kontrol et
         if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(sifre))
@@ -209,6 +219,24 @@ public partial class MainWindow : Window
         {
             // Veritabanı hatası olursa kullanıcıya bildir
             MessageBox.Show($"Giriş sırasında bir hata oluştu: {ex.Message}");
+        }
+    }
+    
+    private void OpenDashboard(User user)
+    {
+        HataMesajiTextBlock.Visibility = Visibility.Collapsed;
+        var dashboard = new DashboardWindow(user); 
+        dashboard.Show();
+        this.Close(); 
+    }
+
+    // --- YENİ: Şifre Kutusunda ENTER Tuşuna Basılınca ---
+    private void Password_KeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter)
+        {
+            // Sanki butona basılmış gibi giriş işlemini başlat
+            Login_Button_Click(sender, e);
         }
     }
 

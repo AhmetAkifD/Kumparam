@@ -23,5 +23,8 @@
 
         // YENİ: Bağlantı testi için
         bool IsConnectionSuccess(); 
+        
+        // YENİ: Kullanıcının finansal özetini getirir
+        FinancialSummary GetFinancialSummary(Guid userId);
     }
 }

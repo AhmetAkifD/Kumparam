@@ -133,5 +133,38 @@ namespace Kumparam.Data
                 }
             }
         }
+        public FinancialSummary GetFinancialSummary(Guid userId)
+        {
+            var summary = new FinancialSummary();
+
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                connection.Open();
+
+                // NOT: Henüz "Transactions" (İşlemler) tablomuz olmadığı için
+                // burada gerçek sorgu yazamıyoruz. Şimdilik elle 0 veya rastgele değer dönelim.
+                // İleride buraya "SELECT SUM(Amount) FROM Transactions WHERE..." yazacağız.
+
+                // ÖRNEK (SAHTE) HESAPLAMA:
+                // Gerçek senaryoda bu değerler veritabanından gelecek.
+                summary.TotalBalance = 0; 
+                summary.MonthlyIncome = 0;
+                summary.MonthlyExpense = 0;
+                summary.SavingsGoalProgress = 0;
+
+                /*
+                // İLERİDE YAZACAĞIMIZ KOD ŞÖYLE OLACAK:
+                var sql = @"
+                    SELECT
+                        (SELECT ISNULL(SUM(Amount), 0) FROM Transactions WHERE UserId = @UserId) as TotalBalance,
+                        (SELECT ISNULL(SUM(Amount), 0) FROM Transactions WHERE UserId = @UserId AND Type = 'Income' AND MONTH(Date) = MONTH(GETDATE())) as MonthlyIncome,
+                        (SELECT ISNULL(SUM(Amount), 0) FROM Transactions WHERE UserId = @UserId AND Type = 'Expense' AND MONTH(Date) = MONTH(GETDATE())) as MonthlyExpense
+                ";
+                // ... sorguyu çalıştır ve summary nesnesini doldur ...
+                */
+            }
+
+            return summary;
+        }
     }
 }

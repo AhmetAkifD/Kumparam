@@ -39,7 +39,8 @@
 
                 <PasswordBox x:Name="SifrePasswordBox" materialDesign:HintAssist.Hint="Şifre" 
                              Style="{StaticResource MaterialDesignOutlinedPasswordBox}" 
-                             Margin="0,10"/>
+                             Margin="0,10"
+                             KeyDown="Password_KeyDown"/>
 
                 <Button Content="Giriş Yap" 
                         Style="{StaticResource MaterialDesignRaisedButton}"
