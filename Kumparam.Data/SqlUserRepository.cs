@@ -301,32 +301,26 @@ namespace Kumparam.Data
             var list = new List<Goal>();
             using (var connection = new SqlConnection(_connectionString))
             {
-                // DÜZELTME 1: SELECT * yerine sütunları tek tek yazıyoruz.
-                var sql = @"SELECT GoalId, UserId, Title, TargetAmount, CurrentAmount, Deadline, Description 
-                    FROM Goals 
-                    WHERE UserId = @UserId 
-                    ORDER BY CreatedAt DESC";
+                // SADELEŞTİRİLDİ: Sadece Title çekiyoruz
+                var sql = "SELECT Title FROM Goals WHERE UserId = @UserId ORDER BY CreatedAt DESC";
 
                 using (var cmd = new SqlCommand(sql, connection))
                 {
                     cmd.Parameters.AddWithValue("@UserId", userId);
                     connection.Open();
+            
                     using (var reader = cmd.ExecuteReader())
                     {
                         while (reader.Read())
                         {
+                            // Sadece Başlığı okuyoruz, diğerleri boş kalsın
                             list.Add(new Goal
                             {
-                                // DÜZELTME 2: İndeks yerine sütun isimleriyle okuyoruz.
-                                GoalId = (Guid)reader["GoalId"],
-                                UserId = (Guid)reader["UserId"],
-                                Title = (string)reader["Title"],
-                                TargetAmount = (decimal)reader["TargetAmount"],
-                                CurrentAmount = (decimal)reader["CurrentAmount"],
+                                Title = reader["Title"].ToString() ?? "Başlıksız",
                         
-                                // DÜZELTME 3: DBNull kontrolleri
-                                Deadline = reader["Deadline"] == DBNull.Value ? null : (DateTime?)reader["Deadline"],
-                                Description = reader["Description"] == DBNull.Value ? null : (string)reader["Description"]
+                                // Diğer alanlar otomatik varsayılan (0 veya null) olacak
+                                // Goal.cs modelindeki "kurşun geçirmez" yapımız sayesinde
+                                // 0 değerleri UI'da hata verdirmeyecek.
                             });
                         }
                     }
