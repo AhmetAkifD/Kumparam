@@ -4,7 +4,9 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using Kumparam.Core;
+using Kumparam.Core.Interfaces;
 using Kumparam.Data;
+using Kumparam.Data.Repositories;
 
 namespace Kumparam.Pages.DashboardSubPages;
 

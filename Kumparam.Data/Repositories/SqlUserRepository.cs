@@ -1,7 +1,11 @@
 ﻿using Kumparam.Core;
-using Microsoft.Data.SqlClient; // NuGet'ten eklediğimiz paket
+using Kumparam.Core.Interfaces;
+using Kumparam.Core.Models;
+using Microsoft.Data.SqlClient;
 
-namespace Kumparam.Data
+// NuGet'ten eklediğimiz paket
+
+namespace Kumparam.Data.Repositories
 {
     // Bu sınıf, IUserRepository sözleşmesini ADO.NET (SQL) kullanarak uygular.
     public class SqlUserRepository : IUserRepository
@@ -165,7 +169,7 @@ namespace Kumparam.Data
             {
                 connection.Open();
 
-                // 1. Toplam Gelir (Income)
+                // 1. Gelir (Değişmedi)
                 var sqlIncome = "SELECT ISNULL(SUM(Amount), 0) FROM Transactions WHERE UserId = @UserId AND Type = 'Income'";
                 using (var cmd = new SqlCommand(sqlIncome, connection))
                 {
@@ -173,7 +177,7 @@ namespace Kumparam.Data
                     summary.MonthlyIncome = (decimal)cmd.ExecuteScalar();
                 }
 
-                // 2. Toplam Gider (Expense)
+                // 2. Gider (Değişmedi)
                 var sqlExpense = "SELECT ISNULL(SUM(Amount), 0) FROM Transactions WHERE UserId = @UserId AND Type = 'Expense'";
                 using (var cmd = new SqlCommand(sqlExpense, connection))
                 {
@@ -181,24 +185,38 @@ namespace Kumparam.Data
                     summary.MonthlyExpense = (decimal)cmd.ExecuteScalar();
                 }
 
-                // 3. Toplam Bakiye (Gelir - Gider)
+                // 3. Bakiye (Değişmedi)
                 summary.TotalBalance = summary.MonthlyIncome - summary.MonthlyExpense;
 
-                // 4. Tasarruf Hedefi (Örnek: Gelirin %20'sini biriktirme hedefi olsun)
-                if (summary.MonthlyIncome > 0)
+                // 4. HEDEF (YENİLENDİ: Artık Goals Tablosundan Hesaplanıyor!)
+                // Tüm hedeflerin toplam tutarını ve şu anki birikimini çekiyoruz
+                var sqlGoals = "SELECT SUM(TargetAmount), SUM(CurrentAmount) FROM Goals WHERE UserId = @UserId";
+                using (var cmd = new SqlCommand(sqlGoals, connection))
                 {
-                    decimal savings = summary.TotalBalance; // Kalan para tasarruftur
-                    // Basit bir hedef mantığı: Gelirin %20'si hedefleniyor
-                    decimal goal = summary.MonthlyIncome * 0.20m; 
+                    cmd.Parameters.AddWithValue("@UserId", userId);
                     
-                    if (goal > 0)
-                        summary.SavingsGoalProgress = (savings / goal) * 100;
-                    else
-                        summary.SavingsGoalProgress = 0;
-                        
-                    // Yüzde 100'ü geçmesin (görsel bozulmasın)
-                    if (summary.SavingsGoalProgress > 100) summary.SavingsGoalProgress = 100;
-                    if (summary.SavingsGoalProgress < 0) summary.SavingsGoalProgress = 0;
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        if (reader.Read() && reader[0] != DBNull.Value)
+                        {
+                            decimal totalTarget = (decimal)reader[0];  // Toplam Hedeflenen
+                            decimal totalCurrent = (decimal)reader[1]; // Toplam Birikmiş
+
+                            if (totalTarget > 0)
+                            {
+                                // Genel İlerleme Yüzdesi
+                                summary.SavingsGoalProgress = (totalCurrent / totalTarget) * 100;
+                                
+                                // %100'ü geçmesin
+                                if (summary.SavingsGoalProgress > 100) summary.SavingsGoalProgress = 100;
+                            }
+                        }
+                        else
+                        {
+                            // Hiç hedef yoksa 0
+                            summary.SavingsGoalProgress = 0;
+                        }
+                    }
                 }
             }
             return summary;
@@ -390,6 +408,76 @@ namespace Kumparam.Data
                     }
             
                     return "Veritabanında Hedef Bulunamadı";
+                }
+            }
+        }
+        
+        public void AddInvestment(Investment investment)
+        {
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                var sql = @"INSERT INTO Investments (UserId, Name, Symbol, Quantity, BuyingPrice, CurrentPrice, PurchaseDate) 
+                            VALUES (@UserId, @Name, @Symbol, @Quantity, @BuyingPrice, @CurrentPrice, @PurchaseDate)";
+
+                using (var cmd = new SqlCommand(sql, connection))
+                {
+                    cmd.Parameters.AddWithValue("@UserId", investment.UserId);
+                    cmd.Parameters.AddWithValue("@Name", investment.Name);
+                    cmd.Parameters.AddWithValue("@Symbol", investment.Symbol ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@Quantity", investment.Quantity);
+                    cmd.Parameters.AddWithValue("@BuyingPrice", investment.BuyingPrice);
+                    cmd.Parameters.AddWithValue("@CurrentPrice", investment.CurrentPrice ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@PurchaseDate", investment.PurchaseDate);
+
+                    connection.Open();
+                    cmd.ExecuteNonQuery();
+                }
+            }
+        }
+
+        public List<Investment> GetInvestments(Guid userId)
+        {
+            var list = new List<Investment>();
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                var sql = "SELECT * FROM Investments WHERE UserId = @UserId ORDER BY PurchaseDate DESC";
+
+                using (var cmd = new SqlCommand(sql, connection))
+                {
+                    cmd.Parameters.AddWithValue("@UserId", userId);
+                    connection.Open();
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            list.Add(new Investment
+                            {
+                                InvestmentId = (Guid)reader["InvestmentId"],
+                                UserId = (Guid)reader["UserId"],
+                                Name = reader["Name"].ToString(),
+                                Symbol = reader["Symbol"] as string,
+                                Quantity = (decimal)reader["Quantity"],
+                                BuyingPrice = (decimal)reader["BuyingPrice"],
+                                CurrentPrice = reader["CurrentPrice"] == DBNull.Value ? null : (decimal?)reader["CurrentPrice"],
+                                PurchaseDate = (DateTime)reader["PurchaseDate"]
+                            });
+                        }
+                    }
+                }
+            }
+            return list;
+        }
+
+        public void DeleteInvestment(Guid investmentId)
+        {
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                var sql = "DELETE FROM Investments WHERE InvestmentId = @InvestmentId";
+                using (var cmd = new SqlCommand(sql, connection))
+                {
+                    cmd.Parameters.AddWithValue("@InvestmentId", investmentId);
+                    connection.Open();
+                    cmd.ExecuteNonQuery();
                 }
             }
         }

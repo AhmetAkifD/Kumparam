@@ -1,4 +1,6 @@
-﻿namespace Kumparam.Core
+﻿using Kumparam.Core.Models;
+
+namespace Kumparam.Core.Interfaces
 {
     // Bu bizim "Sözleşmemiz" (Repository Pattern)
     // Data katmanının NELER YAPABİLECEĞİNİ söyler.
@@ -48,5 +50,8 @@
         void DeleteGoal(Guid goalId); // Silme özelliği de olsun
         void UpdateGoalAmount(Guid goalId, decimal amount); // Para ekleme/çıkarma için
         string? GetFirstGoalTitle(Guid userId);
+        void AddInvestment(Investment investment);
+        List<Investment> GetInvestments(Guid userId);
+        void DeleteInvestment(Guid investmentId);
     }
 }

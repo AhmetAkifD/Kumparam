@@ -6,7 +6,10 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using Kumparam.Core;
+using Kumparam.Core.Interfaces;
 using Kumparam.Data;
+using Kumparam.Data.Repositories;
+
 // App.config'i okumak için
 // PasswordHelper için eklendi
 // Core katmanımızı ekledik

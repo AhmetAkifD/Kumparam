@@ -57,9 +57,9 @@
                                         <TextBlock Text="{Binding TargetAmount}" />
                                     </StackPanel>
 
-                                    <TextBlock Text="{Binding ProgressPercentage, StringFormat='İlerleme: %{0}'}" Foreground="Orange" FontWeight="Bold"/>
+                                    <TextBlock Text="{Binding ProgressPercentage, StringFormat='{}İlerleme: %{0:0.0}'}" Foreground="Orange" FontWeight="Bold"/>
 
-                                    <TextBlock Text="{Binding Deadline}" Opacity="0.5" Margin="0,5,0,0"/>
+                                    <TextBlock Text="{Binding Deadline, StringFormat='{}{0:dd/MM/yyyy}'}" Opacity="0.5" Margin="0,5,0,0"/>
                             
                                     <TextBlock Text="{Binding Description}" FontStyle="Italic" Opacity="0.6"/>
                                 </StackPanel>

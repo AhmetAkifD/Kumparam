@@ -40,7 +40,7 @@ public partial class DashboardWindow : Window
 
     private void InvestmentsButton_Click(object sender, RoutedEventArgs e)
     {
-        MainContentArea.Content = new InvestmentsView();
+        MainContentArea.Content = new InvestmentsView(_currentUser.UserId);
     }
 
     private void GoalsButton_Click(object sender, RoutedEventArgs e)
