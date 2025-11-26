@@ -1,11 +1,15 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Configuration;
+using System.Windows;
 using System.Windows.Controls;
-using System.Configuration; // App.config okumak için
 using Kumparam.Core;
 using Kumparam.Data;
 using LiveChartsCore;
 using LiveChartsCore.SkiaSharpView;
 using LiveChartsCore.SkiaSharpView.Painting;
+using LiveChartsCore.SkiaSharpView.WPF; 
+using LiveChartsCore.Measure; // LegendPosition ve TooltipPosition için BU ŞART
 using SkiaSharp;
 
 namespace Kumparam.Pages.DashboardSubPages;
@@ -15,21 +19,19 @@ public partial class SummaryView : UserControl
     private readonly IUserRepository _userRepository;
     private readonly Guid _currentUserId;
 
-    // Yeni: Kullanıcı ID'si alan constructor
+    // Dolu Constructor
     public SummaryView(Guid userId)
     {
         InitializeComponent();
         _currentUserId = userId;
 
-        // Veritabanı bağlantısını başlat
         string connectionString = ConfigurationManager.ConnectionStrings["KumparamDB"].ConnectionString;
         _userRepository = new SqlUserRepository(connectionString);
 
-        // Verileri Yükle
         LoadData();
     }
 
-    // Parametresiz constructor (XAML editörü hata vermesin diye boş bırakıyoruz)
+    // Boş Constructor
     public SummaryView()
     {
         InitializeComponent();
@@ -37,35 +39,39 @@ public partial class SummaryView : UserControl
 
     private void LoadData()
     {
-        // 1. Veriyi Çek
         var summary = _userRepository.GetFinancialSummary(_currentUserId);
 
-        // 2. Ekrana Yazdır (XAML'deki x:Name'leri kullanıyoruz)
-        TotalBalanceText.Text = $"₺ {summary.TotalBalance:N2}";
-        MonthlyIncomeText.Text = $"₺ {summary.MonthlyIncome:N2}";
-        MonthlyExpenseText.Text = $"₺ {summary.MonthlyExpense:N2}";
+        if (summary != null)
+        {
+            TotalBalanceText.Text = $"₺ {summary.TotalBalance:N2}";
+            MonthlyIncomeText.Text = $"₺ {summary.MonthlyIncome:N2}";
+            MonthlyExpenseText.Text = $"₺ {summary.MonthlyExpense:N2}";
+            
+            SavingsProgressBar.Value = (double)summary.SavingsGoalProgress;
+            SavingsText.Text = $"%{summary.SavingsGoalProgress:0} Tamamlandı";
+        }
         
-        // Tasarruf barı
-        SavingsProgressBar.Value = (double)summary.SavingsGoalProgress;
-        SavingsText.Text = $"%{summary.SavingsGoalProgress} Tamamlandı";
+        // Grafiği yükle
+        LoadChart();
     }
+
     private void LoadChart()
     {
         var stats = _userRepository.GetExpenseStats(_currentUserId);
 
-        // Eğer hiç harcama yoksa boş mesajı göster
+        // Veri yoksa
         if (stats.Count == 0)
         {
-            // Visibility çakışmasını önlemek için tam adını (System.Windows...) yazdık
-            ExpensePieChart.Visibility = System.Windows.Visibility.Collapsed;
-            NoDataText.Visibility = System.Windows.Visibility.Visible;
+            ChartContainer.Visibility = Visibility.Collapsed;
+            NoDataText.Visibility = Visibility.Visible;
             return;
         }
 
-        ExpensePieChart.Visibility = System.Windows.Visibility.Visible;
-        NoDataText.Visibility = System.Windows.Visibility.Collapsed;
+        // Veri varsa
+        ChartContainer.Visibility = Visibility.Visible;
+        NoDataText.Visibility = Visibility.Collapsed;
 
-        // Verileri LiveCharts serisine dönüştür
+        // 1. Serileri Hazırla
         var seriesCollection = new List<ISeries>();
 
         foreach (var item in stats)
@@ -75,19 +81,26 @@ public partial class SummaryView : UserControl
                 Values = new decimal[] { item.TotalAmount },
                 Name = item.Category,
                 InnerRadius = 50,
-            
-                // DÜZELTME: HoverPushout buraya, serinin içine taşındı
-                HoverPushout = 10, 
-            
-                // DÜZELTME: Yüzdelik hesaplama için en güvenli yöntem "Share" kullanmaktır
-                // :P0 formatı otomatik olarak % işareti koyar ve yuvarlar (örn: %25)
+                HoverPushout = 10,
+                
+                // Yüzdelik gösterim
                 DataLabelsFormatter = point => $"{point.StackedValue.Share:P0}", 
-            
+                
                 DataLabelsPosition = LiveChartsCore.Measure.PolarLabelsPosition.Middle,
                 DataLabelsPaint = new SolidColorPaint(SKColors.White)
             });
         }
 
-        ExpensePieChart.Series = seriesCollection;
+        // 2. Grafiği Kodla Oluştur
+        var chart = new PieChart
+        {
+            Series = seriesCollection,
+            // LegendPosition ve TooltipPosition için "LiveChartsCore.Measure" namespace'i eklendi
+            LegendPosition = LiveChartsCore.Measure.LegendPosition.Bottom,
+            TooltipPosition = LiveChartsCore.Measure.TooltipPosition.Top
+        };
+
+        // 3. Kutunun içine koy
+        ChartContainer.Content = chart;
     }
 }

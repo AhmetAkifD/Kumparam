@@ -273,5 +273,122 @@ namespace Kumparam.Data
             }
             return list;
         }
-    } 
+        // SqlUserRepository.cs içine ekle:
+        public void AddGoal(Goal goal)
+        {
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                var sql = @"INSERT INTO Goals (UserId, Title, TargetAmount, CurrentAmount, Deadline, Description) 
+                            VALUES (@UserId, @Title, @TargetAmount, @CurrentAmount, @Deadline, @Description)";
+
+                using (var cmd = new SqlCommand(sql, connection))
+                {
+                    cmd.Parameters.AddWithValue("@UserId", goal.UserId);
+                    cmd.Parameters.AddWithValue("@Title", goal.Title);
+                    cmd.Parameters.AddWithValue("@TargetAmount", goal.TargetAmount);
+                    cmd.Parameters.AddWithValue("@CurrentAmount", goal.CurrentAmount);
+                    cmd.Parameters.AddWithValue("@Deadline", goal.Deadline ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@Description", goal.Description ?? (object)DBNull.Value);
+
+                    connection.Open();
+                    cmd.ExecuteNonQuery();
+                }
+            }
+        }
+
+        public List<Goal> GetGoals(Guid userId)
+        {
+            var list = new List<Goal>();
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                // DÜZELTME 1: SELECT * yerine sütunları tek tek yazıyoruz.
+                var sql = @"SELECT GoalId, UserId, Title, TargetAmount, CurrentAmount, Deadline, Description 
+                    FROM Goals 
+                    WHERE UserId = @UserId 
+                    ORDER BY CreatedAt DESC";
+
+                using (var cmd = new SqlCommand(sql, connection))
+                {
+                    cmd.Parameters.AddWithValue("@UserId", userId);
+                    connection.Open();
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            list.Add(new Goal
+                            {
+                                // DÜZELTME 2: İndeks yerine sütun isimleriyle okuyoruz.
+                                GoalId = (Guid)reader["GoalId"],
+                                UserId = (Guid)reader["UserId"],
+                                Title = (string)reader["Title"],
+                                TargetAmount = (decimal)reader["TargetAmount"],
+                                CurrentAmount = (decimal)reader["CurrentAmount"],
+                        
+                                // DÜZELTME 3: DBNull kontrolleri
+                                Deadline = reader["Deadline"] == DBNull.Value ? null : (DateTime?)reader["Deadline"],
+                                Description = reader["Description"] == DBNull.Value ? null : (string)reader["Description"]
+                            });
+                        }
+                    }
+                }
+            }
+            return list;
+        }
+
+        public void DeleteGoal(Guid goalId)
+        {
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                var sql = "DELETE FROM Goals WHERE GoalId = @GoalId";
+                using (var cmd = new SqlCommand(sql, connection))
+                {
+                    cmd.Parameters.AddWithValue("@GoalId", goalId);
+                    connection.Open();
+                    cmd.ExecuteNonQuery();
+                }
+            }
+        }
+
+        public void UpdateGoalAmount(Guid goalId, decimal amount)
+        {
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                // Mevcut tutarın üzerine ekleme yapıyoruz (amount negatif gelirse çıkarma olur)
+                var sql = "UPDATE Goals SET CurrentAmount = CurrentAmount + @Amount WHERE GoalId = @GoalId";
+                using (var cmd = new SqlCommand(sql, connection))
+                {
+                    cmd.Parameters.AddWithValue("@GoalId", goalId);
+                    cmd.Parameters.AddWithValue("@Amount", amount);
+                    connection.Open();
+                    cmd.ExecuteNonQuery();
+                }
+            }
+        }
+        // Kumparam.Data/SqlUserRepository.cs içine:
+
+        public string? GetFirstGoalTitle(Guid userId)
+        {
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                // Sadece Başlığı (Title) seçiyoruz, sadece 1 tane.
+                var sql = "SELECT TOP 1 Title FROM Goals WHERE UserId = @UserId";
+        
+                using (var cmd = new SqlCommand(sql, connection))
+                {
+                    cmd.Parameters.AddWithValue("@UserId", userId);
+                    connection.Open();
+            
+                    // Tek bir değer döndürür (object tipinde)
+                    var result = cmd.ExecuteScalar();
+            
+                    if (result != null)
+                    {
+                        return result.ToString();
+                    }
+            
+                    return "Veritabanında Hedef Bulunamadı";
+                }
+            }
+        }
+    }
 }

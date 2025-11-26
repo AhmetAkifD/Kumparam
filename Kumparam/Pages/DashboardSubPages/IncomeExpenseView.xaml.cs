@@ -34,7 +34,10 @@ public partial class IncomeExpenseView : UserControl
     
     private void DescriptionTextBox_OnKeyDown(object sender, KeyEventArgs e)
     {
-        SaveButton_Click(sender, e);
+        if (e.Key == Key.Enter)
+        {
+            SaveButton_Click(sender, e);
+        }
     }
     
     private void SaveButton_Click(object sender, RoutedEventArgs e)

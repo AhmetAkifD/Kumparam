@@ -42,5 +42,11 @@
         void AddTransaction(Transaction transaction);
         List<Transaction> GetLastTransactions(Guid userId, int count);
         List<ExpenseStat> GetExpenseStats(Guid userId);
+        // IUserRepository.cs içine:
+        void AddGoal(Goal goal);
+        List<Goal> GetGoals(Guid userId);
+        void DeleteGoal(Guid goalId); // Silme özelliği de olsun
+        void UpdateGoalAmount(Guid goalId, decimal amount); // Para ekleme/çıkarma için
+        string? GetFirstGoalTitle(Guid userId);
     }
 }

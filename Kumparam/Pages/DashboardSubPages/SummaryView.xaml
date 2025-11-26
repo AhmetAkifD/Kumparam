@@ -125,10 +125,7 @@
                                    HorizontalAlignment="Center" VerticalAlignment="Center" 
                                    Opacity="0.5" Visibility="Collapsed"/>
 
-                        <lvc:PieChart x:Name="ExpensePieChart" 
-                                      LegendPosition="Bottom"
-                                      TooltipPosition="Top">
-                        </lvc:PieChart>
+                        <ContentControl x:Name="ChartContainer"></ContentControl>
                     </Grid>
                 </Grid>
             </materialDesign:Card>

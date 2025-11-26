@@ -45,6 +45,18 @@ public partial class DashboardWindow : Window
 
     private void GoalsButton_Click(object sender, RoutedEventArgs e)
     {
-        MainContentArea.Content = new GoalsView();
+        try
+        {
+            // Hata muhtemelen bu satır çalışırken (Constructor veya LoadGoals içinde) oluyor
+            MainContentArea.Content = new GoalsView(_currentUser.UserId);
+        }
+        catch (Exception ex)
+        {
+            // Uygulamayı kapatma, hatayı yüzümüze söyle!
+            MessageBox.Show($"HATA DETAYI:\n\n{ex.Message}\n\nKAYNAK:\n{ex.StackTrace}", 
+                "Hedefler Sayfası Açılmadı", 
+                MessageBoxButton.OK, 
+                MessageBoxImage.Error);
+        }
     }
 }
