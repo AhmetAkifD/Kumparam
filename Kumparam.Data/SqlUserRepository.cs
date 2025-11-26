@@ -301,7 +301,7 @@ namespace Kumparam.Data
             var list = new List<Goal>();
             using (var connection = new SqlConnection(_connectionString))
             {
-                // DÜZELTME 1: SELECT * yerine sütunları tek tek yazıyoruz.
+                // Tüm sütunları isimleriyle çağırıyoruz
                 var sql = @"SELECT GoalId, UserId, Title, TargetAmount, CurrentAmount, Deadline, Description 
                     FROM Goals 
                     WHERE UserId = @UserId 
@@ -311,22 +311,25 @@ namespace Kumparam.Data
                 {
                     cmd.Parameters.AddWithValue("@UserId", userId);
                     connection.Open();
+            
                     using (var reader = cmd.ExecuteReader())
                     {
                         while (reader.Read())
                         {
                             list.Add(new Goal
                             {
-                                // DÜZELTME 2: İndeks yerine sütun isimleriyle okuyoruz.
+                                // ID ve Başlık (Bunlar SQL'de NOT NULL olduğu için direkt alabiliriz)
                                 GoalId = (Guid)reader["GoalId"],
                                 UserId = (Guid)reader["UserId"],
-                                Title = (string)reader["Title"],
-                                TargetAmount = (decimal)reader["TargetAmount"],
-                                CurrentAmount = (decimal)reader["CurrentAmount"],
+                                Title = reader["Title"].ToString(),
+
+                                // Para Birimleri (Convert.ToDecimal kullanımı en güvenlisidir)
+                                TargetAmount = reader["TargetAmount"] != DBNull.Value ? Convert.ToDecimal(reader["TargetAmount"]) : 0,
+                                CurrentAmount = reader["CurrentAmount"] != DBNull.Value ? Convert.ToDecimal(reader["CurrentAmount"]) : 0,
                         
-                                // DÜZELTME 3: DBNull kontrolleri
+                                // Tarih ve Açıklama (NULL gelebilir, kontrol şart)
                                 Deadline = reader["Deadline"] == DBNull.Value ? null : (DateTime?)reader["Deadline"],
-                                Description = reader["Description"] == DBNull.Value ? null : (string)reader["Description"]
+                                Description = reader["Description"] == DBNull.Value ? null : reader["Description"].ToString()
                             });
                         }
                     }

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Configuration;
+using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using Kumparam.Core;
 using Kumparam.Data;
 
@@ -19,29 +21,72 @@ public partial class GoalsView : UserControl
         string connectionString = ConfigurationManager.ConnectionStrings["KumparamDB"].ConnectionString;
         _userRepository = new SqlUserRepository(connectionString);
 
-        // Testi Başlat
-        RunSimpleTest();
+        // Artık güvenli olan fonksiyonumuzu çağırıyoruz
+        LoadGoals();
     }
 
-    // Boş constructor (Hata vermemesi için)
     public GoalsView()
     {
         InitializeComponent();
     }
 
-    private void RunSimpleTest()
+    private void LoadGoals()
     {
         try
         {
-            // Basitçe tek bir string çekiyoruz
-            string title = _userRepository.GetFirstGoalTitle(_currentUserId);
-            
-            // Ekrana yazıyoruz
-            TestTitleText.Text = title;
+            // Bu metot artık SqlUserRepository içinde DÜZELTİLDİĞİ için hata vermeyecek
+            var goals = _userRepository.GetGoals(_currentUserId);
+            GoalsList.ItemsSource = goals;
         }
         catch (Exception ex)
         {
-            TestTitleText.Text = "HATA: " + ex.Message;
+            MessageBox.Show($"Hata: {ex.Message}");
         }
+    }
+
+    private void SaveGoal_Click(object sender, RoutedEventArgs e)
+    {
+        if (string.IsNullOrWhiteSpace(TitleTextBox.Text) || 
+            !decimal.TryParse(TargetAmountTextBox.Text, out decimal targetAmount))
+        {
+            MessageBox.Show("Başlık ve Tutar zorunludur.");
+            return;
+        }
+
+        decimal.TryParse(CurrentAmountTextBox.Text, out decimal currentAmount);
+
+        try
+        {
+            var newGoal = new Goal
+            {
+                UserId = _currentUserId,
+                Title = TitleTextBox.Text,
+                TargetAmount = targetAmount,
+                CurrentAmount = currentAmount,
+                Deadline = DeadlineDatePicker.SelectedDate,
+                Description = DescriptionTextBox.Text
+            };
+
+            _userRepository.AddGoal(newGoal);
+            MessageBox.Show("Hedef Kaydedildi! 🎯");
+            
+            // Formu Temizle
+            TitleTextBox.Clear();
+            TargetAmountTextBox.Clear();
+            CurrentAmountTextBox.Text = "0";
+            DescriptionTextBox.Clear();
+            DeadlineDatePicker.SelectedDate = null;
+
+            LoadGoals(); // Listeyi güncelle
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Kayıt Hatası: {ex.Message}");
+        }
+    }
+
+    private void DescriptionTextBox_OnKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter) SaveGoal_Click(sender, e);
     }
 }
