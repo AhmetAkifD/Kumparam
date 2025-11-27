@@ -1,0 +1,211 @@
+﻿<Window x:Class="Kumparam.Pages.DashboardWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        mc:Ignorable="d"
+        Title="Kumparam Dashboard" Height="720" Width="1280"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource MaterialDesignPaper}"
+        TextElement.Foreground="{DynamicResource MaterialDesignBody}"
+        Style="{StaticResource MaterialDesignWindow}">
+
+    <Window.Resources>
+        <!-- 
+        =================================================================
+        YEREL STİL TANIMLAMASI (Sadece Bu Pencere İçin)
+        =================================================================
+        Bu stil, sol menüdeki butonların ve ikonların rengini ZORLA Beyaz yapar.
+        -->
+        <Style x:Key="SidebarButtonStyle" TargetType="Button" BasedOn="{StaticResource MaterialDesignFlatButton}">
+            <Setter Property="Height" Value="50"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="Margin" Value="0,5"/>
+            <Setter Property="Foreground" Value="White"/>
+            <!-- Yazı rengi: BEYAZ -->
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="materialDesign:ButtonAssist.CornerRadius" Value="10"/>
+
+            <!-- Mouse üzerine gelince arka planı biraz açalım -->
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#1B5E20"/>
+                    <!-- Daha koyu yeşil -->
+                </Trigger>
+            </Style.Triggers>
+
+            <Style.Resources>
+                <!-- Butonun içindeki İKONLAR için özel stil -->
+                <Style TargetType="materialDesign:PackIcon">
+                    <Setter Property="Foreground" Value="White"/>
+                    <!-- İkon rengi: BEYAZ -->
+                    <Setter Property="Width" Value="24"/>
+                    <Setter Property="Height" Value="24"/>
+                    <Setter Property="Margin" Value="0,0,15,0"/>
+                    <Setter Property="VerticalAlignment" Value="Center"/>
+                </Style>
+                <!-- Butonun içindeki YAZILAR için özel stil -->
+                <Style TargetType="TextBlock">
+                    <Setter Property="Foreground" Value="White"/>
+                    <!-- Yazı rengi: BEYAZ -->
+                    <Setter Property="VerticalAlignment" Value="Center"/>
+                </Style>
+            </Style.Resources>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="250"/>
+            <!-- SOL MENÜ -->
+            <ColumnDefinition Width="*"/>
+            <!-- SAĞ TARAF -->
+        </Grid.ColumnDefinitions>
+
+        <!-- ============================================================== -->
+        <!-- SOL MENÜ (SIDEBAR) -->
+        <!-- ============================================================== -->
+        <!-- Arka plan rengini #2E7D32 (Koyu Yeşil) yaptık -->
+        <Border Grid.Column="0" Background="#2E7D32" CornerRadius="0,20,20,0">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="100"/>
+                    <!-- Logo Alanı -->
+                    <RowDefinition Height="*"/>
+                    <!-- Menü Butonları -->
+                    <RowDefinition Height="80"/>
+                    <!-- Çıkış Butonu -->
+                </Grid.RowDefinitions>
+
+                <!-- 1. Logo / Uygulama Adı -->
+                <StackPanel Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Center">
+                    <materialDesign:PackIcon Kind="Finance" Width="40" Height="40" HorizontalAlignment="Center" Foreground="White"/>
+                    <TextBlock Text="KUMPARAM" FontSize="20" FontWeight="Bold" Foreground="White" Margin="0,10,0,0" HorizontalAlignment="Center"/>
+                </StackPanel>
+
+                <!-- 2. Menü Butonları -->
+                <StackPanel Grid.Row="1" Margin="10,20">
+                    <!-- Hazırladığımız "SidebarButtonStyle" stilini kullanıyoruz -->
+
+                    <Button Style="{StaticResource SidebarButtonStyle}"
+                            Click="SummaryButton_Click">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="ViewDashboard"/>
+                            <TextBlock Text="Özet Durum"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Button Style="{StaticResource SidebarButtonStyle}"
+                            Click="IncomeExpenseButton_Click">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="BankTransfer"/>
+                            <TextBlock Text="Gelir &amp; Gider"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Button Style="{StaticResource SidebarButtonStyle}"
+                            Click="InvestmentsButton_Click">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="ChartLine"/>
+                            <TextBlock Text="Yatırımlar"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Button Style="{StaticResource SidebarButtonStyle}"
+                            Click="GoalsButton_Click">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Target"/>
+                            <TextBlock Text="Hedefler"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+
+                <!-- 3. Çıkış Butonu -->
+                <Button Grid.Row="2" Style="{StaticResource SidebarButtonStyle}" 
+                        Click="Logout_Button_Click" Foreground="#FFCDD2">
+                    <StackPanel Orientation="Horizontal">
+                        <!-- Çıkış butonunun ikon rengini manuel eziyoruz -->
+                        <materialDesign:PackIcon Kind="Logout" Foreground="#FFCDD2"/>
+                        <TextBlock Text="Çıkış Yap" Foreground="#FFCDD2"/>
+                    </StackPanel>
+                </Button>
+            </Grid>
+        </Border>
+
+        <!-- ============================================================== -->
+        <!-- SAĞ TARAF (ÜST BAR + İÇERİK) -->
+        <!-- ============================================================== -->
+        <Grid Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="70"/>
+                <!-- Üst Bar -->
+                <RowDefinition Height="*"/>
+                <!-- Ana İçerik -->
+            </Grid.RowDefinitions>
+
+            <!-- 1. ÜST BAR (TOP NAVBAR) -->
+            <Grid Grid.Row="0" Background="{DynamicResource MaterialDesignPaper}">
+                <!-- Sayfa Başlığı -->
+                <TextBlock Text="Gösterge Paneli" VerticalAlignment="Center" Margin="30,0,0,0" 
+                           FontSize="24" FontWeight="SemiBold" 
+                           Foreground="{DynamicResource MaterialDesignBody}"/>
+
+                <!-- Sağ Üst Köşe (Profil ve Bildirimler) -->
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,30,0">
+
+                    <!-- Bildirim Zili -->
+                    <materialDesign:Badged Badge="3" Margin="0,0,20,0">
+                        <Button Style="{StaticResource MaterialDesignIconForegroundButton}" ToolTip="Bildirimler">
+                            <materialDesign:PackIcon Kind="Bell" Width="24" Height="24"/>
+                        </Button>
+                    </materialDesign:Badged>
+
+                    <!-- Profil Bölümü -->
+                    <materialDesign:PopupBox PlacementMode="BottomAndAlignRightEdges" StaysOpen="False">
+                        <materialDesign:PopupBox.ToggleContent>
+                            <StackPanel Orientation="Horizontal" Cursor="Hand">
+                                <!-- Profil Resmi (Varsayılan İkon) -->
+                                <Ellipse Width="40" Height="40" Stroke="{DynamicResource PrimaryHueMidBrush}" StrokeThickness="2">
+                                    <Ellipse.Fill>
+                                        <SolidColorBrush Color="#EEEEEE"/>
+                                    </Ellipse.Fill>
+                                    <!-- Resim Yeri -->
+                                    <Ellipse.Resources>
+                                        <ImageBrush x:Key="ProfileImage" ImageSource="https://i.pravatar.cc/150?img=68"/>
+                                    </Ellipse.Resources>
+                                    <Ellipse.Style>
+                                        <Style TargetType="Ellipse">
+                                            <Setter Property="Fill" Value="{StaticResource ProfileImage}"/>
+                                        </Style>
+                                    </Ellipse.Style>
+                                </Ellipse>
+                                <!-- İsim -->
+                                <TextBlock x:Name="WelcomeText" Text="Kullanıcı" VerticalAlignment="Center" Margin="10,0,0,0" FontWeight="SemiBold"/>
+                                <materialDesign:PackIcon Kind="ChevronDown" VerticalAlignment="Center" Margin="5,0,0,0"/>
+                            </StackPanel>
+                        </materialDesign:PopupBox.ToggleContent>
+                        <!-- Profil Açılır Menüsü -->
+                        <StackPanel Width="150">
+                            <Button Content="Profilim"/>
+                            <Button Content="Ayarlar"/>
+                            <Separator/>
+                            <Button Content="Oturumu Kapat" Click="Logout_Button_Click"/>
+                        </StackPanel>
+                    </materialDesign:PopupBox>
+                </StackPanel>
+                <!-- Alt Çizgi -->
+                <Separator VerticalAlignment="Bottom" Background="{DynamicResource MaterialDesignDivider}"/>
+            </Grid>
+            <!-- 
+            ==============================================================
+            ANA İÇERİK ALANI (CONTENT AREA) - DÜZELTİLEN KISIM
+            ==============================================================
+            -->
+            <Grid Grid.Row="1" Background="{DynamicResource MaterialDesignBackground}">
+                <!-- Buraya ContentControl ekledik ve ismini verdik -->
+                <ContentControl x:Name="MainContentArea" />
+            </Grid>
+        </Grid>
+    </Grid>
+</Window>
