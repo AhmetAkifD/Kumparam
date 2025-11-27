@@ -11,29 +11,28 @@
 
     <Grid Margin="20">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="1.5*"/> <ColumnDefinition Width="2*"/>   </Grid.ColumnDefinitions>
+            <ColumnDefinition Width="1.5*"/>
+            <ColumnDefinition Width="2*"/>
+        </Grid.ColumnDefinitions>
 
         <materialDesign:Card Grid.Column="0" Style="{StaticResource DashboardCardStyle}" Margin="0,0,20,0" VerticalAlignment="Top">
             <StackPanel>
                 <TextBlock Text="Yeni Yatırım Ekle" Style="{StaticResource HeaderTextStyle}"/>
 
                 <ComboBox x:Name="InvestmentComboBox" 
-                          materialDesign:HintAssist.Hint="Yatırım Aracı Seçin"
+                          materialDesign:HintAssist.Hint="Yatırım Aracı"
                           Style="{StaticResource MaterialDesignOutlinedComboBox}" 
                           Margin="0,10"
                           SelectionChanged="InvestmentComboBox_SelectionChanged"/>
 
                 <TextBox x:Name="SymbolTextBox" 
-                         materialDesign:HintAssist.Hint="Sembol (Otomatik)" 
+                         materialDesign:HintAssist.Hint="Sembol" 
                          Style="{StaticResource MaterialDesignOutlinedTextBox}" 
                          Margin="0,10"
                          IsReadOnly="True" 
                          Background="#F0F0F0"/>
 
-                <TextBox x:Name="QuantityTextBox" materialDesign:HintAssist.Hint="Miktar / Adet" 
-                         Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,10"/>
-
-                <TextBox x:Name="BuyingPriceTextBox" materialDesign:HintAssist.Hint="Birim Alış Fiyatı (₺)" 
+                <TextBox x:Name="QuantityTextBox" materialDesign:HintAssist.Hint="Miktar" 
                          Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,10"/>
 
                 <DatePicker x:Name="PurchaseDatePicker" materialDesign:HintAssist.Hint="Alış Tarihi" 
@@ -52,41 +51,63 @@
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
                             <materialDesign:Card Margin="0,0,0,15" Padding="15">
+                                <materialDesign:Card.ToolTip>
+                                    <StackPanel>
+                                        <TextBlock Text="Birim Maliyet / Güncel Fiyat:"/>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="{Binding BuyingPrice, StringFormat='{}{0:N4} ₺'}" FontWeight="Bold"/>
+                                            <TextBlock Text=" / "/>
+                                            <TextBlock Text="{Binding CurrentPrice, StringFormat='{}{0:N4} ₺'}" FontWeight="Bold"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </materialDesign:Card.ToolTip>
+
                                 <Grid>
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/> <ColumnDefinition Width="*"/>    <ColumnDefinition Width="Auto"/> </Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/> 
+                                        <ColumnDefinition Width="*"/>    
+                                        <ColumnDefinition Width="Auto"/> 
+                                        <ColumnDefinition Width="Auto"/> 
+                                        <ColumnDefinition Width="Auto"/> 
+                                    </Grid.ColumnDefinitions>
 
-                                    <Viewbox Width="32" Height="32" Margin="0,0,15,0" VerticalAlignment="Center">
+                                    <Viewbox Grid.Column="0" Width="32" Height="32" Margin="0,0,15,0" VerticalAlignment="Center">
                                         <materialDesign:PackIcon Kind="ChartLine" Foreground="{DynamicResource PrimaryHueMidBrush}"/>
                                     </Viewbox>
 
                                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                         <TextBlock Text="{Binding Name}" FontWeight="Bold" FontSize="16"/>
-                                        
                                         <StackPanel Orientation="Horizontal" Opacity="0.7" Margin="0,5,0,0">
-                                            <TextBlock Text="{Binding Quantity, StringFormat='{}{0:N2} Adet'}" />
-                                            <TextBlock Text=" x " Margin="5,0"/>
-                                            <TextBlock Text="{Binding BuyingPrice, StringFormat='{}{0:N2} ₺'}"/>
-                                            <TextBlock Text=" (Maliyet)" FontSize="10" VerticalAlignment="Bottom" Margin="5,0,0,2"/>
-                                        </StackPanel>
-                                        
-                                        <TextBlock Text="{Binding Symbol}" FontSize="10" Opacity="0.5" Margin="0,2,0,0"/>
-                                    </StackPanel>
-
-                                    <StackPanel Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right">
-                                        <TextBlock Text="Toplam Değer" FontSize="10" Opacity="0.6" HorizontalAlignment="Right"/>
-                                        
-                                        <TextBlock Text="{Binding TotalCost, StringFormat='{}{0:N2} ₺'}" 
-                                                   FontWeight="Bold" FontSize="18" HorizontalAlignment="Right"/>
-
-                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,5,0,0">
-                                            <TextBlock Text="{Binding ProfitLossAmount, StringFormat='{}{0:N2} ₺'}" 
-                                                       Foreground="Gray" FontWeight="SemiBold"/>
-                                            
-                                            <TextBlock Text="{Binding ProfitLossPercentage, StringFormat=' (%{0:0.00})'}" 
-                                                       Foreground="Gray" FontSize="11" VerticalAlignment="Center"/>
+                                            <TextBlock Text="{Binding Quantity, StringFormat='{}{0:N2} Adet'}" FontWeight="SemiBold"/>
+                                            <TextBlock Text="{Binding Symbol}" Margin="10,0,0,0" Opacity="0.7"/>
                                         </StackPanel>
                                     </StackPanel>
+
+                                    <StackPanel Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,0,15,0">
+                                        <TextBlock Text="Güncel Değer" FontSize="10" Opacity="0.6" HorizontalAlignment="Right"/>
+                                        <TextBlock Text="{Binding CurrentTotalValue, StringFormat='{}{0:N2} ₺'}" 
+                                                   FontWeight="Bold" FontSize="18" HorizontalAlignment="Right" Foreground="#2E7D32"/>
+                                    </StackPanel>
+
+                                    <Button Grid.Column="3" 
+                                            Style="{StaticResource MaterialDesignIconForegroundButton}"
+                                            ToolTip="Bozdur / Sat"
+                                            Width="30" Height="30"
+                                            Margin="10,0,5,0"
+                                            Tag="{Binding}" 
+                                            Click="SellInvestment_Click">
+                                        <materialDesign:PackIcon Kind="HandCoin" Foreground="Green" />
+                                    </Button>
+
+                                    <Button Grid.Column="4" 
+                                            Style="{StaticResource MaterialDesignIconForegroundButton}"
+                                            ToolTip="Yatırımı Sil"
+                                            Width="30" Height="30"
+                                            Margin="5,0,0,0"
+                                            Tag="{Binding InvestmentId}"
+                                            Click="DeleteInvestment_Click">
+                                        <materialDesign:PackIcon Kind="Delete" Foreground="Red" />
+                                    </Button>
                                 </Grid>
                             </materialDesign:Card>
                         </DataTemplate>

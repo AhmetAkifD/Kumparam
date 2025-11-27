@@ -86,5 +86,15 @@ namespace Kumparam.Data.Services
                 _ => "" // Bilinmeyen sembol
             };
         }
+        // WebScrapingService.cs içine ekle:
+
+        public async Task<decimal> GetBuyingPriceAsync(string symbol)
+        {
+            // Şimdilik Satış fiyatı ile aynı mantığı kullanalım.
+            // İleride buraya "Alış" fiyatını çeken özel XPath yazılabilir.
+            // Örn: //div[contains(@text, 'Alış')]/span ...
+    
+            return await GetPriceAsync(symbol);
+        }
     }
 }

@@ -1,0 +1,24 @@
+﻿<Window x:Class="Kumparam.SimpleInputWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        Title="Miktar Girin" Height="200" Width="350"
+        WindowStartupLocation="CenterScreen" ResizeMode="NoResize"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent">
+    
+    <materialDesign:Card UniformCornerRadius="10" Padding="20" Margin="10">
+        <StackPanel>
+            <TextBlock Text="Satılacak Miktarı Girin:" FontWeight="Bold" Margin="0,0,0,10"/>
+            
+            <TextBox x:Name="InputTextBox" materialDesign:HintAssist.Hint="Örn: 50" 
+                     Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,20"/>
+            
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="İPTAL" Style="{StaticResource MaterialDesignFlatButton}" 
+                        IsCancel="True" Click="Cancel_Click"/>
+                <Button Content="ONAYLA" Style="{StaticResource MaterialDesignRaisedButton}" 
+                        IsDefault="True" Click="Ok_Click" Margin="10,0,0,0"/>
+            </StackPanel>
+        </StackPanel>
+    </materialDesign:Card>
+</Window>

@@ -416,8 +416,9 @@ namespace Kumparam.Data.Repositories
         {
             using (var connection = new SqlConnection(_connectionString))
             {
-                var sql = @"INSERT INTO Investments (UserId, Name, Symbol, Quantity, BuyingPrice, CurrentPrice, PurchaseDate) 
-                            VALUES (@UserId, @Name, @Symbol, @Quantity, @BuyingPrice, @CurrentPrice, @PurchaseDate)";
+                // CurrentPrice ÇIKARILDI
+                var sql = @"INSERT INTO Investments (UserId, Name, Symbol, Quantity, BuyingPrice, PurchaseDate) 
+                            VALUES (@UserId, @Name, @Symbol, @Quantity, @BuyingPrice, @PurchaseDate)";
 
                 using (var cmd = new SqlCommand(sql, connection))
                 {
@@ -426,7 +427,7 @@ namespace Kumparam.Data.Repositories
                     cmd.Parameters.AddWithValue("@Symbol", investment.Symbol ?? (object)DBNull.Value);
                     cmd.Parameters.AddWithValue("@Quantity", investment.Quantity);
                     cmd.Parameters.AddWithValue("@BuyingPrice", investment.BuyingPrice);
-                    cmd.Parameters.AddWithValue("@CurrentPrice", investment.CurrentPrice ?? (object)DBNull.Value);
+                    // CurrentPrice PARAMETRESİ SİLİNDİ
                     cmd.Parameters.AddWithValue("@PurchaseDate", investment.PurchaseDate);
 
                     connection.Open();
@@ -458,8 +459,12 @@ namespace Kumparam.Data.Repositories
                                 Symbol = reader["Symbol"] as string,
                                 Quantity = (decimal)reader["Quantity"],
                                 BuyingPrice = (decimal)reader["BuyingPrice"],
-                                CurrentPrice = reader["CurrentPrice"] == DBNull.Value ? null : (decimal?)reader["CurrentPrice"],
-                                PurchaseDate = (DateTime)reader["PurchaseDate"]
+                                PurchaseDate = (DateTime)reader["PurchaseDate"],
+                                
+                                // CurrentPrice ARTIK VERİTABANINDAN GELMİYOR!
+                                // Varsayılan olarak 0 veya BuyingPrice atayabiliriz,
+                                // ama asıl değer birazdan TCMB'den gelecek.
+                                CurrentPrice = (decimal)reader["BuyingPrice"] 
                             });
                         }
                     }
@@ -475,6 +480,20 @@ namespace Kumparam.Data.Repositories
                 var sql = "DELETE FROM Investments WHERE InvestmentId = @InvestmentId";
                 using (var cmd = new SqlCommand(sql, connection))
                 {
+                    cmd.Parameters.AddWithValue("@InvestmentId", investmentId);
+                    connection.Open();
+                    cmd.ExecuteNonQuery();
+                }
+            }
+        }
+        public void UpdateInvestmentQuantity(Guid investmentId, decimal newQuantity)
+        {
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                var sql = "UPDATE Investments SET Quantity = @Quantity WHERE InvestmentId = @InvestmentId";
+                using (var cmd = new SqlCommand(sql, connection))
+                {
+                    cmd.Parameters.AddWithValue("@Quantity", newQuantity);
                     cmd.Parameters.AddWithValue("@InvestmentId", investmentId);
                     connection.Open();
                     cmd.ExecuteNonQuery();

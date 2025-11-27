@@ -12,15 +12,10 @@
     
     <Grid Margin="20">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/> <!-- Başlık -->
-            <RowDefinition Height="Auto"/> <!-- Kartlar -->
-            <RowDefinition Height="*"/>    <!-- Alt Bölüm (Tablo ve Grafik) -->
-        </Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/> <RowDefinition Height="Auto"/> <RowDefinition Height="*"/>    </Grid.RowDefinitions>
 
-        <!-- 1. BAŞLIK -->
         <TextBlock Text="Finansal Özet" Style="{StaticResource HeaderTextStyle}"/>
 
-        <!-- 2. BİLGİ KARTLARI (INFO CARDS) -->
         <Grid Grid.Row="1" Margin="0,10,0,20">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
@@ -29,67 +24,54 @@
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
-            <!-- Kart 1: Toplam Bakiye -->
             <materialDesign:Card Grid.Column="0" Style="{StaticResource DashboardCardStyle}" Margin="0,0,10,0">
                 <StackPanel>
                     <DockPanel LastChildFill="False">
                         <materialDesign:PackIcon Kind="Wallet" Width="24" Height="24" Foreground="{DynamicResource PrimaryHueMidBrush}" DockPanel.Dock="Left"/>
                         <TextBlock Text="Toplam Bakiye" VerticalAlignment="Center" Margin="10,0,0,0" Opacity="0.6" FontWeight="SemiBold"/>
                     </DockPanel>
-                    <!-- x:Name Verdik: TotalBalanceText -->
                     <TextBlock x:Name="TotalBalanceText" Text="₺ 0.00" FontSize="24" FontWeight="Bold" Margin="0,10,0,0" Foreground="#2E7D32"/>
-                    <TextBlock Text="Güncel durum" FontSize="11" Foreground="Green" Margin="0,5,0,0"/>
                 </StackPanel>
             </materialDesign:Card>
 
-            <!-- Kart 2: Bu Ay Gelir -->
             <materialDesign:Card Grid.Column="1" Style="{StaticResource DashboardCardStyle}" Margin="10,0">
                 <StackPanel>
                     <DockPanel LastChildFill="False">
                         <materialDesign:PackIcon Kind="ArrowUpBoldCircle" Width="24" Height="24" Foreground="Green" DockPanel.Dock="Left"/>
                         <TextBlock Text="Bu Ay Gelir" VerticalAlignment="Center" Margin="10,0,0,0" Opacity="0.6" FontWeight="SemiBold"/>
                     </DockPanel>
-                    <!-- x:Name Verdik: MonthlyIncomeText -->
                     <TextBlock x:Name="MonthlyIncomeText" Text="₺ 0.00" FontSize="24" FontWeight="Bold" Margin="0,10,0,0"/>
-                    <TextBlock Text="Toplam giriş" FontSize="11" Opacity="0.5" Margin="0,5,0,0"/>
                 </StackPanel>
             </materialDesign:Card>
 
-            <!-- Kart 3: Bu Ay Gider -->
             <materialDesign:Card Grid.Column="2" Style="{StaticResource DashboardCardStyle}" Margin="10,0">
                 <StackPanel>
                     <DockPanel LastChildFill="False">
                         <materialDesign:PackIcon Kind="ArrowDownBoldCircle" Width="24" Height="24" Foreground="Red" DockPanel.Dock="Left"/>
                         <TextBlock Text="Bu Ay Gider" VerticalAlignment="Center" Margin="10,0,0,0" Opacity="0.6" FontWeight="SemiBold"/>
                     </DockPanel>
-                    <!-- x:Name Verdik: MonthlyExpenseText -->
                     <TextBlock x:Name="MonthlyExpenseText" Text="₺ 0.00" FontSize="24" FontWeight="Bold" Margin="0,10,0,0"/>
-                    <TextBlock Text="Toplam çıkış" FontSize="11" Opacity="0.5" Margin="0,5,0,0"/>
                 </StackPanel>
             </materialDesign:Card>
 
-            <!-- Kart 4: Tasarruf Hedefi (İleride dinamik olacak) -->
             <materialDesign:Card Grid.Column="3" Style="{StaticResource DashboardCardStyle}" Margin="10,0,0,0">
                 <StackPanel>
                     <DockPanel LastChildFill="False">
                         <materialDesign:PackIcon Kind="Target" Width="24" Height="24" Foreground="Orange" DockPanel.Dock="Left"/>
                         <TextBlock Text="Hedef İlerlemesi" VerticalAlignment="Center" Margin="10,0,0,0" Opacity="0.6" FontWeight="SemiBold"/>
                     </DockPanel>
-                    <!-- x:Name Verdik: SavingsProgressBar ve SavingsText -->
                     <ProgressBar x:Name="SavingsProgressBar" Value="0" Height="10" Margin="0,15,0,5" Foreground="Orange" Background="#EEE"/>
                     <TextBlock x:Name="SavingsText" Text="%0 Tamamlandı" FontSize="11" Opacity="0.5" HorizontalAlignment="Right"/>
                 </StackPanel>
             </materialDesign:Card>
         </Grid>
 
-        <!-- 3. ALT BÖLÜM (LİSTE VE GRAFİK ALANI) -->
         <Grid Grid.Row="2">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="2*"/> <!-- Sol (Geniş) -->
-                <ColumnDefinition Width="1*"/> <!-- Sağ (Dar) -->
+                <ColumnDefinition Width="2*"/>
+                <ColumnDefinition Width="1*"/>
             </Grid.ColumnDefinitions>
 
-            <!-- Sol: Son İşlemler Listesi -->
             <materialDesign:Card Grid.Column="0" Style="{StaticResource DashboardCardStyle}" Margin="0,0,10,0">
                 <Grid>
                     <Grid.RowDefinitions>
@@ -97,20 +79,64 @@
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
                     
-                    <!-- Liste Başlığı -->
                     <DockPanel LastChildFill="False" Margin="0,0,0,10">
                         <TextBlock Text="Son İşlemler" Style="{StaticResource HeaderTextStyle}" Margin="0"/>
                         <Button Content="Tümünü Gör" Style="{StaticResource MaterialDesignFlatButton}" Height="Auto" Padding="10,5" DockPanel.Dock="Right"/>
                     </DockPanel>
 
-                    <!-- Buraya ileride DataGrid veya ItemsControl gelecek. Şimdilik placeholder. -->
-                    <StackPanel Grid.Row="1">
-                        <TextBlock Text="Henüz işlem yok." Opacity="0.5" HorizontalAlignment="Center" Margin="20"/>
-                    </StackPanel>
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                        <ItemsControl x:Name="TransactionsList">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border BorderBrush="#EEE" BorderThickness="0,0,0,1" Padding="5,10">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/> <ColumnDefinition Width="*"/>    <ColumnDefinition Width="Auto"/> </Grid.ColumnDefinitions>
+
+                                            <materialDesign:PackIcon Grid.Column="0" Width="24" Height="24" VerticalAlignment="Center" Margin="0,0,10,0">
+                                                <materialDesign:PackIcon.Style>
+                                                    <Style TargetType="materialDesign:PackIcon">
+                                                        <Setter Property="Kind" Value="ArrowDownBoldCircle"/>
+                                                        <Setter Property="Foreground" Value="Red"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Type}" Value="Income">
+                                                                <Setter Property="Kind" Value="ArrowUpBoldCircle"/>
+                                                                <Setter Property="Foreground" Value="Green"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </materialDesign:PackIcon.Style>
+                                            </materialDesign:PackIcon>
+
+                                            <StackPanel Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Left">
+                                                <TextBlock Text="{Binding Category}" FontWeight="SemiBold"/>
+                                                <TextBlock Text="{Binding Description}" FontSize="11" Opacity="0.6" 
+                                                           TextTrimming="CharacterEllipsis" MaxWidth="300"/>
+                                            </StackPanel>
+
+                                            <TextBlock Grid.Column="2" FontWeight="Bold" VerticalAlignment="Center">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Text" Value="{Binding Amount, StringFormat='-₺ {0:N2}'}"/>
+                                                        <Setter Property="Foreground" Value="Red"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Type}" Value="Income">
+                                                                <Setter Property="Text" Value="{Binding Amount, StringFormat='+₺ {0:N2}'}"/>
+                                                                <Setter Property="Foreground" Value="Green"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
                 </Grid>
             </materialDesign:Card>
 
-            <!-- Sağ: Grafik Alanı (Placeholder) -->
             <materialDesign:Card Grid.Column="1" Style="{StaticResource DashboardCardStyle}" Margin="10,0,0,0">
                 <Grid>
                     <Grid.RowDefinitions>
@@ -125,11 +151,11 @@
                                    HorizontalAlignment="Center" VerticalAlignment="Center" 
                                    Opacity="0.5" Visibility="Collapsed"/>
 
-                        <ContentControl x:Name="ChartContainer"></ContentControl>
+                        <ContentControl x:Name="ChartContainer" Height="300" 
+                                        VerticalAlignment="Stretch" HorizontalAlignment="Stretch"/>
                     </Grid>
                 </Grid>
             </materialDesign:Card>
-
         </Grid>
     </Grid>
 </UserControl>

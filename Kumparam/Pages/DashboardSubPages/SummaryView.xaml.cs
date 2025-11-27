@@ -53,7 +53,19 @@ public partial class SummaryView : UserControl
             SavingsText.Text = $"%{summary.SavingsGoalProgress:0} Tamamlandı";
         }
         
-        // Grafiği yükle
+        try
+        {
+            // Son 5 işlemi getir
+            var transactions = _userRepository.GetLastTransactions(_currentUserId, 5);
+            TransactionsList.ItemsSource = transactions;
+        }
+        catch
+        {
+            // Hata olursa listeyi boş bırak (Uygulama patlamasın)
+            TransactionsList.ItemsSource = null;
+        }
+
+        // 4. Grafiği Yükle
         LoadChart();
     }
 

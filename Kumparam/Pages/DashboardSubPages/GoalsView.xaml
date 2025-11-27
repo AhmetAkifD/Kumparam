@@ -17,7 +17,7 @@
             <StackPanel>
                 <TextBlock Text="Yeni Hedef Oluştur" Style="{StaticResource HeaderTextStyle}"/>
 
-                <TextBox x:Name="TitleTextBox" materialDesign:HintAssist.Hint="Hedef Başlığı (Örn: Araba)" 
+                <TextBox x:Name="TitleTextBox" materialDesign:HintAssist.Hint="Hedef Başlığı" 
                          Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,10"/>
 
                 <TextBox x:Name="TargetAmountTextBox" materialDesign:HintAssist.Hint="Hedeflenen Tutar (₺)" 
@@ -26,7 +26,7 @@
                 <TextBox x:Name="CurrentAmountTextBox" materialDesign:HintAssist.Hint="Şu Anki Birikim (Varsa)" 
                          Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,10" Text="0"/>
 
-                <DatePicker x:Name="DeadlineDatePicker" materialDesign:HintAssist.Hint="Hedef Tarihi (Opsiyonel)" 
+                <DatePicker x:Name="DeadlineDatePicker" materialDesign:HintAssist.Hint="Hedef Tarih (Opsiyonel)" 
                             Style="{StaticResource MaterialDesignOutlinedDatePicker}" Margin="0,10"/>
 
                 <TextBox x:Name="DescriptionTextBox" materialDesign:HintAssist.Hint="Açıklama / Notlar" 
