@@ -18,34 +18,34 @@ namespace Kumparam.Data.Services
             _httpClient = new HttpClient();
         }
 
+        // Alım İşlemi İçin (Bankanın Satış Kuru)
         public async Task<decimal> GetPriceAsync(string symbol)
         {
-            // Sadece USD ve EUR destekliyoruz
-            if (symbol != "USD" && symbol != "EUR") return 0;
-
+            // Kısıtlamayı kaldırdık! Artık TCMB'de olan her şeyi çeker.
+            // Altın ve kripto gibi TCMB'de olmayanlar zaten XML'de bulunamayacağı için 0 döner.
+            
             try
             {
-                var xmlStream = await _httpClient.GetStreamAsync(TcmbUrl);
-                var xDoc = XDocument.Load(xmlStream);
-
-                var currencyNode = xDoc.Descendants("Currency")
-                    .FirstOrDefault(x => x.Attribute("CurrencyCode")?.Value == symbol);
-
-                if (currencyNode != null)
+                using (var stream = await _httpClient.GetStreamAsync(TcmbUrl))
                 {
-                    // DÜZELTME BURADA: "ForexBuying" yerine "ForexSelling" (Satış Kuru)
-                    string priceText = currencyNode.Element("ForexSelling")?.Value;
-                    
-                    // Eğer ForexSelling boşsa (bazen olabilir), BanknoteSelling'i dene
-                    if (string.IsNullOrEmpty(priceText))
-                    {
-                        priceText = currencyNode.Element("BanknoteSelling")?.Value;
-                    }
+                    var xDoc = XDocument.Load(stream);
 
-                    if (!string.IsNullOrEmpty(priceText) && 
-                        decimal.TryParse(priceText, NumberStyles.Any, CultureInfo.InvariantCulture, out decimal price))
+                    var currencyNode = xDoc.Descendants("Currency")
+                        .FirstOrDefault(x => x.Attribute("CurrencyCode")?.Value == symbol);
+
+                    if (currencyNode != null)
                     {
-                        return price;
+                        // Biz alırken banka satar -> ForexSelling
+                        string priceText = currencyNode.Element("ForexSelling")?.Value;
+                        
+                        if (string.IsNullOrEmpty(priceText))
+                            priceText = currencyNode.Element("BanknoteSelling")?.Value;
+
+                        if (!string.IsNullOrEmpty(priceText) && 
+                            decimal.TryParse(priceText, NumberStyles.Any, CultureInfo.InvariantCulture, out decimal price))
+                        {
+                            return price;
+                        }
                     }
                 }
             }
@@ -56,25 +56,24 @@ namespace Kumparam.Data.Services
 
             return 0;
         }
-        // TcmbDataService.cs içine ekle:
 
+        // Satış İşlemi İçin (Bankanın Alış Kuru)
         public async Task<decimal> GetBuyingPriceAsync(string symbol)
         {
-            if (symbol != "USD" && symbol != "EUR" && symbol != "GBP") return 0;
-
+             // Kısıtlamayı kaldırdık!
+            
             try
             {
-                // XML mantığı aynı, sadece çektiğimiz alan farklı
-                using (var client = new HttpClient())
+                using (var stream = await _httpClient.GetStreamAsync(TcmbUrl))
                 {
-                    var xmlStream = await client.GetStreamAsync("https://www.tcmb.gov.tr/kurlar/today.xml");
-                    var xDoc = XDocument.Load(xmlStream);
+                    var xDoc = XDocument.Load(stream);
 
-                    var currencyNode = System.Linq.Enumerable.FirstOrDefault(xDoc.Descendants("Currency"), x => x.Attribute("CurrencyCode")?.Value == symbol);
+                    var currencyNode = xDoc.Descendants("Currency")
+                        .FirstOrDefault(x => x.Attribute("CurrencyCode")?.Value == symbol);
 
                     if (currencyNode != null)
                     {
-                        // BURASI FARKLI: "ForexBuying" (Alış Kuru) çekiyoruz
+                        // Biz satarken banka alır -> ForexBuying
                         string priceText = currencyNode.Element("ForexBuying")?.Value;
                 
                         if (string.IsNullOrEmpty(priceText))

@@ -145,6 +145,7 @@ public partial class InvestmentsView : UserControl
 
     private async void SaveInvestment_Click(object sender, RoutedEventArgs e)
     {
+        // 1. Temel Validasyonlar (Boş mu, sayı mı?)
         if (InvestmentComboBox.SelectedItem == null || string.IsNullOrWhiteSpace(QuantityTextBox.Text))
         {
             MessageBox.Show("Lütfen yatırım türünü ve miktarını seçin.");
@@ -161,20 +162,50 @@ public partial class InvestmentsView : UserControl
         {
             var selectedOption = (InvestmentOption)InvestmentComboBox.SelectedItem;
 
-            // YENİ: Akıllı fiyat çekiciyi kullan (Maliyet için)
+            // 2. Fiyatı Öğren (İnternetten Çek)
             decimal costPrice = 0;
             if (!string.IsNullOrEmpty(selectedOption.Symbol))
             {
                 costPrice = await GetSmartPriceAsync(selectedOption.Symbol);
             }
 
+            // Fiyat çekilemediyse manuel sor
             if (costPrice == 0)
             {
-                // Eğer çekilemezse (internet yoksa veya borsa kapalıysa) uyar ama kayda izin ver
-                // Şimdilik kullanıcıyı bilgilendirelim
-                MessageBox.Show("Güncel fiyat çekilemedi, maliyet 0 olarak kaydedilecek. Daha sonra manuel düzenleyebilirsiniz.");
+                var inputDialog = new SimpleInputWindow("Fiyat çekilemedi. Alış Fiyatını Girin:");
+                if (inputDialog.ShowDialog() == true)
+                {
+                    if (!decimal.TryParse(inputDialog.ResultText, out costPrice) || costPrice <= 0)
+                    {
+                        MessageBox.Show("Geçersiz fiyat. İşlem iptal.");
+                        return;
+                    }
+                }
+                else
+                {
+                    return; // İptal edildi
+                }
             }
 
+            // 3. BAKİYE KONTROLÜ (İşte Burası!) 🛑
+            // İşlem ne kadar tutacak?
+            decimal totalAmount = quantity * costPrice;
+
+            // Cebimizde ne kadar var?
+            var summary = _userRepository.GetFinancialSummary(_currentUserId);
+            decimal currentBalance = summary.TotalBalance;
+
+            if (totalAmount > currentBalance)
+            {
+                MessageBox.Show($"Yetersiz Bakiye!\n\n" +
+                                $"Mevcut Bakiye: {currentBalance:N2} ₺\n" +
+                                $"İşlem Tutarı: {totalAmount:N2} ₺\n" +
+                                $"Eksik: {totalAmount - currentBalance:N2} ₺", 
+                                "İşlem Başarısız", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return; // <--- İşlemi burada kesiyoruz, veritabanına gitmiyor.
+            }
+
+            // 4. Her Şey Yolundaysa Kaydet (Varlık Ekle)
             var newInvestment = new Investment
             {
                 UserId = _currentUserId,
@@ -187,8 +218,7 @@ public partial class InvestmentsView : UserControl
 
             _userRepository.AddInvestment(newInvestment);
 
-            // Gider Fişi Kes
-            decimal totalAmount = quantity * costPrice;
+            // 5. Gider Fişi Kes (Bakiyeden Düş)
             var newTransaction = new Transaction
             {
                 UserId = _currentUserId,
@@ -200,7 +230,7 @@ public partial class InvestmentsView : UserControl
             };
             _userRepository.AddTransaction(newTransaction);
 
-            MessageBox.Show($"Yatırım Eklendi! (Maliyet Kuru: {costPrice:N4} ₺)");
+            MessageBox.Show($"Yatırım Eklendi! (Kur: {costPrice:N4} ₺)");
 
             // Temizlik
             InvestmentComboBox.SelectedIndex = -1;
