@@ -60,7 +60,7 @@ namespace Kumparam.Data.Services
 
         public async Task<decimal> GetBuyingPriceAsync(string symbol)
         {
-            if (symbol != "USD" && symbol != "EUR") return 0;
+            if (symbol != "USD" && symbol != "EUR" && symbol != "GBP") return 0;
 
             try
             {

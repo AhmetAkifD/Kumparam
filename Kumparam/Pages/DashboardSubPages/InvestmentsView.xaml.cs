@@ -4,7 +4,8 @@ using System.Configuration;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using Kumparam.Core;
+using System.Linq;
+using Kumparam.Core; // LINQ (FirstOrDefault) için gerekli
 using Kumparam.Core.Models;
 using Kumparam.Core.Interfaces;
 using Kumparam.Data.Repositories;
@@ -23,29 +24,54 @@ public partial class InvestmentsView : UserControl
 {
     private readonly IUserRepository _userRepository;
     private readonly Guid _currentUserId;
-    private readonly IFinancialDataService _priceService;
+    
+    // İki servisi de ayrı ayrı tutuyoruz
+    private readonly IFinancialDataService _tcmbService;
+    private readonly IFinancialDataService _scrapingService;
 
+    // GENİŞLETİLMİŞ LİSTE
     private readonly List<InvestmentOption> _supportedInvestments = new List<InvestmentOption>
     {
+        // Dövizler (TCMB)
         new InvestmentOption { Name = "Amerikan Doları", Symbol = "USD", Type = "Döviz" },
-        new InvestmentOption { Name = "Euro", Symbol = "EUR", Type = "Döviz" }
+        new InvestmentOption { Name = "Euro", Symbol = "EUR", Type = "Döviz" },
+        new InvestmentOption { Name = "İngiliz Sterlini", Symbol = "GBP", Type = "Döviz" },
+
+        // Altınlar (Scraping)
+        new InvestmentOption { Name = "Gram Altın", Symbol = "GLD", Type = "Altın" },
+        new InvestmentOption { Name = "Çeyrek Altın", Symbol = "QGLD", Type = "Altın" },
+
+        // Hisseler (Scraping - BIST)
+        new InvestmentOption { Name = "THY (Hisse)", Symbol = "THYAO", Type = "Borsa" },
+        new InvestmentOption { Name = "Aselsan (Hisse)", Symbol = "ASELS", Type = "Borsa" },
+        new InvestmentOption { Name = "Garanti (Hisse)", Symbol = "GARAN", Type = "Borsa" },
+        new InvestmentOption { Name = "Şişecam (Hisse)", Symbol = "SISE", Type = "Borsa" },
+        new InvestmentOption { Name = "Koç Holding (Hisse)", Symbol = "KCHOL", Type = "Borsa" },
+
+        // Kripto (Scraping)
+        new InvestmentOption { Name = "Bitcoin", Symbol = "BTC", Type = "Kripto" },
+        new InvestmentOption { Name = "Ethereum", Symbol = "ETH", Type = "Kripto" }
     };
 
     public InvestmentsView(Guid userId)
     {
         InitializeComponent();
         _currentUserId = userId;
-        
-        _priceService = new TcmbDataService();
+
+        // 1. İki servisi de başlat
+        _tcmbService = new TcmbDataService();
+        _scrapingService = new WebScrapingService();
 
         string connectionString = ConfigurationManager.ConnectionStrings["KumparamDB"].ConnectionString;
         _userRepository = new SqlUserRepository(connectionString);
 
+        // 2. Arayüzü Doldur
         InvestmentComboBox.ItemsSource = _supportedInvestments;
         InvestmentComboBox.DisplayMemberPath = "Name"; 
         InvestmentComboBox.SelectedValuePath = "Symbol";
         PurchaseDatePicker.SelectedDate = DateTime.Now;
 
+        // 3. Verileri Yükle
         _ = LoadInvestmentsAsync();
     }
 
@@ -54,30 +80,52 @@ public partial class InvestmentsView : UserControl
         InitializeComponent();
     }
 
+    // YARDIMCI METOT: Hangi servisi kullanacağına karar verir
+    private async Task<decimal> GetSmartPriceAsync(string symbol, bool isBuyingFromBank = false)
+    {
+        // Listeden bu sembolün türünü bulalım (Döviz mi, Altın mı?)
+        var option = _supportedInvestments.FirstOrDefault(x => x.Symbol == symbol);
+        string type = option?.Type ?? "Diğer";
+
+        IFinancialDataService activeService;
+
+        // Eğer Döviz ise TCMB, değilse Scraping kullan
+        if (type == "Döviz")
+        {
+            activeService = _tcmbService;
+        }
+        else
+        {
+            activeService = _scrapingService;
+        }
+
+        // Alış veya Satış fiyatını iste
+        if (isBuyingFromBank)
+            return await activeService.GetBuyingPriceAsync(symbol);
+        else
+            return await activeService.GetPriceAsync(symbol);
+    }
+
     private async Task LoadInvestmentsAsync()
     {
         try
         {
-            // 1. Veritabanından sadece maliyet bilgilerini çek
             var investments = _userRepository.GetInvestments(_currentUserId);
 
-            // 2. RAM üzerindeki nesnelerin Fiyatını internetten güncelle
             foreach (var investment in investments)
             {
                 if (!string.IsNullOrEmpty(investment.Symbol))
                 {
-                    // TCMB'ye sor: "USD ne kadar?"
-                    decimal livePrice = await _priceService.GetPriceAsync(investment.Symbol);
+                    // YENİ: Akıllı fiyat çekiciyi kullan
+                    decimal livePrice = await GetSmartPriceAsync(investment.Symbol);
                     
                     if (livePrice > 0)
                     {
-                        // Veritabanına yazmıyoruz, sadece ekranda göstermek için nesneyi güncelliyoruz
                         investment.CurrentPrice = livePrice;
                     }
                 }
             }
 
-            // 3. Listeyi yenile (Kâr/Zarar otomatik hesaplanmış olacak)
             InvestmentsList.ItemsSource = null;
             InvestmentsList.ItemsSource = investments;
         }
@@ -97,7 +145,6 @@ public partial class InvestmentsView : UserControl
 
     private async void SaveInvestment_Click(object sender, RoutedEventArgs e)
     {
-        // Validasyonlar
         if (InvestmentComboBox.SelectedItem == null || string.IsNullOrWhiteSpace(QuantityTextBox.Text))
         {
             MessageBox.Show("Lütfen yatırım türünü ve miktarını seçin.");
@@ -114,20 +161,20 @@ public partial class InvestmentsView : UserControl
         {
             var selectedOption = (InvestmentOption)InvestmentComboBox.SelectedItem;
 
-            // 1. Güncel Kuru Çek (Maliyet Hesabı İçin)
+            // YENİ: Akıllı fiyat çekiciyi kullan (Maliyet için)
             decimal costPrice = 0;
             if (!string.IsNullOrEmpty(selectedOption.Symbol))
             {
-                costPrice = await _priceService.GetPriceAsync(selectedOption.Symbol);
+                costPrice = await GetSmartPriceAsync(selectedOption.Symbol);
             }
 
             if (costPrice == 0)
             {
-                MessageBox.Show("Güncel kur çekilemedi. İnternet bağlantınızı kontrol edin.");
-                return; 
+                // Eğer çekilemezse (internet yoksa veya borsa kapalıysa) uyar ama kayda izin ver
+                // Şimdilik kullanıcıyı bilgilendirelim
+                MessageBox.Show("Güncel fiyat çekilemedi, maliyet 0 olarak kaydedilecek. Daha sonra manuel düzenleyebilirsiniz.");
             }
 
-            // 2. Yatırımı Oluştur ve Kaydet (Varlık Ekleme)
             var newInvestment = new Investment
             {
                 UserId = _currentUserId,
@@ -140,27 +187,20 @@ public partial class InvestmentsView : UserControl
 
             _userRepository.AddInvestment(newInvestment);
 
-            // --- YENİ KISIM BAŞLANGICI ---
-            
-            // 3. İşlem Kaydı Oluştur ve Kaydet (Bakiyeden Düşme - Gider)
-            // Toplam Tutar = Miktar * Birim Fiyat
+            // Gider Fişi Kes
             decimal totalAmount = quantity * costPrice;
-
             var newTransaction = new Transaction
             {
                 UserId = _currentUserId,
                 Amount = totalAmount,
-                Type = "Expense", // Gider olarak düşüyoruz
+                Type = "Expense",
                 Category = "Yatırım",
                 Description = $"{selectedOption.Name} Alımı ({quantity:N2} Adet x {costPrice:N2})",
                 TransactionDate = newInvestment.PurchaseDate
             };
-
             _userRepository.AddTransaction(newTransaction);
 
-            // --- YENİ KISIM BİTİŞİ ---
-
-            MessageBox.Show($"Yatırım Eklendi ve {totalAmount:N2} ₺ bakiyeden düşüldü!");
+            MessageBox.Show($"Yatırım Eklendi! (Maliyet Kuru: {costPrice:N4} ₺)");
 
             // Temizlik
             InvestmentComboBox.SelectedIndex = -1;
@@ -199,79 +239,69 @@ public partial class InvestmentsView : UserControl
             }
         }
     }
+
     private async void SellInvestment_Click(object sender, RoutedEventArgs e)
-{
-    if (sender is Button btn && btn.Tag is Investment investment)
     {
-        // 1. Miktar Sor
-        var inputDialog = new SimpleInputWindow();
-        if (inputDialog.ShowDialog() == true)
+        if (sender is Button btn && btn.Tag is Investment investment)
         {
-            if (decimal.TryParse(inputDialog.ResultText, out decimal sellAmount) && sellAmount > 0)
+            var inputDialog = new SimpleInputWindow();
+            if (inputDialog.ShowDialog() == true)
             {
-                // 2. Miktar Kontrolü
-                if (sellAmount > investment.Quantity)
+                if (decimal.TryParse(inputDialog.ResultText, out decimal sellAmount) && sellAmount > 0)
                 {
-                    MessageBox.Show("Sahip olduğunuzdan fazlasını satamazsınız!");
-                    return;
-                }
-
-                try
-                {
-                    // 3. Güncel Alış Kurunu Çek (Biz satıyoruz, banka alıyor -> BuyingRate)
-                    decimal currentRate = await _priceService.GetBuyingPriceAsync(investment.Symbol);
-                    
-                    if (currentRate == 0) 
+                    if (sellAmount > investment.Quantity)
                     {
-                        // Eğer kur çekilemezse varsayılan olarak o anki görünen fiyatı veya manuel girişi kullanabiliriz
-                        // Şimdilik uyarı verelim
-                        MessageBox.Show("Güncel satış kuru çekilemedi.");
-                        return; 
+                        MessageBox.Show("Sahip olduğunuzdan fazlasını satamazsınız!");
+                        return;
                     }
 
-                    // 4. Gelir Hesapla
-                    decimal incomeTotal = sellAmount * currentRate;
-
-                    // 5. Veritabanı Güncellemeleri
-                    
-                    // A) Miktarı Azalt veya Sil
-                    decimal newQuantity = investment.Quantity - sellAmount;
-                    if (newQuantity == 0)
+                    try
                     {
-                        _userRepository.DeleteInvestment(investment.InvestmentId);
+                        // YENİ: Akıllı fiyat çekiciyi kullan (Satış için - Bankadan Alış Kuru)
+                        decimal currentRate = await GetSmartPriceAsync(investment.Symbol, isBuyingFromBank: true);
+                        
+                        if (currentRate == 0) 
+                        {
+                            MessageBox.Show("Güncel satış kuru çekilemedi.");
+                            return; 
+                        }
+
+                        decimal incomeTotal = sellAmount * currentRate;
+
+                        decimal newQuantity = investment.Quantity - sellAmount;
+                        if (newQuantity == 0)
+                        {
+                            _userRepository.DeleteInvestment(investment.InvestmentId);
+                        }
+                        else
+                        {
+                            _userRepository.UpdateInvestmentQuantity(investment.InvestmentId, newQuantity);
+                        }
+
+                        var newTransaction = new Transaction
+                        {
+                            UserId = _currentUserId,
+                            Amount = incomeTotal,
+                            Type = "Income",
+                            Category = "Yatırım Satışı",
+                            Description = $"{investment.Name} Satışı ({sellAmount:N2} Adet x {currentRate:N4})",
+                            TransactionDate = DateTime.Now
+                        };
+                        _userRepository.AddTransaction(newTransaction);
+
+                        MessageBox.Show($"Satış Başarılı! {incomeTotal:N2} ₺ hesabınıza eklendi.");
+                        _ = LoadInvestmentsAsync();
                     }
-                    else
+                    catch (Exception ex)
                     {
-                        _userRepository.UpdateInvestmentQuantity(investment.InvestmentId, newQuantity);
+                        MessageBox.Show($"Satış hatası: {ex.Message}");
                     }
-
-                    // B) Gelir Fişi Kes (Transaction - Income)
-                    var newTransaction = new Transaction
-                    {
-                        UserId = _currentUserId,
-                        Amount = incomeTotal,
-                        Type = "Income", // Gelir olarak ekleniyor
-                        Category = "Yatırım Satışı",
-                        Description = $"{investment.Name} Satışı ({sellAmount:N2} Adet x {currentRate:N2})",
-                        TransactionDate = DateTime.Now
-                    };
-                    _userRepository.AddTransaction(newTransaction);
-
-                    MessageBox.Show($"Satış Başarılı! {incomeTotal:N2} ₺ hesabınıza eklendi.");
-                    
-                    // Listeyi Yenile
-                    _ = LoadInvestmentsAsync();
                 }
-                catch (Exception ex)
+                else
                 {
-                    MessageBox.Show($"Satış hatası: {ex.Message}");
+                    MessageBox.Show("Geçersiz miktar.");
                 }
-            }
-            else
-            {
-                MessageBox.Show("Geçersiz miktar.");
             }
         }
     }
-}
 }
