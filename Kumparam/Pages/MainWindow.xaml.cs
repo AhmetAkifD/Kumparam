@@ -9,6 +9,7 @@ using Kumparam.Core;
 using Kumparam.Core.Interfaces;
 using Kumparam.Data;
 using Kumparam.Data.Repositories;
+using Kumparam.Data.Helpers;
 
 // App.config'i okumak için
 // PasswordHelper için eklendi
@@ -29,13 +30,25 @@ public partial class MainWindow : Window
         try
         {
             string connectionString = ConfigurationManager.ConnectionStrings["KumparamDB"].ConnectionString;
-            
-            // SqlUserRepository yerine artık IUserRepository arayüzünü kullanıyoruz
-            // Ancak IsConnectionSuccess metodunu IUserRepository'ye eklediğimiz için sorun yok.
-            // (Eğer SqlUserRepository olarak cast etmemiz gerekirse: ((SqlUserRepository)_userRepository).IsConnectionSuccess())
-            
             _userRepository = new SqlUserRepository(connectionString);
+            try 
+            {
+                // --- OTOMATİK VERİTABANI KURULUMU ---
+                // Bu satır, veritabanı yoksa oluşturur, tablolar eksikse tamamlar.
+                var dbInit = new DatabaseInitializer(connectionString);
+                dbInit.Initialize();
+                // ------------------------------------
+        
+                _userRepository = new SqlUserRepository(connectionString);
 
+                // ... (Diğer bağlantı testi kodları) ...
+            }
+            catch (Exception ex)
+            {
+                // CustomMessageBox varsa onu kullan, yoksa standart MessageBox
+                // CustomMessageBox.Show("Kritik Hata", "Veritabanı oluşturulamadı.\n" + ex.Message);
+                MessageBox.Show("Veritabanı oluşturulamadı.\n" + ex.Message);
+            }
             // --- BAĞLANTI TESTİ ---
             if (_userRepository.IsConnectionSuccess())
             {

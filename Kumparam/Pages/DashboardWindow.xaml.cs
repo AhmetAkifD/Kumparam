@@ -18,6 +18,7 @@ public partial class DashboardWindow : Window
 
         // Varsayılan sayfa: Özet Durum
         MainContentArea.Content = new SummaryView(_currentUser.UserId);
+        CheckScreenResolution();
     }
     
     private void Logout_Button_Click(object sender, RoutedEventArgs e)
@@ -57,6 +58,44 @@ public partial class DashboardWindow : Window
                 "Hedefler Sayfası Açılmadı", 
                 MessageBoxButton.OK, 
                 MessageBoxImage.Error);
+        }
+    }
+    private void CheckScreenResolution()
+    {
+        // Ekran genişliğini ve yüksekliğini al
+        double screenWidth = SystemParameters.PrimaryScreenWidth;
+        double screenHeight = SystemParameters.PrimaryScreenHeight;
+
+        // Hedeflenen minimum boyutlar
+        double targetMinW = 1280;
+        double targetMinH = 720;
+
+        // Eğer ekran, hedefimizden küçükse (Laptop vs.)
+        if (screenWidth < targetMinW || screenHeight < targetMinH)
+        {
+            // Özel mesaj kutumuzla haber verelim (Ses yok, şık tasarım var)
+            CustomMessageBox.Show(
+                "Ekran Çözünürlüğü Uyarısı", 
+                $"Ekran çözünürlüğünüz ({screenWidth}x{screenHeight}), önerilen boyutlardan (1280x720) düşük. " +
+                "Uygulama kısıtlama olmadan açılacak ancak bazı görüntüler taşabilir."
+            );
+        
+            // Kısıtlama koymuyoruz (veya ekran boyutuna eşitliyoruz)
+            this.MinWidth = 800; // Daha güvenli, çok küçük bir alt sınır
+            this.MinHeight = 600;
+        
+            // İstersen pencereyi ekranı kaplatabilirsin
+            this.WindowState = WindowState.Maximized;
+        }
+        else
+        {
+            // Ekran büyükse kısıtlamayı koy
+            this.MinWidth = targetMinW;
+            this.MinHeight = targetMinH;
+        
+            // İstersen başlangıç boyutu olarak da ata
+            this.Width = targetMinW;
+            this.Height = targetMinH;
         }
     }
 }
