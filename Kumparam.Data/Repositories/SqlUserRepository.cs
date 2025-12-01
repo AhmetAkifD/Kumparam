@@ -3,18 +3,11 @@ using Kumparam.Core.Interfaces;
 using Kumparam.Core.Models;
 using Microsoft.Data.SqlClient;
 
-// NuGet'ten eklediğimiz paket
-
 namespace Kumparam.Data.Repositories
 {
-    // Bu sınıf, IUserRepository sözleşmesini ADO.NET (SQL) kullanarak uygular.
     public class SqlUserRepository : IUserRepository
     {
-        // Connection string'i burada saklayacağız
         private readonly string _connectionString;
-
-        // Constructor (Yapıcı Metot):
-        // Bu sınıf çağrıldığında (new SqlUserRepository) connection string'i almamız lazım
         public SqlUserRepository(string connectionString)
         {
             _connectionString = connectionString;
@@ -34,7 +27,6 @@ namespace Kumparam.Data.Repositories
                 return false;
             }
         }
-
         public User? GetUserByEmail(string email)
         {
             User? user = null;
@@ -66,7 +58,6 @@ namespace Kumparam.Data.Repositories
             }
             return user;
         }
-
         public bool EmailExists(string email)
         {
             using (var connection = new SqlConnection(_connectionString))
@@ -83,7 +74,6 @@ namespace Kumparam.Data.Repositories
                 }
             }
         }
-
         public void AddUser(User user, UserProfile profile)
         {
             // İki tabloya (Users ve UserProfiles) yazma işlemi yapacağımız için,
@@ -137,8 +127,6 @@ namespace Kumparam.Data.Repositories
                 }
             }
         }
-        // SqlUserRepository.cs dosyasının içine, diğer metotların yanına ekle/güncelle:
-
         public void AddTransaction(Transaction transaction)
         {
             using (var connection = new SqlConnection(_connectionString))
@@ -160,7 +148,6 @@ namespace Kumparam.Data.Repositories
                 }
             }
         }
-        // MEVCUT GetFinancialSummary METODUNU BUNUNLA DEĞİŞTİR:
         public FinancialSummary GetFinancialSummary(Guid userId)
         {
             var summary = new FinancialSummary();
@@ -187,9 +174,7 @@ namespace Kumparam.Data.Repositories
 
                 // 3. Bakiye (Değişmedi)
                 summary.TotalBalance = summary.MonthlyIncome - summary.MonthlyExpense;
-
-                // 4. HEDEF (YENİLENDİ: Artık Goals Tablosundan Hesaplanıyor!)
-                // Tüm hedeflerin toplam tutarını ve şu anki birikimini çekiyoruz
+                
                 var sqlGoals = "SELECT SUM(TargetAmount), SUM(CurrentAmount) FROM Goals WHERE UserId = @UserId";
                 using (var cmd = new SqlCommand(sqlGoals, connection))
                 {
@@ -291,7 +276,6 @@ namespace Kumparam.Data.Repositories
             }
             return list;
         }
-        // SqlUserRepository.cs içine ekle:
         public void AddGoal(Goal goal)
         {
             using (var connection = new SqlConnection(_connectionString))
@@ -313,7 +297,6 @@ namespace Kumparam.Data.Repositories
                 }
             }
         }
-
         public List<Goal> GetGoals(Guid userId)
         {
             var list = new List<Goal>();
@@ -355,7 +338,6 @@ namespace Kumparam.Data.Repositories
             }
             return list;
         }
-
         public void DeleteGoal(Guid goalId)
         {
             using (var connection = new SqlConnection(_connectionString))
@@ -369,7 +351,6 @@ namespace Kumparam.Data.Repositories
                 }
             }
         }
-
         public void UpdateGoalAmount(Guid goalId, decimal amount)
         {
             using (var connection = new SqlConnection(_connectionString))
@@ -385,8 +366,6 @@ namespace Kumparam.Data.Repositories
                 }
             }
         }
-        // Kumparam.Data/SqlUserRepository.cs içine:
-
         public string? GetFirstGoalTitle(Guid userId)
         {
             using (var connection = new SqlConnection(_connectionString))
@@ -411,7 +390,6 @@ namespace Kumparam.Data.Repositories
                 }
             }
         }
-        
         public void AddInvestment(Investment investment)
         {
             using (var connection = new SqlConnection(_connectionString))
@@ -435,7 +413,6 @@ namespace Kumparam.Data.Repositories
                 }
             }
         }
-
         public List<Investment> GetInvestments(Guid userId)
         {
             var list = new List<Investment>();
@@ -472,7 +449,6 @@ namespace Kumparam.Data.Repositories
             }
             return list;
         }
-
         public void DeleteInvestment(Guid investmentId)
         {
             using (var connection = new SqlConnection(_connectionString))
@@ -499,6 +475,135 @@ namespace Kumparam.Data.Repositories
                     cmd.ExecuteNonQuery();
                 }
             }
+        }
+        public UserProfile GetUserProfile(Guid userId)
+        {
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                var sql = "SELECT FirstName, LastName FROM UserProfiles WHERE UserId = @UserId";
+                using (var cmd = new SqlCommand(sql, connection))
+                {
+                    cmd.Parameters.AddWithValue("@UserId", userId);
+                    connection.Open();
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            return new UserProfile
+                            {
+                                UserId = userId,
+                                FirstName = reader["FirstName"] != DBNull.Value ? (string)reader["FirstName"] : "",
+                                LastName = reader["LastName"] != DBNull.Value ? (string)reader["LastName"] : ""
+                            };
+                        }
+                    }
+                }
+            }
+            // Eğer profil yoksa boş döndür
+            return new UserProfile { UserId = userId };
+        }
+        public void UpdateUserProfile(UserProfile profile)
+        {
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                var sql = "UPDATE UserProfiles SET FirstName = @FirstName, LastName = @LastName WHERE UserId = @UserId";
+                using (var cmd = new SqlCommand(sql, connection))
+                {
+                    cmd.Parameters.AddWithValue("@UserId", profile.UserId);
+                    cmd.Parameters.AddWithValue("@FirstName", profile.FirstName ?? "");
+                    cmd.Parameters.AddWithValue("@LastName", profile.LastName ?? "");
+                    connection.Open();
+                    cmd.ExecuteNonQuery();
+                }
+            }
+        }
+        public void ResetUserData(Guid userId)
+        {
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                connection.Open();
+                using (var transaction = connection.BeginTransaction())
+                {
+                    try
+                    {
+                        // 1. Yatırımları Sil
+                        var sqlInvest = "DELETE FROM Investments WHERE UserId = @UserId";
+                        using (var cmd = new SqlCommand(sqlInvest, connection, transaction))
+                        {
+                            cmd.Parameters.AddWithValue("@UserId", userId);
+                            cmd.ExecuteNonQuery();
+                        }
+
+                        // 2. Hedefleri Sil
+                        var sqlGoals = "DELETE FROM Goals WHERE UserId = @UserId";
+                        using (var cmd = new SqlCommand(sqlGoals, connection, transaction))
+                        {
+                            cmd.Parameters.AddWithValue("@UserId", userId);
+                            cmd.ExecuteNonQuery();
+                        }
+
+                        // 3. İşlemleri (Gelir/Gider) Sil
+                        var sqlTrans = "DELETE FROM Transactions WHERE UserId = @UserId";
+                        using (var cmd = new SqlCommand(sqlTrans, connection, transaction))
+                        {
+                            cmd.Parameters.AddWithValue("@UserId", userId);
+                            cmd.ExecuteNonQuery();
+                        }
+
+                        transaction.Commit();
+                    }
+                    catch
+                    {
+                        transaction.Rollback();
+                        throw;
+                    }
+                }
+            }
+        }
+        // SqlUserRepository.cs içine ekle:
+
+        public void UpdatePassword(Guid userId, byte[] passwordHash, byte[] passwordSalt)
+        {
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                var sql = "UPDATE Users SET PasswordHash = @PasswordHash, PasswordSalt = @PasswordSalt WHERE UserId = @UserId";
+                using (var cmd = new SqlCommand(sql, connection))
+                {
+                    cmd.Parameters.AddWithValue("@UserId", userId);
+                    cmd.Parameters.AddWithValue("@PasswordHash", passwordHash);
+                    cmd.Parameters.AddWithValue("@PasswordSalt", passwordSalt);
+                    connection.Open();
+                    cmd.ExecuteNonQuery();
+                }
+            }
+        }
+
+        public User? GetUserById(Guid userId)
+        {
+            User? user = null;
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                var sql = "SELECT UserId, Email, PasswordHash, PasswordSalt FROM Users WHERE UserId = @UserId";
+                using (var cmd = new SqlCommand(sql, connection))
+                {
+                    cmd.Parameters.AddWithValue("@UserId", userId);
+                    connection.Open();
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            user = new User
+                            {
+                                UserId = (Guid)reader["UserId"],
+                                Email = (string)reader["Email"],
+                                PasswordHash = (byte[])reader["PasswordHash"],
+                                PasswordSalt = (byte[])reader["PasswordSalt"]
+                            };
+                        }
+                    }
+                }
+            }
+            return user;
         }
     }
 }

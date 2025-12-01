@@ -1,0 +1,74 @@
+﻿<UserControl x:Class="Kumparam.Pages.DashboardSubPages.ProfileView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             mc:Ignorable="d" 
+             d:DesignHeight="600" d:DesignWidth="900"
+             TextElement.Foreground="{DynamicResource MaterialDesignBody}"
+             FontFamily="{DynamicResource MaterialDesignFont}">
+
+    <Grid Margin="20">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="1.5*"/> <ColumnDefinition Width="2*"/>   </Grid.ColumnDefinitions>
+
+        <materialDesign:Card Grid.Column="0" Style="{StaticResource DashboardCardStyle}" VerticalAlignment="Top" Margin="0,0,20,0">
+            <StackPanel>
+                <TextBlock Text="Profil Bilgilerim" Style="{StaticResource HeaderTextStyle}"/>
+
+                <materialDesign:PackIcon Kind="AccountCircle" Width="80" Height="80" 
+                                         Foreground="{DynamicResource PrimaryHueMidBrush}" 
+                                         HorizontalAlignment="Center" Margin="0,10,0,20"/>
+
+                <TextBox x:Name="FirstNameTextBox" materialDesign:HintAssist.Hint="Ad" 
+                         Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,10"/>
+
+                <TextBox x:Name="LastNameTextBox" materialDesign:HintAssist.Hint="Soyad" 
+                         Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,10"/>
+
+                <TextBox x:Name="EmailTextBox" materialDesign:HintAssist.Hint="E-posta Adresi" 
+                         Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,10"
+                         IsReadOnly="True" Background="#F0F0F0" ToolTip="E-posta adresi değiştirilemez."/>
+
+                <Button Content="BİLGİLERİ GÜNCELLE" Style="{StaticResource MaterialDesignRaisedButton}" 
+                        Margin="0,20,0,0" Click="UpdateProfile_Click"/>
+            </StackPanel>
+        </materialDesign:Card>
+
+        <StackPanel Grid.Column="1">
+            
+            <materialDesign:Card Style="{StaticResource DashboardCardStyle}" Margin="0,0,0,20">
+                <StackPanel>
+                    <TextBlock Text="Şifre Değiştir" Style="{StaticResource HeaderTextStyle}"/>
+
+                    <PasswordBox x:Name="OldPasswordBox" materialDesign:HintAssist.Hint="Mevcut Şifre"
+                                 Style="{StaticResource MaterialDesignOutlinedPasswordBox}" Margin="0,10"/>
+
+                    <PasswordBox x:Name="NewPasswordBox" materialDesign:HintAssist.Hint="Yeni Şifre"
+                                 Style="{StaticResource MaterialDesignOutlinedPasswordBox}" Margin="0,10"/>
+
+                    <Button Content="ŞİFREYİ DEĞİŞTİR" Style="{StaticResource MaterialDesignOutlinedButton}" 
+                            HorizontalAlignment="Left" Margin="0,10,0,0" Click="ChangePassword_Click"/>
+                </StackPanel>
+            </materialDesign:Card>
+
+            <materialDesign:Card Style="{StaticResource DashboardCardStyle}" Background="#FFF5F5">
+                <StackPanel>
+                    <DockPanel LastChildFill="False">
+                        <materialDesign:PackIcon Kind="Warning" Foreground="Red" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                        <TextBlock Text="Tehlikeli Bölge" FontWeight="Bold" Foreground="Red" FontSize="16" VerticalAlignment="Center"/>
+                    </DockPanel>
+                    
+                    <TextBlock Text="Tüm finansal verilerinizi (İşlemler, Yatırımlar, Hedefler) kalıcı olarak siler. Bu işlem geri alınamaz." 
+                               TextWrapping="Wrap" Margin="0,10" Opacity="0.7"/>
+
+                    <Button Content="TÜM VERİLERİ SIFIRLA" Background="Red" BorderBrush="Red"
+                            Foreground="White" HorizontalAlignment="Left" 
+                            Click="ResetData_Click"/>
+                </StackPanel>
+            </materialDesign:Card>
+
+        </StackPanel>
+    </Grid>
+</UserControl>

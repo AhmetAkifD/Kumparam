@@ -30,5 +30,10 @@ namespace Kumparam.Core.Interfaces
         List<Investment> GetInvestments(Guid userId);
         void DeleteInvestment(Guid investmentId);
         void UpdateInvestmentQuantity(Guid investmentId, decimal newQuantity);
+        UserProfile GetUserProfile(Guid userId);
+        void UpdateUserProfile(UserProfile profile);
+        void ResetUserData(Guid userId);
+        void UpdatePassword(Guid userId, byte[] passwordHash, byte[] passwordSalt);
+        User? GetUserById(Guid userId);
     }
 }

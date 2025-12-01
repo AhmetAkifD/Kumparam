@@ -60,6 +60,10 @@ public partial class DashboardWindow : Window
                 MessageBoxImage.Error);
         }
     }
+    private void ProfileButton_Click(object sender, RoutedEventArgs e)
+    {
+        MainContentArea.Content = new ProfileView(_currentUser.UserId, _currentUser.Email);
+    }
     private void CheckScreenResolution()
     {
         // Ekran genişliğini ve yüksekliğini al
