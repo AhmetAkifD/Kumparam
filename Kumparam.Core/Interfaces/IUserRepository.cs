@@ -35,5 +35,10 @@ namespace Kumparam.Core.Interfaces
         void ResetUserData(Guid userId);
         void UpdatePassword(Guid userId, byte[] passwordHash, byte[] passwordSalt);
         User? GetUserById(Guid userId);
+        List<ScrapingConfig> GetAllScrapingConfigs();
+        ScrapingConfig? GetScrapingConfig(string symbol);
+        void AddScrapingConfig(ScrapingConfig config);
+        void UpdateScrapingConfig(ScrapingConfig config);
+        void DeleteScrapingConfig(int configId);
     }
 }

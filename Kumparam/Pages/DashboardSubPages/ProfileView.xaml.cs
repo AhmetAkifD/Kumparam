@@ -2,8 +2,8 @@
 using System.Configuration;
 using System.Windows;
 using System.Windows.Controls;
-using Kumparam.Core;
-using Kumparam.Core.Models; 
+using Kumparam.Core; 
+using Kumparam.Core.Models;
 using Kumparam.Core.Interfaces;
 using Kumparam.Data.Repositories;
 
@@ -15,7 +15,6 @@ public partial class ProfileView : UserControl
     private readonly Guid _currentUserId;
     private readonly string _userEmail;
 
-    // Parametreli Constructor (Dashboard'dan çağrılır)
     public ProfileView(Guid userId, string email)
     {
         InitializeComponent();
@@ -28,7 +27,6 @@ public partial class ProfileView : UserControl
         LoadProfile();
     }
 
-    // Boş Constructor (XAML Designer için)
     public ProfileView()
     {
         InitializeComponent();
@@ -38,17 +36,14 @@ public partial class ProfileView : UserControl
     {
         try
         {
-            // E-postayı ekrana yaz
             EmailTextBox.Text = _userEmail;
-
-            // Profil bilgilerini çek
             var profile = _userRepository.GetUserProfile(_currentUserId);
             FirstNameTextBox.Text = profile.FirstName;
             LastNameTextBox.Text = profile.LastName;
         }
         catch (Exception ex)
         {
-            MessageBox.Show("Profil yüklenirken hata oluştu: " + ex.Message, "Hata");
+            MessageBox.Show("Profil yüklenirken hata: " + ex.Message);
         }
     }
 
@@ -62,89 +57,62 @@ public partial class ProfileView : UserControl
                 FirstName = FirstNameTextBox.Text,
                 LastName = LastNameTextBox.Text
             };
-
             _userRepository.UpdateUserProfile(updatedProfile);
-            MessageBox.Show("Profil bilgileriniz güncellendi. ✅", "Başarılı");
+            MessageBox.Show("Profil güncellendi! ✅");
         }
         catch (Exception ex)
         {
-            MessageBox.Show("Güncelleme başarısız: " + ex.Message, "Hata");
+            MessageBox.Show("Hata: " + ex.Message);
         }
     }
 
     private void ChangePassword_Click(object sender, RoutedEventArgs e)
     {
-        string oldPassword = OldPasswordBox.Password;
-        string newPassword = NewPasswordBox.Password;
+        string oldPass = OldPasswordBox.Password;
+        string newPass = NewPasswordBox.Password;
 
-        // 1. Validasyon
-        if (string.IsNullOrWhiteSpace(oldPassword) || string.IsNullOrWhiteSpace(newPassword))
+        if (string.IsNullOrWhiteSpace(oldPass) || string.IsNullOrWhiteSpace(newPass))
         {
-            MessageBox.Show("Lütfen mevcut ve yeni şifrenizi girin.", "Eksik Bilgi");
-            return;
-        }
-
-        if (newPassword.Length < 4) // Örnek kural
-        {
-            MessageBox.Show("Yeni şifre en az 4 karakter olmalıdır.", "Zayıf Şifre");
+            MessageBox.Show("Lütfen alanları doldurun.");
             return;
         }
 
         try
         {
-            // 2. Kullanıcı bilgilerini (Mevcut Hash/Salt) çek
             var user = _userRepository.GetUserById(_currentUserId);
-            if (user == null)
+            if (user != null && PasswordHelper.VerifyPassword(oldPass, user.PasswordSalt, user.PasswordHash))
             {
-                MessageBox.Show("Kullanıcı bulunamadı.", "Hata");
-                return;
+                PasswordHelper.HashPassword(newPass, out byte[] newSalt, out byte[] newHash);
+                _userRepository.UpdatePassword(_currentUserId, newHash, newSalt);
+                MessageBox.Show("Şifre başarıyla değiştirildi! 🔒");
+                OldPasswordBox.Clear();
+                NewPasswordBox.Clear();
             }
-
-            // 3. Eski şifreyi doğrula
-            bool isOldPasswordCorrect = PasswordHelper.VerifyPassword(oldPassword, user.PasswordSalt, user.PasswordHash);
-            if (!isOldPasswordCorrect)
+            else
             {
-                MessageBox.Show("Mevcut şifreniz hatalı.", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
+                MessageBox.Show("Mevcut şifre hatalı! ❌");
             }
-
-            // 4. Yeni şifreyi Hash'le
-            PasswordHelper.HashPassword(newPassword, out byte[] newSalt, out byte[] newHash);
-
-            // 5. Veritabanını güncelle
-            _userRepository.UpdatePassword(_currentUserId, newHash, newSalt);
-
-            MessageBox.Show("Şifreniz başarıyla değiştirildi! 🔒", "Başarılı");
-            
-            // Kutuları temizle
-            OldPasswordBox.Clear();
-            NewPasswordBox.Clear();
         }
         catch (Exception ex)
         {
-            MessageBox.Show("Şifre değiştirme hatası: " + ex.Message, "Hata");
+            MessageBox.Show("Hata: " + ex.Message);
         }
     }
 
     private void ResetData_Click(object sender, RoutedEventArgs e)
     {
-        // Standart MessageBox ile Onay Alma
-        var result = MessageBox.Show(
-            "DİKKAT! Tüm gelir, gider, yatırım ve hedefleriniz silinecek.\nBu işlem geri alınamaz. Emin misiniz?", 
-            "Verileri Sıfırla", 
-            MessageBoxButton.YesNo, 
-            MessageBoxImage.Warning);
-
+        var result = MessageBox.Show("DİKKAT! Tüm verileriniz silinecek. Emin misiniz?", "Veri Sıfırlama", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+        
         if (result == MessageBoxResult.Yes)
         {
             try
             {
                 _userRepository.ResetUserData(_currentUserId);
-                MessageBox.Show("Tüm verileriniz sıfırlandı. Temiz bir sayfa açtınız! 🧹", "Başarılı");
+                MessageBox.Show("Hesabınız temizlendi. Temiz bir başlangıç! 🧹");
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Sıfırlama başarısız: " + ex.Message, "Hata");
+                MessageBox.Show("Hata: " + ex.Message);
             }
         }
     }

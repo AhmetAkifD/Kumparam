@@ -7,6 +7,7 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using Kumparam.Core;
 using Kumparam.Core.Interfaces;
+using Kumparam.Core.Models;
 using Kumparam.Data;
 using Kumparam.Data.Repositories;
 using Kumparam.Data.Helpers;
@@ -175,16 +176,6 @@ public partial class MainWindow : Window
         var email = EmailTextBox.Text;
         var sifre = SifrePasswordBox.Password;
         
-        // --- 1. HIZLI ADMIN GİRİŞİ (Backdoor) ---
-        if (email == "admin" && sifre == "admin")
-        {
-            // Sahte bir User nesnesi oluşturup Dashboard'a gönderiyoruz
-            var adminUser = new User { Email = "admin@admin.com", UserId = Guid.Empty };
-            OpenDashboard(adminUser);
-            return;
-        }
-
-        // 2. E-posta ve şifre boş mu kontrol et
         if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(sifre))
         {
             HataMesajiTextBlock.Text = "Lütfen e-posta ve şifrenizi girin.";

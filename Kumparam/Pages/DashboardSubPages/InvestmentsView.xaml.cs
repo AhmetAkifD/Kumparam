@@ -60,7 +60,7 @@ public partial class InvestmentsView : UserControl
 
         // 1. İki servisi de başlat
         _tcmbService = new TcmbDataService();
-        _scrapingService = new WebScrapingService();
+        _scrapingService = new WebScrapingService(_userRepository);
 
         string connectionString = ConfigurationManager.ConnectionStrings["KumparamDB"].ConnectionString;
         _userRepository = new SqlUserRepository(connectionString);

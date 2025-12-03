@@ -31,15 +31,14 @@ namespace Kumparam.Data.Repositories
         {
             User? user = null;
 
-            // 'using' blokları, bağlantının ve komutun işi bitince otomatik kapanmasını sağlar
             using (var connection = new SqlConnection(_connectionString))
             {
-                var sql = "SELECT UserId, Email, PasswordHash, PasswordSalt FROM Users WHERE Email = @Email";
+                var sql = "SELECT UserId, Email, PasswordHash, PasswordSalt, IsAdmin FROM Users WHERE Email = @Email";
+        
                 using (var command = new SqlCommand(sql, connection))
                 {
-                    // SQL Injection'a karşı parametre kullanmak ZORUNLUDUR
                     command.Parameters.AddWithValue("@Email", email);
-                    
+            
                     connection.Open();
                     using (var reader = command.ExecuteReader())
                     {
@@ -50,7 +49,8 @@ namespace Kumparam.Data.Repositories
                                 UserId = (Guid)reader["UserId"],
                                 Email = (string)reader["Email"],
                                 PasswordHash = (byte[])reader["PasswordHash"],
-                                PasswordSalt = (byte[])reader["PasswordSalt"]
+                                PasswordSalt = (byte[])reader["PasswordSalt"],
+                                IsAdmin = reader["IsAdmin"] != DBNull.Value && (bool)reader["IsAdmin"]
                             };
                         }
                     }
@@ -560,8 +560,6 @@ namespace Kumparam.Data.Repositories
                 }
             }
         }
-        // SqlUserRepository.cs içine ekle:
-
         public void UpdatePassword(Guid userId, byte[] passwordHash, byte[] passwordSalt)
         {
             using (var connection = new SqlConnection(_connectionString))
@@ -577,7 +575,6 @@ namespace Kumparam.Data.Repositories
                 }
             }
         }
-
         public User? GetUserById(Guid userId)
         {
             User? user = null;
@@ -604,6 +601,112 @@ namespace Kumparam.Data.Repositories
                 }
             }
             return user;
+        }
+        public List<ScrapingConfig> GetAllScrapingConfigs()
+        {
+            var list = new List<ScrapingConfig>();
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                var sql = "SELECT * FROM ScrapingConfigs";
+                using (var cmd = new SqlCommand(sql, connection))
+                {
+                    connection.Open();
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            list.Add(new ScrapingConfig
+                            {
+                                ConfigId = (int)reader["ConfigId"],
+                                Symbol = reader["Symbol"].ToString()!,
+                                TargetUrl = reader["TargetUrl"].ToString()!,
+                                HtmlPath = reader["HtmlPath"].ToString()!,
+                                IsActive = (bool)reader["IsActive"],
+                                Description = reader["Description"] != DBNull.Value ? reader["Description"].ToString() : null
+                            });
+                        }
+                    }
+                }
+            }
+            return list;
+        }
+        public ScrapingConfig? GetScrapingConfig(string symbol)
+        {
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                var sql = "SELECT TOP 1 * FROM ScrapingConfigs WHERE Symbol = @Symbol AND IsActive = 1";
+                using (var cmd = new SqlCommand(sql, connection))
+                {
+                    cmd.Parameters.AddWithValue("@Symbol", symbol);
+                    connection.Open();
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            return new ScrapingConfig
+                            {
+                                ConfigId = (int)reader["ConfigId"],
+                                Symbol = reader["Symbol"].ToString()!,
+                                TargetUrl = reader["TargetUrl"].ToString()!,
+                                HtmlPath = reader["HtmlPath"].ToString()!,
+                                IsActive = (bool)reader["IsActive"],
+                                Description = reader["Description"] != DBNull.Value ? reader["Description"].ToString() : null
+                            };
+                        }
+                    }
+                }
+            }
+            return null; // Bulunamazsa null dön
+        }
+        public void AddScrapingConfig(ScrapingConfig config)
+        {
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                var sql = @"INSERT INTO ScrapingConfigs (Symbol, TargetUrl, HtmlPath, IsActive, Description) 
+                            VALUES (@Symbol, @TargetUrl, @HtmlPath, @IsActive, @Description)";
+                using (var cmd = new SqlCommand(sql, connection))
+                {
+                    cmd.Parameters.AddWithValue("@Symbol", config.Symbol);
+                    cmd.Parameters.AddWithValue("@TargetUrl", config.TargetUrl);
+                    cmd.Parameters.AddWithValue("@HtmlPath", config.HtmlPath);
+                    cmd.Parameters.AddWithValue("@IsActive", config.IsActive);
+                    cmd.Parameters.AddWithValue("@Description", config.Description ?? (object)DBNull.Value);
+                    connection.Open();
+                    cmd.ExecuteNonQuery();
+                }
+            }
+        }
+        public void UpdateScrapingConfig(ScrapingConfig config)
+        {
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                var sql = @"UPDATE ScrapingConfigs 
+                            SET TargetUrl = @TargetUrl, HtmlPath = @HtmlPath, IsActive = @IsActive, Description = @Description 
+                            WHERE Symbol = @Symbol"; // Symbol üzerinden güncellemek daha pratik olabilir veya ConfigId kullanabilirsin
+                using (var cmd = new SqlCommand(sql, connection))
+                {
+                    cmd.Parameters.AddWithValue("@Symbol", config.Symbol);
+                    cmd.Parameters.AddWithValue("@TargetUrl", config.TargetUrl);
+                    cmd.Parameters.AddWithValue("@HtmlPath", config.HtmlPath);
+                    cmd.Parameters.AddWithValue("@IsActive", config.IsActive);
+                    cmd.Parameters.AddWithValue("@Description", config.Description ?? (object)DBNull.Value);
+                    connection.Open();
+                    cmd.ExecuteNonQuery();
+                }
+            }
+        }
+        public void DeleteScrapingConfig(int configId)
+        {
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                var sql = "DELETE FROM ScrapingConfigs WHERE ConfigId = @ConfigId";
+                using (var cmd = new SqlCommand(sql, connection))
+                {
+                    cmd.Parameters.AddWithValue("@ConfigId", configId);
+                    connection.Open();
+                    cmd.ExecuteNonQuery();
+                }
+            }
         }
     }
 }

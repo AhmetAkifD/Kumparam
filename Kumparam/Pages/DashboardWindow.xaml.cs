@@ -1,6 +1,7 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
 using Kumparam.Core;
+using Kumparam.Core.Models;
 // YENİ NAMESPACE'İ BURAYA EKLEDİK
 using Kumparam.Pages.DashboardSubPages; 
 
@@ -19,6 +20,10 @@ public partial class DashboardWindow : Window
         // Varsayılan sayfa: Özet Durum
         MainContentArea.Content = new SummaryView(_currentUser.UserId);
         CheckScreenResolution();
+        if (_currentUser.IsAdmin)
+        {
+            AdminPanelButton.Visibility = Visibility.Visible;
+        }
     }
     
     private void Logout_Button_Click(object sender, RoutedEventArgs e)
@@ -26,6 +31,10 @@ public partial class DashboardWindow : Window
         var loginWindow = new Pages.MainWindow();
         loginWindow.Show();
         this.Close();
+    }
+    private void AdminPanelButton_Click(object sender, RoutedEventArgs e)
+    {
+        MainContentArea.Content = new AdminView(); // Admin sayfasını aç
     }
 
     // Yeni: Metotları güncelledik, artık ID gönderiyoruz

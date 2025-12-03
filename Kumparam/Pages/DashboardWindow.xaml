@@ -119,6 +119,15 @@
                             <TextBlock Text="Hedefler"/>
                         </StackPanel>
                     </Button>
+                    <Button x:Name="AdminPanelButton" 
+                            Style="{StaticResource SidebarButtonStyle}" 
+                            Visibility="Collapsed" 
+                            Click="AdminPanelButton_Click">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Security"/>
+                            <TextBlock Text="Yönetici Paneli"/>
+                        </StackPanel>
+                    </Button>
                 </StackPanel>
 
                 <!-- 3. Çıkış Butonu -->
