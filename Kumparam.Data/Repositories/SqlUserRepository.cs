@@ -620,7 +620,9 @@ namespace Kumparam.Data.Repositories
                                 ConfigId = (int)reader["ConfigId"],
                                 Symbol = reader["Symbol"].ToString()!,
                                 TargetUrl = reader["TargetUrl"].ToString()!,
-                                HtmlPath = reader["HtmlPath"].ToString()!,
+                                HtmlPath_Buying = reader["HtmlPath_Buying"] != DBNull.Value ? reader["HtmlPath_Buying"].ToString()! : "",
+                                HtmlPath_Selling = reader["HtmlPath_Selling"] != DBNull.Value ? reader["HtmlPath_Selling"].ToString()! : "",
+                                SourceType = reader["SourceType"] != DBNull.Value ? reader["SourceType"].ToString()! : "Web",
                                 IsActive = (bool)reader["IsActive"],
                                 Description = reader["Description"] != DBNull.Value ? reader["Description"].ToString() : null
                             });
@@ -648,7 +650,9 @@ namespace Kumparam.Data.Repositories
                                 ConfigId = (int)reader["ConfigId"],
                                 Symbol = reader["Symbol"].ToString()!,
                                 TargetUrl = reader["TargetUrl"].ToString()!,
-                                HtmlPath = reader["HtmlPath"].ToString()!,
+                                SourceType = reader["SourceType"].ToString()!,
+                                HtmlPath_Buying = reader["HtmlPath_Buying"].ToString()!,
+                                HtmlPath_Selling = reader["HtmlPath_Selling"].ToString()!,  
                                 IsActive = (bool)reader["IsActive"],
                                 Description = reader["Description"] != DBNull.Value ? reader["Description"].ToString() : null
                             };
@@ -662,15 +666,20 @@ namespace Kumparam.Data.Repositories
         {
             using (var connection = new SqlConnection(_connectionString))
             {
-                var sql = @"INSERT INTO ScrapingConfigs (Symbol, TargetUrl, HtmlPath, IsActive, Description) 
-                            VALUES (@Symbol, @TargetUrl, @HtmlPath, @IsActive, @Description)";
+                var sql = @"INSERT INTO ScrapingConfigs 
+                    (Symbol, TargetUrl, HtmlPath_Buying, HtmlPath_Selling, IsActive, Description, SourceType) 
+                    VALUES 
+                    (@Symbol, @TargetUrl, @HtmlPath_Buying, @HtmlPath_Selling, @IsActive, @Description, @SourceType)";
+                
                 using (var cmd = new SqlCommand(sql, connection))
                 {
                     cmd.Parameters.AddWithValue("@Symbol", config.Symbol);
                     cmd.Parameters.AddWithValue("@TargetUrl", config.TargetUrl);
-                    cmd.Parameters.AddWithValue("@HtmlPath", config.HtmlPath);
+                    cmd.Parameters.AddWithValue("@HtmlPath_Buying", config.HtmlPath_Buying);
+                    cmd.Parameters.AddWithValue("@HtmlPath_Selling", config.HtmlPath_Selling);
                     cmd.Parameters.AddWithValue("@IsActive", config.IsActive);
                     cmd.Parameters.AddWithValue("@Description", config.Description ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@SourceType", "Web");
                     connection.Open();
                     cmd.ExecuteNonQuery();
                 }
@@ -681,15 +690,22 @@ namespace Kumparam.Data.Repositories
             using (var connection = new SqlConnection(_connectionString))
             {
                 var sql = @"UPDATE ScrapingConfigs 
-                            SET TargetUrl = @TargetUrl, HtmlPath = @HtmlPath, IsActive = @IsActive, Description = @Description 
-                            WHERE Symbol = @Symbol"; // Symbol üzerinden güncellemek daha pratik olabilir veya ConfigId kullanabilirsin
+                    SET TargetUrl = @TargetUrl, 
+                        HtmlPath_Buying = @HtmlPath_Buying, 
+                        HtmlPath_Selling = @HtmlPath_Selling, 
+                        IsActive = @IsActive, 
+                        Description = @Description,
+                        SourceType = @SourceType
+                    WHERE Symbol = @Symbol";
                 using (var cmd = new SqlCommand(sql, connection))
                 {
                     cmd.Parameters.AddWithValue("@Symbol", config.Symbol);
                     cmd.Parameters.AddWithValue("@TargetUrl", config.TargetUrl);
-                    cmd.Parameters.AddWithValue("@HtmlPath", config.HtmlPath);
+                    cmd.Parameters.AddWithValue("@HtmlPath_Buying", config.HtmlPath_Buying);
+                    cmd.Parameters.AddWithValue("@HtmlPath_Selling", config.HtmlPath_Selling);
                     cmd.Parameters.AddWithValue("@IsActive", config.IsActive);
                     cmd.Parameters.AddWithValue("@Description", config.Description ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@SourceType", "Web");
                     connection.Open();
                     cmd.ExecuteNonQuery();
                 }

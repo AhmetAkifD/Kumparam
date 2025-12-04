@@ -25,26 +25,34 @@ namespace Kumparam.Data.Services
 
         public async Task<decimal> GetPriceAsync(string symbol)
         {
-            // 1. Veritabanından Ayarları Çek (DİNAMİK)
             var config = _userRepository.GetScrapingConfig(symbol);
-
-            // Eğer veritabanında ayar yoksa veya pasifse 0 dön
             if (config == null || !config.IsActive) return 0;
 
+            // SATIŞ İÇİN: HtmlPath_Selling kullan
+            return await ScrapeData(config.TargetUrl, config.HtmlPath_Selling);
+        }
+
+        public async Task<decimal> GetBuyingPriceAsync(string symbol)
+        {
+            var config = _userRepository.GetScrapingConfig(symbol);
+            if (config == null || !config.IsActive) return 0;
+
+            // ALIŞ İÇİN: HtmlPath_Buying kullan
+            return await ScrapeData(config.TargetUrl, config.HtmlPath_Buying);
+        }
+        private async Task<decimal> ScrapeData(string url, string xpath)
+        {
             try
             {
-                // 2. Ayarlardaki URL'ye git
-                var html = await _httpClient.GetStringAsync(config.TargetUrl);
+                var html = await _httpClient.GetStringAsync(url);
                 var htmlDoc = new HtmlDocument();
                 htmlDoc.LoadHtml(html);
 
-                // 3. Ayarlardaki XPath ile veriyi bul
-                var priceNode = htmlDoc.DocumentNode.SelectSingleNode(config.HtmlPath);
-                
+                var priceNode = htmlDoc.DocumentNode.SelectSingleNode(xpath);
+        
                 if (priceNode != null)
                 {
                     string priceText = priceNode.InnerText.Trim();
-                    
                     // Temizlik
                     priceText = priceText.Replace("TL", "").Replace("$", "").Replace("%", "").Trim();
 
@@ -55,18 +63,11 @@ namespace Kumparam.Data.Services
                     }
                 }
             }
-            catch (Exception)
+            catch
             {
                 return 0;
             }
-
             return 0;
-        }
-
-        public async Task<decimal> GetBuyingPriceAsync(string symbol)
-        {
-            // Şimdilik aynı mantık
-            return await GetPriceAsync(symbol);
         }
     }
 }
