@@ -266,7 +266,7 @@ public partial class InvestmentsView : UserControl
     {
         if (sender is Button btn && btn.Tag is Investment investment)
         {
-            var inputDialog = new SimpleInputWindow();
+            var inputDialog = new SimpleInputWindow("Satılacak Miktarı Giriniz:");
             if (inputDialog.ShowDialog() == true)
             {
                 if (decimal.TryParse(inputDialog.ResultText, out decimal sellAmount) && sellAmount > 0)

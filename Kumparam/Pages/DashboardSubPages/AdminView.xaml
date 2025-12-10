@@ -65,6 +65,7 @@
                     <ComboBoxItem Content="Altın (altin.doviz.com)" Tag="Web_Gold"/>
                     <ComboBoxItem Content="Borsa (borsa.doviz.com)" Tag="Web_Stock"/>
                     <ComboBoxItem Content="Kripto (doviz.com)" Tag="Web_Crypto"/>
+                    <ComboBoxItem Content="Yatırım Fonu (TEFAS)" Tag="Web_Fund"/>
     
                     <!-- DİĞER -->
                     <ComboBoxItem Content="Özel / Diğer Web Sitesi" Tag="Web_Custom"/>
