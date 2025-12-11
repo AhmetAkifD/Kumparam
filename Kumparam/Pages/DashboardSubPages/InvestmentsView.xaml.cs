@@ -93,10 +93,8 @@ public partial class InvestmentsView : UserControl
     {
         try
         {
-            // 1. Veritabanından ham veriyi çek
             var rawInvestments = _userRepository.GetInvestments(_currentUserId);
 
-            // 2. Gruplama (Grouping)
             var groupedList = rawInvestments
                 .GroupBy(x => x.Symbol)
                 .Select(g => new PortfolioItem
@@ -104,17 +102,19 @@ public partial class InvestmentsView : UserControl
                     Symbol = g.Key,
                     Name = g.First().Name,
                     TotalQuantity = g.Sum(x => x.Quantity),
-                    // Ağırlıklı Ortalama Maliyet
                     AverageCost = g.Sum(x => x.Quantity * x.BuyingPrice) / g.Sum(x => x.Quantity),
-                    CurrentPrice = null // Başlangıçta boş
+                    CurrentPrice = null
                 })
                 .ToList();
 
-            // 3. UI'ya Bağla
             PortfolioItems = new ObservableCollection<PortfolioItem>(groupedList);
             PortfolioGrid.ItemsSource = PortfolioItems;
 
-            // 4. Fiyatları Güncelle
+            // YENİ: Veriler ekrana gelir gelmez Maliyeti hesapla ve göster.
+            // (Fiyatlar henüz gelmediği için "Hesaplanıyor..." yazacak ama Maliyet doğru görünecek)
+            CalculatePortfolioSummary();
+
+            // Sonra fiyatları çekmeye başla
             await UpdatePricesAsync();
         }
         catch (Exception ex)
@@ -122,22 +122,6 @@ public partial class InvestmentsView : UserControl
             MessageBox.Show($"Portföy yüklenirken hata: {ex.Message}");
         }
     }
-
-    // --- 3. CANLI FİYAT GÜNCELLEME ---
-    private async Task UpdatePricesAsync()
-    {
-        foreach (var item in PortfolioItems)
-        {
-            // TCMB kontrolü kaldırıldı. Hepsi Scraping servisinden geliyor.
-            decimal livePrice = await _scrapingService.GetPriceAsync(item.Symbol);
-            
-            if (livePrice > 0)
-            {
-                item.CurrentPrice = livePrice;
-            }
-        }
-    }
-
     // --- 4. YENİ YATIRIM KAYDETME ---
     private async void SaveInvestment_Click(object sender, RoutedEventArgs e)
     {
@@ -385,6 +369,73 @@ public partial class InvestmentsView : UserControl
                 }
             }
         }
+    }
+    // --- 1. YENİ METOT: ÖZET KARTLARINI HESAPLA ---
+    private void CalculatePortfolioSummary()
+    {
+        // Eğer liste boşsa veya henüz oluşmadıysa işlem yapma
+        if (PortfolioItems == null) return;
+
+        decimal totalValue = 0; // Toplam Piyasa Değeri
+        decimal totalCost = 0;  // Toplam Harcanan Para
+
+        foreach (var item in PortfolioItems)
+        {
+            // Maliyet her zaman vardır, topla
+            totalCost += item.TotalCost;
+            
+            // Eğer internetten fiyat geldiyse (IsPriceLoaded), güncel değeri topla.
+            // Gelmediyse 0 kabul et (veya maliyeti ekle, ama 0 daha güvenli)
+            if (item.IsPriceLoaded)
+            {
+                totalValue += item.CurrentValue;
+            }
+        }
+
+        decimal totalProfit = totalValue - totalCost;
+
+        // XAML'daki TextBlock'lara Yazdır
+        // Not: Eğer totalValue henüz 0 ise (fiyatlar gelmediyse), kârı gösterme veya tire koy
+        if (totalValue > 0)
+        {
+            HeaderTotalValueText.Text = $"{totalValue:N2} ₺";
+            HeaderTotalProfitText.Text = $"{totalProfit:N2} ₺";
+            
+            // Renk Ayarı
+            if (totalProfit >= 0)
+                HeaderTotalProfitText.Foreground = System.Windows.Media.Brushes.Green;
+            else
+                HeaderTotalProfitText.Foreground = System.Windows.Media.Brushes.Red;
+        }
+        else
+        {
+            HeaderTotalValueText.Text = "Hesaplanıyor...";
+            HeaderTotalProfitText.Text = "--- ₺";
+            HeaderTotalProfitText.Foreground = System.Windows.Media.Brushes.Gray;
+        }
+
+        // Maliyet her zaman görünür
+        HeaderTotalCostText.Text = $"{totalCost:N2} ₺";
+    }
+
+    // --- 2. GÜNCELLENMİŞ METOT: FİYATLAR GELDİKÇE HESAPLA ---
+    private async Task UpdatePricesAsync()
+    {
+        // Tüm elemanlar için fiyatları çek
+        foreach (var item in PortfolioItems)
+        {
+            decimal livePrice = await _scrapingService.GetPriceAsync(item.Symbol);
+            
+            if (livePrice > 0)
+            {
+                item.CurrentPrice = livePrice;
+            }
+            // DİKKAT: Buradaki "CalculatePortfolioSummary()" satırını sildik/kaldırdık.
+            // Artık her adımda hesaplama yapmıyor.
+        }
+
+        // YENİ YERİ: Döngü bitti, tüm fiyatlar geldi. Şimdi TEK SEFERDE hesapla.
+        CalculatePortfolioSummary();
     }
 }
 
