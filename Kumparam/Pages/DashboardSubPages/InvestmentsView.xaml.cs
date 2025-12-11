@@ -17,62 +17,65 @@ public class InvestmentOption
 {
     public string Name { get; set; } = string.Empty;
     public string Symbol { get; set; } = string.Empty;
-    public string Type { get; set; } = string.Empty;
+    public string SourceType { get; set; } = string.Empty; 
 }
 
 public partial class InvestmentsView : UserControl
 {
     private readonly IUserRepository _userRepository;
     private readonly Guid _currentUserId;
-    
-    // İki servisi de ayrı ayrı tutuyoruz
-    private readonly IFinancialDataService _tcmbService;
     private readonly IFinancialDataService _scrapingService;
-
-    // GENİŞLETİLMİŞ LİSTE
-    private readonly List<InvestmentOption> _supportedInvestments = new List<InvestmentOption>
-    {
-        // Dövizler (TCMB)
-        new InvestmentOption { Name = "Amerikan Doları", Symbol = "USD", Type = "Döviz" },
-        new InvestmentOption { Name = "Euro", Symbol = "EUR", Type = "Döviz" },
-        new InvestmentOption { Name = "İngiliz Sterlini", Symbol = "GBP", Type = "Döviz" },
-
-        // Altınlar (Scraping)
-        new InvestmentOption { Name = "Gram Altın", Symbol = "GLD", Type = "Altın" },
-        new InvestmentOption { Name = "Çeyrek Altın", Symbol = "QGLD", Type = "Altın" },
-
-        // Hisseler (Scraping - BIST)
-        new InvestmentOption { Name = "THY (Hisse)", Symbol = "THYAO", Type = "Borsa" },
-        new InvestmentOption { Name = "Aselsan (Hisse)", Symbol = "ASELS", Type = "Borsa" },
-        new InvestmentOption { Name = "Garanti (Hisse)", Symbol = "GARAN", Type = "Borsa" },
-        new InvestmentOption { Name = "Şişecam (Hisse)", Symbol = "SISE", Type = "Borsa" },
-        new InvestmentOption { Name = "Koç Holding (Hisse)", Symbol = "KCHOL", Type = "Borsa" },
-
-        // Kripto (Scraping)
-        new InvestmentOption { Name = "Bitcoin", Symbol = "BTC", Type = "Kripto" },
-        new InvestmentOption { Name = "Ethereum", Symbol = "ETH", Type = "Kripto" }
-    };
+    private List<InvestmentOption> _supportedInvestments = new List<InvestmentOption>();
 
     public InvestmentsView(Guid userId)
     {
         InitializeComponent();
         _currentUserId = userId;
-
-        // 1. İki servisi de başlat
-        _tcmbService = new TcmbDataService();
-        _scrapingService = new WebScrapingService();
-
+        
         string connectionString = ConfigurationManager.ConnectionStrings["KumparamDB"].ConnectionString;
+        
         _userRepository = new SqlUserRepository(connectionString);
-
-        // 2. Arayüzü Doldur
+        _scrapingService = new WebScrapingService(_userRepository);
+        
         InvestmentComboBox.ItemsSource = _supportedInvestments;
         InvestmentComboBox.DisplayMemberPath = "Name"; 
         InvestmentComboBox.SelectedValuePath = "Symbol";
         PurchaseDatePicker.SelectedDate = DateTime.Now;
-
-        // 3. Verileri Yükle
+        LoadDynamicOptions();
         _ = LoadInvestmentsAsync();
+    }
+    private void LoadDynamicOptions()
+    {
+        try
+        {
+            _supportedInvestments.Clear(); // Listeyi temizle
+
+            // Veritabanındaki HER ŞEYİ çek (USD, EUR ve Altın hepsi burada artık)
+            var allConfigs = _userRepository.GetAllScrapingConfigs();
+
+            foreach (var config in allConfigs)
+            {
+                if (config.IsActive)
+                {
+                    _supportedInvestments.Add(new InvestmentOption
+                    {
+                        Name = config.Description ?? config.Symbol,
+                        Symbol = config.Symbol,
+                        SourceType = config.SourceType // "TCMB" veya "Web"
+                    });
+                }
+            }
+            
+            // ComboBox'ı yenile
+            InvestmentComboBox.ItemsSource = null;
+            InvestmentComboBox.ItemsSource = _supportedInvestments;
+            InvestmentComboBox.DisplayMemberPath = "Name"; 
+            InvestmentComboBox.SelectedValuePath = "Symbol";
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show("Liste yüklenirken hata: " + ex.Message);
+        }
     }
 
     public InvestmentsView()
@@ -83,27 +86,16 @@ public partial class InvestmentsView : UserControl
     // YARDIMCI METOT: Hangi servisi kullanacağına karar verir
     private async Task<decimal> GetSmartPriceAsync(string symbol, bool isBuyingFromBank = false)
     {
-        // Listeden bu sembolün türünü bulalım (Döviz mi, Altın mı?)
+        // 1. Seçilen sembolün kaynağını bul
         var option = _supportedInvestments.FirstOrDefault(x => x.Symbol == symbol);
-        string type = option?.Type ?? "Diğer";
-
-        IFinancialDataService activeService;
-
-        // Eğer Döviz ise TCMB, değilse Scraping kullan
-        if (type == "Döviz")
-        {
-            activeService = _tcmbService;
-        }
-        else
-        {
-            activeService = _scrapingService;
-        }
-
-        // Alış veya Satış fiyatını iste
+        
+        // Eğer listede yoksa veya veritabanında silindiyse 0 dön
+        if (option == null) return 0;
+        // Web Servisine git
         if (isBuyingFromBank)
-            return await activeService.GetBuyingPriceAsync(symbol);
+            return await _scrapingService.GetBuyingPriceAsync(symbol);
         else
-            return await activeService.GetPriceAsync(symbol);
+            return await _scrapingService.GetPriceAsync(symbol);
     }
 
     private async Task LoadInvestmentsAsync()

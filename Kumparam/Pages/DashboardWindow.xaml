@@ -119,6 +119,15 @@
                             <TextBlock Text="Hedefler"/>
                         </StackPanel>
                     </Button>
+                    <Button x:Name="AdminPanelButton" 
+                            Style="{StaticResource SidebarButtonStyle}" 
+                            Visibility="Collapsed" 
+                            Click="AdminPanelButton_Click">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Security"/>
+                            <TextBlock Text="Yönetici Paneli"/>
+                        </StackPanel>
+                    </Button>
                 </StackPanel>
 
                 <!-- 3. Çıkış Butonu -->
@@ -187,7 +196,7 @@
                         </materialDesign:PopupBox.ToggleContent>
                         <!-- Profil Açılır Menüsü -->
                         <StackPanel Width="150">
-                            <Button Content="Profilim"/>
+                            <Button Content="Profilim" Click="ProfileButton_Click"/>
                             <Button Content="Ayarlar"/>
                             <Separator/>
                             <Button Content="Oturumu Kapat" Click="Logout_Button_Click"/>

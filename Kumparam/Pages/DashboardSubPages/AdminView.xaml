@@ -1,0 +1,105 @@
+﻿<UserControl x:Class="Kumparam.Pages.DashboardSubPages.AdminView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             mc:Ignorable="d" 
+             d:DesignHeight="600" d:DesignWidth="900"
+             TextElement.Foreground="{DynamicResource MaterialDesignBody}"
+             FontFamily="{DynamicResource MaterialDesignFont}">
+
+    <Grid Margin="20">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="1.5*"/> <ColumnDefinition Width="1*"/>   </Grid.ColumnDefinitions>
+
+        <materialDesign:Card Grid.Column="0" Style="{StaticResource DashboardCardStyle}" VerticalAlignment="Stretch" Margin="0,0,20,0">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <DockPanel LastChildFill="False" Margin="0,0,0,10">
+                    <TextBlock Text="Web Scraping Ayarları" Style="{StaticResource HeaderTextStyle}" VerticalAlignment="Center"/>
+                    <Button Content="YENİ EKLE" Style="{StaticResource MaterialDesignOutlinedButton}" 
+                            DockPanel.Dock="Right" Click="NewConfig_Click"/>
+                </DockPanel>
+
+                <DataGrid Grid.Row="1" x:Name="ConfigsGrid" AutoGenerateColumns="False" 
+                          CanUserAddRows="False" IsReadOnly="True" 
+                          SelectionMode="Single" SelectionUnit="FullRow"
+                          SelectionChanged="ConfigsGrid_SelectionChanged">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Sembol" Binding="{Binding Symbol}" FontWeight="Bold"/>
+                        <DataGridTextColumn Header="Açıklama" Binding="{Binding Description}" Width="*"/>
+                        <DataGridCheckBoxColumn Header="Aktif" Binding="{Binding IsActive}"/>
+                        <DataGridTemplateColumn Header="İşlemler">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Button Style="{StaticResource MaterialDesignIconForegroundButton}" 
+                                            ToolTip="Sil" Click="DeleteConfig_Click" Tag="{Binding ConfigId}">
+                                        <materialDesign:PackIcon Kind="Delete" Foreground="Red"/>
+                                    </Button>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Grid>
+        </materialDesign:Card>
+
+        <materialDesign:Card Grid.Column="1" Style="{StaticResource DashboardCardStyle}" VerticalAlignment="Top">
+            <StackPanel>
+                <TextBlock Text="Ayar Düzenle / Test Et" Style="{StaticResource HeaderTextStyle}"/>
+
+                <TextBox x:Name="SymbolTextBox" materialDesign:HintAssist.Hint="Sembol (Örn: GLD)" 
+                         Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,10"/>
+                <ComboBox x:Name="SourceTypeComboBox"
+                          materialDesign:HintAssist.Hint="Veri Kaynağı Seçin"
+                          Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                          Margin="0,10"
+                          SelectionChanged="SourceTypeComboBox_SelectionChanged">
+                    <!-- DOVIZ.COM KATEGORİLERİ -->
+                    <ComboBoxItem Content="Döviz (doviz.com)" Tag="Web_Currency"/>
+                    <ComboBoxItem Content="Altın (altin.doviz.com)" Tag="Web_Gold"/>
+                    <ComboBoxItem Content="Borsa (borsa.doviz.com)" Tag="Web_Stock"/>
+                    <ComboBoxItem Content="Kripto (doviz.com)" Tag="Web_Crypto"/>
+    
+                    <!-- DİĞER -->
+                    <ComboBoxItem Content="Özel / Diğer Web Sitesi" Tag="Web_Custom"/>
+                </ComboBox>
+
+                <TextBox x:Name="DescTextBox" materialDesign:HintAssist.Hint="Açıklama (Örn: Gram Altın)" 
+                         Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,10"/>
+
+                <TextBox x:Name="UrlTextBox" materialDesign:HintAssist.Hint="Hedef URL" 
+                         Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,10"
+                         TextWrapping="Wrap" Height="60" AcceptsReturn="True" VerticalScrollBarVisibility="Auto"/>
+
+                <TextBox x:Name="XPathSellingBox" materialDesign:HintAssist.Hint="Banka Satış XPath (Yatırım)" 
+                         Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,10"/>
+
+                <TextBox x:Name="XPathBuyingBox" materialDesign:HintAssist.Hint="Banka Alış XPath (Bozdurma)" 
+                         Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,10"/>
+
+                <CheckBox x:Name="ActiveCheckBox" Content="Bu kaynak aktif" IsChecked="True" Margin="0,10"/>
+
+                <TextBlock x:Name="TestResultText" Text="Test bekleniyor..." FontSize="12" Foreground="Gray" Margin="0,5"/>
+
+                <Grid Margin="0,20,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <Button Grid.Column="0" Content="TEST ET 🧪" Style="{StaticResource MaterialDesignOutlinedButton}" 
+                            Margin="0,0,5,0" Click="TestConfig_Click"/>
+                    
+                    <Button Grid.Column="1" Content="KAYDET 💾" Style="{StaticResource MaterialDesignRaisedButton}" 
+                            Margin="5,0,0,0" Click="SaveConfig_Click"/>
+                </Grid>
+            </StackPanel>
+        </materialDesign:Card>
+    </Grid>
+</UserControl>
