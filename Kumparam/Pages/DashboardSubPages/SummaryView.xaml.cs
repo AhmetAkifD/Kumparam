@@ -117,4 +117,15 @@ public partial class SummaryView : UserControl
         // 3. Kutunun içine koy
         ChartContainer.Content = chart;
     }
+    private void SeeAllTransactions_Click(object sender, RoutedEventArgs e)
+    {
+        // DashboardWindow'a eriş ve ana içeriği değiştir
+        var dashboardWindow = Window.GetWindow(this) as DashboardWindow;
+        if (dashboardWindow != null)
+        {
+            // Sol menüdeki butonun aktiflik durumunu güncellemek istersen burada yapabilirsin
+            // Ama en temeli sayfayı değiştirmektir:
+            dashboardWindow.MainContentArea.Content = new IncomeExpenseView(_currentUserId);
+        }
+    }
 }

@@ -40,5 +40,9 @@ namespace Kumparam.Core.Interfaces
         void AddScrapingConfig(ScrapingConfig config);
         void UpdateScrapingConfig(ScrapingConfig config);
         void DeleteScrapingConfig(int configId);
+        List<Transaction> GetAllTransactions(Guid userId);
+        void DeleteTransaction(Guid transactionId);
+        List<Transaction> GetDeletedTransactions(Guid userId);
+        void RestoreTransaction(int deletedId); // DeletedId int olduğu için
     }
 }

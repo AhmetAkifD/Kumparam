@@ -80,8 +80,15 @@
                     </Grid.RowDefinitions>
                     
                     <DockPanel LastChildFill="False" Margin="0,0,0,10">
-                        <TextBlock Text="Son İşlemler" Style="{StaticResource HeaderTextStyle}" Margin="0"/>
-                        <Button Content="Tümünü Gör" Style="{StaticResource MaterialDesignFlatButton}" Height="Auto" Padding="10,5" DockPanel.Dock="Right"/>
+                        <TextBlock Text="Son İşlemler" Style="{StaticResource HeaderTextStyle}" VerticalAlignment="Center"/>
+    
+                        <Button DockPanel.Dock="Right"
+                                Style="{StaticResource MaterialDesignFlatButton}"
+                                Content="Tümünü Gör >"
+                                FontSize="16"
+                                Foreground="Green"
+                                Click="SeeAllTransactions_Click"
+                                Cursor="Hand"/>
                     </DockPanel>
 
                     <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">

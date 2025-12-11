@@ -1,0 +1,65 @@
+﻿<UserControl x:Class="Kumparam.Pages.DashboardSubPages.RecycleBinView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             mc:Ignorable="d" 
+             d:DesignHeight="600" d:DesignWidth="900"
+             TextElement.Foreground="{DynamicResource MaterialDesignBody}"
+             FontFamily="{DynamicResource MaterialDesignFont}">
+
+    <materialDesign:Card Margin="20" Padding="20" Style="{StaticResource DashboardCardStyle}" VerticalAlignment="Stretch">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <DockPanel LastChildFill="False" Margin="0,0,0,20">
+                <Button Style="{StaticResource MaterialDesignIconForegroundButton}" 
+                        HorizontalAlignment="Left" Click="BackButton_Click" ToolTip="Geri Dön">
+                    <materialDesign:PackIcon Kind="ArrowLeft" Width="24" Height="24"/>
+                </Button>
+                <TextBlock Text="Geri Dönüşüm Kutusu" Style="{StaticResource HeaderTextStyle}" 
+                           VerticalAlignment="Center" Margin="10,0,0,0"/>
+                <materialDesign:PackIcon Kind="DeleteRestore" Width="30" Height="30" 
+                                         VerticalAlignment="Center" DockPanel.Dock="Right" Opacity="0.5"/>
+            </DockPanel>
+
+            <DataGrid Grid.Row="1" x:Name="DeletedGrid" AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
+                      HeadersVisibility="Column" SelectionMode="Single" SelectionUnit="FullRow">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Tarih" Binding="{Binding TransactionDate, StringFormat='dd.MM.yyyy'}" Width="100"/>
+                    <DataGridTextColumn Header="Kategori" Binding="{Binding Category}" Width="120" FontWeight="Bold"/>
+                    <DataGridTextColumn Header="Açıklama" Binding="{Binding Description}" Width="*"/>
+                    
+                    <DataGridTemplateColumn Header="Tutar" Width="100">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Amount, StringFormat='{}{0:N2} ₺'}" FontWeight="Bold"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <DataGridTemplateColumn Width="80">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Button Style="{StaticResource MaterialDesignIconForegroundButton}"
+                                        Tag="{Binding Description}" 
+                                        Click="RestoreButton_Click"
+                                        ToolTip="Geri Yükle">
+                                    <materialDesign:PackIcon Kind="RestoreFromTrash" Foreground="Green"/>
+                                </Button>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+
+            <TextBlock Grid.Row="2" Text="* Geri yüklenen işlemler bakiyenize tekrar dahil edilecektir." 
+                       Opacity="0.6" FontStyle="Italic" Margin="0,10,0,0" HorizontalAlignment="Center"/>
+        </Grid>
+    </materialDesign:Card>
+</UserControl>

@@ -305,7 +305,7 @@ public partial class InvestmentsView : UserControl
                             UserId = _currentUserId,
                             Amount = incomeTotal,
                             Type = "Income",
-                            Category = "Yatırım Satışı",
+                            Category = "Yatırım",
                             Description = $"{investment.Name} Satışı ({sellAmount:N2} Adet x {currentRate:N4})",
                             TransactionDate = DateTime.Now
                         };

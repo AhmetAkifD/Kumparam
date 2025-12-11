@@ -116,4 +116,12 @@ public partial class ProfileView : UserControl
             }
         }
     }
+    private void OpenRecycleBin_Click(object sender, RoutedEventArgs e)
+    {
+        var dashboard = Window.GetWindow(this) as DashboardWindow;
+        if (dashboard != null)
+        {
+            dashboard.MainContentArea.Content = new RecycleBinView(_currentUserId);
+        }
+    }
 }
