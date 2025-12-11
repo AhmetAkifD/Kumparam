@@ -11,7 +11,9 @@
 
     <Grid Margin="20">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="1.5*"/> <ColumnDefinition Width="2*"/>   </Grid.ColumnDefinitions>
+            <ColumnDefinition Width="1.5*"/>
+            <ColumnDefinition Width="2*"/>
+        </Grid.ColumnDefinitions>
 
         <materialDesign:Card Grid.Column="0" Style="{StaticResource DashboardCardStyle}" Margin="0,0,20,0" VerticalAlignment="Top">
             <StackPanel>
@@ -48,7 +50,26 @@
                         <DataTemplate>
                             <materialDesign:Card Margin="0,0,0,15" Padding="15">
                                 <StackPanel>
-                                    <TextBlock Text="{Binding Title}" FontWeight="Bold" FontSize="18" Foreground="Black"/>
+                                    <DockPanel LastChildFill="False">
+                                        <TextBlock Text="{Binding Title}" FontWeight="Bold" FontSize="18" Foreground="Black" 
+                                                   VerticalAlignment="Center" DockPanel.Dock="Left"/>
+                                        
+                                        <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" VerticalAlignment="Center">
+                                            <Button Style="{StaticResource MaterialDesignIconForegroundButton}"
+                                                    ToolTip="Para Ekle"
+                                                    Margin="5,0"
+                                                    Tag="{Binding}"
+                                                    Click="AddMoney_Click">
+                                                <materialDesign:PackIcon Kind="CashPlus" Foreground="Green" Width="24" Height="24"/>
+                                            </Button>
+                                            <Button Style="{StaticResource MaterialDesignIconForegroundButton}"
+                                                    ToolTip="Sil"
+                                                    Margin="5,0"
+                                                    Tag="{Binding}"  Click="DeleteGoal_Click">
+                                                <materialDesign:PackIcon Kind="Delete" Foreground="Red" Width="24" Height="24"/>
+                                            </Button>
+                                        </StackPanel>
+                                    </DockPanel>
                             
                                     <StackPanel Orientation="Horizontal" Margin="0,5">
                                         <TextBlock Text="Birikim: " FontWeight="Bold"/>

@@ -34,6 +34,10 @@ public partial class AdminView : UserControl
     // 4. KRİPTO (doviz.com/kripto) Template'leri
     private const string Tpl_Url_Crypto = "https://www.doviz.com/kripto-paralar";
     private const string Tpl_XP_Crypto_Last = "//tr[td//div[text()=\"\"]]/td[3]";
+    
+    // 5. TEFAS Template'leri
+    private const string Tpl_Url_Fund = "https://www.tefas.gov.tr/FonAnaliz.aspx?FonKod=[LINK-ADI]";
+    private const string Tpl_XP_Fund_Price = "//div[@class='main-indicators']/ul[@class='top-list']/li[1]/span";
 
     public AdminView()
     {
@@ -126,7 +130,11 @@ public partial class AdminView : UserControl
         {
             using (var client = new HttpClient())
             {
-                client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36");
+                // Tarayıcı Taklidi (User-Agent)
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
+                client.DefaultRequestHeaders.Add("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8");
+                client.DefaultRequestHeaders.Add("Accept-Language", "tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7");
                 
                 var html = await client.GetStringAsync(UrlTextBox.Text);
                 var doc = new HtmlDocument();
@@ -285,6 +293,18 @@ public partial class AdminView : UserControl
                     XPathSellingBox.Text = Tpl_XP_Crypto_Last;
                     DescTextBox.Text = "";
                     XPathBuyingBox.IsEnabled = false;
+                    break;
+                case "Web_Fund":
+                    UrlTextBox.Text = Tpl_Url_Fund;
+    
+                    // Fon için de tek fiyat (Son Fiyat) geçerlidir
+                    XPathSellingBox.Text = Tpl_XP_Fund_Price;
+    
+                    // Alış kutusunu KAPATIYORUZ
+                    XPathBuyingBox.Text = "";
+                    XPathBuyingBox.IsEnabled = false;
+    
+                    DescTextBox.Text = "Yatırım Fonu";
                     break;
 
                 default: // Custom
