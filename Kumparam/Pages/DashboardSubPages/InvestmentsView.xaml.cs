@@ -1,11 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Configuration;
+using System.Globalization;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Linq;
-using Kumparam.Core; // LINQ (FirstOrDefault) için gerekli
+using System.Windows.Data;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
+using Kumparam.Core;
 using Kumparam.Core.Models;
 using Kumparam.Core.Interfaces;
 using Kumparam.Data.Repositories;
@@ -13,19 +18,17 @@ using Kumparam.Data.Services;
 
 namespace Kumparam.Pages.DashboardSubPages;
 
-public class InvestmentOption
-{
-    public string Name { get; set; } = string.Empty;
-    public string Symbol { get; set; } = string.Empty;
-    public string SourceType { get; set; } = string.Empty; 
-}
-
 public partial class InvestmentsView : UserControl
 {
     private readonly IUserRepository _userRepository;
     private readonly Guid _currentUserId;
     private readonly IFinancialDataService _scrapingService;
-    private List<InvestmentOption> _supportedInvestments = new List<InvestmentOption>();
+
+    // UI'ın dinlediği canlı liste (Gruplanmış)
+    public ObservableCollection<PortfolioItem> PortfolioItems { get; set; }
+
+    // ComboBox için seçenekler listesi
+    public List<InvestmentOption> InvestmentOptions { get; set; }
 
     public InvestmentsView(Guid userId)
     {
@@ -33,42 +36,49 @@ public partial class InvestmentsView : UserControl
         _currentUserId = userId;
         
         string connectionString = ConfigurationManager.ConnectionStrings["KumparamDB"].ConnectionString;
-        
         _userRepository = new SqlUserRepository(connectionString);
-        _scrapingService = new WebScrapingService(_userRepository);
         
-        InvestmentComboBox.ItemsSource = _supportedInvestments;
-        InvestmentComboBox.DisplayMemberPath = "Name"; 
-        InvestmentComboBox.SelectedValuePath = "Symbol";
-        PurchaseDatePicker.SelectedDate = DateTime.Now;
+        // Scraping servisini başlat (Parametre alıp almaması senin Service koduna bağlı, 
+        // senin attığın kodda parametre vardı, onu korudum. Hata verirse parantez içini sil.)
+        _scrapingService = new WebScrapingService(_userRepository); 
+        // Not: Eğer senin WebScrapingService constructor'ında IUserRepository istiyorsa üstteki satırı silip şunu aç:
+        // _scrapingService = new WebScrapingService(_userRepository);
+
+        // 1. ComboBox Seçeneklerini Yükle
         LoadDynamicOptions();
-        _ = LoadInvestmentsAsync();
+
+        // 2. Portföyü Yükle
+        _ = LoadPortfolioAsync();
+        
+        // Tarihi bugüne ayarla
+        PurchaseDatePicker.SelectedDate = DateTime.Now;
     }
+
+    public InvestmentsView() { InitializeComponent(); }
+
+    // --- 1. COMBOBOX DOLDURMA (Veritabanından) ---
     private void LoadDynamicOptions()
     {
         try
         {
-            _supportedInvestments.Clear(); // Listeyi temizle
-
-            // Veritabanındaki HER ŞEYİ çek (USD, EUR ve Altın hepsi burada artık)
             var allConfigs = _userRepository.GetAllScrapingConfigs();
+            InvestmentOptions = new List<InvestmentOption>();
 
             foreach (var config in allConfigs)
             {
                 if (config.IsActive)
                 {
-                    _supportedInvestments.Add(new InvestmentOption
+                    InvestmentOptions.Add(new InvestmentOption
                     {
-                        Name = config.Description ?? config.Symbol,
                         Symbol = config.Symbol,
-                        SourceType = config.SourceType // "TCMB" veya "Web"
+                        Name = config.Description ?? config.Symbol,
+                        SourceType = "Web" // Artık hepsi Web Scraping
                     });
                 }
             }
             
             // ComboBox'ı yenile
-            InvestmentComboBox.ItemsSource = null;
-            InvestmentComboBox.ItemsSource = _supportedInvestments;
+            InvestmentComboBox.ItemsSource = InvestmentOptions;
             InvestmentComboBox.DisplayMemberPath = "Name"; 
             InvestmentComboBox.SelectedValuePath = "Symbol";
         }
@@ -78,66 +88,59 @@ public partial class InvestmentsView : UserControl
         }
     }
 
-    public InvestmentsView()
-    {
-        InitializeComponent();
-    }
-
-    // YARDIMCI METOT: Hangi servisi kullanacağına karar verir
-    private async Task<decimal> GetSmartPriceAsync(string symbol, bool isBuyingFromBank = false)
-    {
-        // 1. Seçilen sembolün kaynağını bul
-        var option = _supportedInvestments.FirstOrDefault(x => x.Symbol == symbol);
-        
-        // Eğer listede yoksa veya veritabanında silindiyse 0 dön
-        if (option == null) return 0;
-        // Web Servisine git
-        if (isBuyingFromBank)
-            return await _scrapingService.GetBuyingPriceAsync(symbol);
-        else
-            return await _scrapingService.GetPriceAsync(symbol);
-    }
-
-    private async Task LoadInvestmentsAsync()
+    // --- 2. PORTFÖY YÜKLEME (GRUPLAMA MANTIĞI) ---
+    private async Task LoadPortfolioAsync()
     {
         try
         {
-            var investments = _userRepository.GetInvestments(_currentUserId);
+            // 1. Veritabanından ham veriyi çek
+            var rawInvestments = _userRepository.GetInvestments(_currentUserId);
 
-            foreach (var investment in investments)
-            {
-                if (!string.IsNullOrEmpty(investment.Symbol))
+            // 2. Gruplama (Grouping)
+            var groupedList = rawInvestments
+                .GroupBy(x => x.Symbol)
+                .Select(g => new PortfolioItem
                 {
-                    // YENİ: Akıllı fiyat çekiciyi kullan
-                    decimal livePrice = await GetSmartPriceAsync(investment.Symbol);
-                    
-                    if (livePrice > 0)
-                    {
-                        investment.CurrentPrice = livePrice;
-                    }
-                }
-            }
+                    Symbol = g.Key,
+                    Name = g.First().Name,
+                    TotalQuantity = g.Sum(x => x.Quantity),
+                    // Ağırlıklı Ortalama Maliyet
+                    AverageCost = g.Sum(x => x.Quantity * x.BuyingPrice) / g.Sum(x => x.Quantity),
+                    CurrentPrice = null // Başlangıçta boş
+                })
+                .ToList();
 
-            InvestmentsList.ItemsSource = null;
-            InvestmentsList.ItemsSource = investments;
+            // 3. UI'ya Bağla
+            PortfolioItems = new ObservableCollection<PortfolioItem>(groupedList);
+            PortfolioGrid.ItemsSource = PortfolioItems;
+
+            // 4. Fiyatları Güncelle
+            await UpdatePricesAsync();
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Yatırımlar yüklenirken hata: {ex.Message}");
+            MessageBox.Show($"Portföy yüklenirken hata: {ex.Message}");
         }
     }
 
-    private void InvestmentComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    // --- 3. CANLI FİYAT GÜNCELLEME ---
+    private async Task UpdatePricesAsync()
     {
-        if (InvestmentComboBox.SelectedItem is InvestmentOption selectedOption)
+        foreach (var item in PortfolioItems)
         {
-            SymbolTextBox.Text = selectedOption.Symbol;
+            // TCMB kontrolü kaldırıldı. Hepsi Scraping servisinden geliyor.
+            decimal livePrice = await _scrapingService.GetPriceAsync(item.Symbol);
+            
+            if (livePrice > 0)
+            {
+                item.CurrentPrice = livePrice;
+            }
         }
     }
 
+    // --- 4. YENİ YATIRIM KAYDETME ---
     private async void SaveInvestment_Click(object sender, RoutedEventArgs e)
     {
-        // 1. Temel Validasyonlar (Boş mu, sayı mı?)
         if (InvestmentComboBox.SelectedItem == null || string.IsNullOrWhiteSpace(QuantityTextBox.Text))
         {
             MessageBox.Show("Lütfen yatırım türünü ve miktarını seçin.");
@@ -154,50 +157,35 @@ public partial class InvestmentsView : UserControl
         {
             var selectedOption = (InvestmentOption)InvestmentComboBox.SelectedItem;
 
-            // 2. Fiyatı Öğren (İnternetten Çek)
+            // Fiyatı Çek (Alış Fiyatı - Banka Satışı)
             decimal costPrice = 0;
             if (!string.IsNullOrEmpty(selectedOption.Symbol))
             {
-                costPrice = await GetSmartPriceAsync(selectedOption.Symbol);
+                costPrice = await _scrapingService.GetBuyingPriceAsync(selectedOption.Symbol);
             }
 
-            // Fiyat çekilemediyse manuel sor
+            // Fiyat çekilemediyse sor
             if (costPrice == 0)
             {
                 var inputDialog = new SimpleInputWindow("Fiyat çekilemedi. Alış Fiyatını Girin:");
                 if (inputDialog.ShowDialog() == true)
                 {
-                    if (!decimal.TryParse(inputDialog.ResultText, out costPrice) || costPrice <= 0)
-                    {
-                        MessageBox.Show("Geçersiz fiyat. İşlem iptal.");
-                        return;
-                    }
+                    if (!decimal.TryParse(inputDialog.ResultText, out costPrice) || costPrice <= 0) return;
                 }
-                else
-                {
-                    return; // İptal edildi
-                }
+                else return;
             }
 
-            // 3. BAKİYE KONTROLÜ (İşte Burası!) 🛑
-            // İşlem ne kadar tutacak?
+            // Bakiye Kontrolü
             decimal totalAmount = quantity * costPrice;
-
-            // Cebimizde ne kadar var?
             var summary = _userRepository.GetFinancialSummary(_currentUserId);
-            decimal currentBalance = summary.TotalBalance;
 
-            if (totalAmount > currentBalance)
+            if (totalAmount > summary.TotalBalance)
             {
-                MessageBox.Show($"Yetersiz Bakiye!\n\n" +
-                                $"Mevcut Bakiye: {currentBalance:N2} ₺\n" +
-                                $"İşlem Tutarı: {totalAmount:N2} ₺\n" +
-                                $"Eksik: {totalAmount - currentBalance:N2} ₺", 
-                                "İşlem Başarısız", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return; // <--- İşlemi burada kesiyoruz, veritabanına gitmiyor.
+                MessageBox.Show($"Yetersiz Bakiye!\nGereken: {totalAmount:N2} ₺\nMevcut: {summary.TotalBalance:N2} ₺", "Hata", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
             }
 
-            // 4. Her Şey Yolundaysa Kaydet (Varlık Ekle)
+            // Yatırımı Kaydet
             var newInvestment = new Investment
             {
                 UserId = _currentUserId,
@@ -207,10 +195,9 @@ public partial class InvestmentsView : UserControl
                 BuyingPrice = costPrice, 
                 PurchaseDate = PurchaseDatePicker.SelectedDate ?? DateTime.Now
             };
-
             _userRepository.AddInvestment(newInvestment);
 
-            // 5. Gider Fişi Kes (Bakiyeden Düş)
+            // Gider Fişi Kes
             var newTransaction = new Transaction
             {
                 UserId = _currentUserId,
@@ -230,94 +217,59 @@ public partial class InvestmentsView : UserControl
             QuantityTextBox.Clear();
             PurchaseDatePicker.SelectedDate = DateTime.Now;
 
-            _ = LoadInvestmentsAsync();
+            // Listeyi Yenile (Yeni Metot)
+            await LoadPortfolioAsync();
         }
         catch (Exception ex)
         {
             MessageBox.Show($"Kayıt hatası: {ex.Message}");
         }
     }
-    
-    private void DeleteInvestment_Click(object sender, RoutedEventArgs e)
-    {
-        if (sender is Button btn && btn.Tag is Guid investmentId)
-        {
-            var result = MessageBox.Show("Bu yatırımı silmek istediğinize emin misiniz?", 
-                                         "Silme Onayı", 
-                                         MessageBoxButton.YesNo, 
-                                         MessageBoxImage.Warning);
 
-            if (result == MessageBoxResult.Yes)
-            {
-                try
-                {
-                    _userRepository.DeleteInvestment(investmentId);
-                    _ = LoadInvestmentsAsync();
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"Silme hatası: {ex.Message}");
-                }
-            }
-        }
-    }
-
-    private async void SellInvestment_Click(object sender, RoutedEventArgs e)
+    // --- 5. SATIŞ (CÜZDAN BOŞALTMA) ---
+    private async void SellGroup_Click(object sender, RoutedEventArgs e)
     {
-        if (sender is Button btn && btn.Tag is Investment investment)
+        if (sender is Button btn && btn.DataContext is PortfolioItem item)
         {
-            var inputDialog = new SimpleInputWindow("Satılacak Miktarı Giriniz:");
+            var inputDialog = new SimpleInputWindow($"{item.Symbol} Satış Miktarı:");
             if (inputDialog.ShowDialog() == true)
             {
                 if (decimal.TryParse(inputDialog.ResultText, out decimal sellAmount) && sellAmount > 0)
                 {
-                    if (sellAmount > investment.Quantity)
+                    if (sellAmount > item.TotalQuantity)
                     {
-                        MessageBox.Show("Sahip olduğunuzdan fazlasını satamazsınız!");
+                        MessageBox.Show("Elinizde olandan fazlasını satamazsınız!");
                         return;
                     }
 
-                    try
+                    // Satış Kuru (Banka Alışı)
+                    // Fiyat henüz yüklenmediyse maliyetten satmaya çalışır (Fallback)
+                    decimal currentRate = item.CurrentPrice ?? item.AverageCost;
+
+                    // Eğer güncel fiyat yoksa tekrar çekmeyi dene
+                    if (item.CurrentPrice == null)
                     {
-                        // YENİ: Akıllı fiyat çekiciyi kullan (Satış için - Bankadan Alış Kuru)
-                        decimal currentRate = await GetSmartPriceAsync(investment.Symbol, isBuyingFromBank: true);
-                        
-                        if (currentRate == 0) 
-                        {
-                            MessageBox.Show("Güncel satış kuru çekilemedi.");
-                            return; 
-                        }
-
-                        decimal incomeTotal = sellAmount * currentRate;
-
-                        decimal newQuantity = investment.Quantity - sellAmount;
-                        if (newQuantity == 0)
-                        {
-                            _userRepository.DeleteInvestment(investment.InvestmentId);
-                        }
-                        else
-                        {
-                            _userRepository.UpdateInvestmentQuantity(investment.InvestmentId, newQuantity);
-                        }
-
-                        var newTransaction = new Transaction
-                        {
-                            UserId = _currentUserId,
-                            Amount = incomeTotal,
-                            Type = "Income",
-                            Category = "Yatırım",
-                            Description = $"{investment.Name} Satışı ({sellAmount:N2} Adet x {currentRate:N4})",
-                            TransactionDate = DateTime.Now
-                        };
-                        _userRepository.AddTransaction(newTransaction);
-
-                        MessageBox.Show($"Satış Başarılı! {incomeTotal:N2} ₺ hesabınıza eklendi.");
-                        _ = LoadInvestmentsAsync();
+                         currentRate = await _scrapingService.GetPriceAsync(item.Symbol);
+                         if(currentRate == 0) currentRate = item.AverageCost;
                     }
-                    catch (Exception ex)
+
+                    // Gelir Ekle
+                    var income = new Transaction
                     {
-                        MessageBox.Show($"Satış hatası: {ex.Message}");
-                    }
+                        UserId = _currentUserId,
+                        Amount = sellAmount * currentRate,
+                        Type = "Income",
+                        Category = "Yatırım",
+                        Description = $"{item.Symbol} Satışı ({sellAmount:N2} Adet)",
+                        TransactionDate = DateTime.Now
+                    };
+                    _userRepository.AddTransaction(income);
+
+                    // Adet Düş
+                    ReduceInvestmentQuantity(item.Symbol, sellAmount);
+
+                    MessageBox.Show("Satış gerçekleşti ve bakiyenize eklendi! 💸");
+                    await LoadPortfolioAsync();
                 }
                 else
                 {
@@ -326,4 +278,194 @@ public partial class InvestmentsView : UserControl
             }
         }
     }
+
+    private void ReduceInvestmentQuantity(string symbol, decimal amountToSell)
+    {
+        var investments = _userRepository.GetInvestments(_currentUserId)
+            .Where(x => x.Symbol == symbol)
+            .OrderBy(x => x.PurchaseDate) // FIFO
+            .ToList();
+
+        decimal remainingToSell = amountToSell;
+
+        foreach (var inv in investments)
+        {
+            if (remainingToSell <= 0) break;
+
+            if (inv.Quantity <= remainingToSell)
+            {
+                _userRepository.DeleteInvestment(inv.InvestmentId);
+                remainingToSell -= inv.Quantity;
+            }
+            else
+            {
+                decimal newQty = inv.Quantity - remainingToSell;
+                _userRepository.UpdateInvestmentQuantity(inv.InvestmentId, newQty);
+                remainingToSell = 0;
+            }
+        }
+    }
+    // InvestmentsView.xaml.cs içine ekle:
+
+    private void OpenAddDialog_Click(object sender, RoutedEventArgs e)
+    {
+        // Burası için 2 seçenek var:
+        // 1. Basit bir MessageBox ile "Admin panelinden veya başka yerden ekleyin" diyebiliriz.
+        // 2. Veya şu anki sayfanın üzerine açılan bir Popup yapabiliriz.
+    
+        // Şimdilik basit tutalım:
+        MessageBox.Show("Yeni yatırım ekleme ekranı bu tasarıma daha sonra entegre edilecek.\nŞimdilik veritabanından eklemeye devam edebilirsiniz.", "Bilgi");
+    
+        // NOT: Eğer eski sol paneldeki ekleme formunu kullanmak istiyorsan,
+        // XAML'da sol tarafa bir "Expander" veya "Popup" koyup o formu oraya taşıyabiliriz.
+        // İstersen bir sonraki adımda "Yeni Ekle" butonuna basınca açılan şık bir pencere yapalım.
+    }
+    private void InvestmentComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (InvestmentComboBox.SelectedItem is InvestmentOption selectedOption)
+        {
+            SymbolTextBox.Text = selectedOption.Symbol;
+        }
+    }
+    // --- YENİ: SİLME (İPTAL) İŞLEMİ ---
+    private void DeleteGroup_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button btn && btn.DataContext is PortfolioItem item)
+        {
+            // Kullanıcıya ne olacağını net anlatan bir uyarı
+            var result = MessageBox.Show(
+                $"DİKKAT: '{item.Name}' varlığını tamamen silmek üzeresiniz.\n\n" +
+                $"Bu bir 'Satış' değildir. Kayıt hatalı olduğu için siliniyorsa:\n" +
+                $"Bu varlık için harcanan toplam {item.TotalQuantity * item.AverageCost:N2} ₺ bakiyenize İADE edilecektir.\n\n" +
+                "Onaylıyor musunuz?", 
+                "Yatırım Silme / İptal", 
+                MessageBoxButton.YesNo, 
+                MessageBoxImage.Warning);
+
+            if (result == MessageBoxResult.Yes)
+            {
+                try
+                {
+                    // 1. İade Edilecek Tutarı Hesapla (Toplam Maliyet)
+                    decimal refundAmount = item.TotalQuantity * item.AverageCost;
+
+                    // 2. O sembole ait tüm yatırımları veritabanından sil
+                    var investmentsToDelete = _userRepository.GetInvestments(_currentUserId)
+                                                             .Where(x => x.Symbol == item.Symbol)
+                                                             .ToList();
+
+                    foreach (var inv in investmentsToDelete)
+                    {
+                        _userRepository.DeleteInvestment(inv.InvestmentId);
+                    }
+
+                    // 3. Parayı Bakiyeye Geri Yükle (Gelir Fişi Kes)
+                    if (refundAmount > 0)
+                    {
+                        var refundTransaction = new Transaction
+                        {
+                            UserId = _currentUserId,
+                            Amount = refundAmount,
+                            Type = "Income", // Gelir (Para geri dönüyor)
+                            Category = "Yatırım İadesi",
+                            Description = $"{item.Symbol} Yatırımı İptali/Silinmesi (İade)",
+                            TransactionDate = DateTime.Now
+                        };
+                        _userRepository.AddTransaction(refundTransaction);
+                    }
+
+                    MessageBox.Show("Yatırım silindi ve tutar bakiyenize iade edildi.");
+                    
+                    // Listeyi Yenile
+                    _ = LoadPortfolioAsync();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Silme sırasında hata oluştu: " + ex.Message);
+                }
+            }
+        }
+    }
+}
+
+// --- YARDIMCI SINIFLAR (Namespace İçine Taşındı - Dışarıda Olmalı) ---
+
+public class InvestmentOption
+{
+    public string Name { get; set; } = string.Empty;
+    public string Symbol { get; set; } = string.Empty;
+    public string SourceType { get; set; } = string.Empty; 
+}
+
+public class PortfolioItem : INotifyPropertyChanged
+{
+    public string Symbol { get; set; }
+    public string Name { get; set; }
+    public decimal TotalQuantity { get; set; }
+    public decimal AverageCost { get; set; } // Birim Maliyet (Hesaplama için lazım ama göstermeyeceğiz)
+    
+    // YENİ: Toplam Harcanan Para (Bu eksikti, o yüzden görünmüyordu)
+    public decimal TotalCost => TotalQuantity * AverageCost; 
+
+    private decimal? _currentPrice;
+    public decimal? CurrentPrice
+    {
+        get => _currentPrice;
+        set { 
+            _currentPrice = value; 
+            OnPropertyChanged(); 
+            // Fiyat değişince tüm toplamları yeniden hesaplat
+            OnPropertyChanged(nameof(CurrentValue)); 
+            OnPropertyChanged(nameof(TotalCost));
+            OnPropertyChanged(nameof(ProfitLossAmount)); 
+            OnPropertyChanged(nameof(ProfitLossPercent)); 
+            OnPropertyChanged(nameof(IsPriceLoaded));
+        }
+    }
+
+    public bool IsPriceLoaded => CurrentPrice.HasValue && CurrentPrice > 0;
+
+    // Toplam Güncel Değer (Cüzdandaki Anlık Para)
+    public decimal CurrentValue => (CurrentPrice ?? 0) * TotalQuantity;
+
+    // Net Kâr/Zarar
+    public decimal? ProfitLossAmount => IsPriceLoaded ? (CurrentValue - TotalCost) : null;
+
+    // Yüzdelik
+    public decimal? ProfitLossPercent
+    {
+        get
+        {
+            if (!IsPriceLoaded) return null;
+            if (TotalCost == 0) return 0;
+            return ((CurrentValue - TotalCost) / TotalCost) * 100;
+        }
+    }
+
+    public event PropertyChangedEventHandler PropertyChanged;
+    protected void OnPropertyChanged([CallerMemberName] string name = null)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+    }
+}
+
+// Converterlar (XAML Erişimi İçin Buraya)
+public class FirstCharConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (value is string s && !string.IsNullOrEmpty(s)) return s[0].ToString();
+        return "?";
+    }
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotImplementedException();
+}
+
+public class IsNegativeConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (value is decimal d) return d < 0;
+        return false;
+    }
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotImplementedException();
 }
