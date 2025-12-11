@@ -139,7 +139,7 @@ public partial class GoalsView : UserControl
                             UserId = _currentUserId,
                             Amount = goal.CurrentAmount,
                             Type = "Income", // Gelir (Para geri dönüyor)
-                            Category = "Birikim İadesi",
+                            Category = "Birikim",
                             Description = $"Hedef İptali: {goal.Title} (İade)",
                             TransactionDate = DateTime.Now
                         };

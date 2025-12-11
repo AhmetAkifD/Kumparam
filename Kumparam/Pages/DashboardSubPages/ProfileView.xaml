@@ -52,7 +52,17 @@
                             HorizontalAlignment="Left" Margin="0,10,0,0" Click="ChangePassword_Click"/>
                 </StackPanel>
             </materialDesign:Card>
+            <materialDesign:Card Style="{StaticResource DashboardCardStyle}" Margin="0,0,0,20">
+                <DockPanel LastChildFill="False">
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="Veri Kurtarma" Style="{StaticResource HeaderTextStyle}" Margin="0"/>
+                        <TextBlock Text="Silinen işlemleri inceleyin ve geri yükleyin." Opacity="0.6" FontSize="12"/>
+                    </StackPanel>
 
+                    <Button DockPanel.Dock="Right" Style="{StaticResource MaterialDesignOutlinedButton}" 
+                            Content="GERİ DÖNÜŞÜM KUTUSU ♻️" Click="OpenRecycleBin_Click"/>
+                </DockPanel>
+            </materialDesign:Card>
             <materialDesign:Card Style="{StaticResource DashboardCardStyle}" Background="#FFF5F5">
                 <StackPanel>
                     <DockPanel LastChildFill="False">

@@ -724,5 +724,160 @@ namespace Kumparam.Data.Repositories
                 }
             }
         }
+        public List<Transaction> GetAllTransactions(Guid userId)
+        {
+            var list = new List<Transaction>();
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                // "TOP" komutu yok, hepsini tarihe göre tersten (yeni -> eski) sıralayıp çekiyoruz
+                var sql = "SELECT * FROM Transactions WHERE UserId = @UserId ORDER BY TransactionDate DESC";
+        
+                using (var cmd = new SqlCommand(sql, connection))
+                {
+                    cmd.Parameters.AddWithValue("@UserId", userId);
+                    connection.Open();
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            list.Add(new Transaction
+                            {
+                                TransactionId = (Guid)reader["TransactionId"],
+                                UserId = (Guid)reader["UserId"],
+                                Amount = (decimal)reader["Amount"],
+                                Type = (string)reader["Type"],
+                                Category = reader["Category"].ToString(),
+                                Description = reader["Description"].ToString(),
+                                TransactionDate = (DateTime)reader["TransactionDate"]
+                            });
+                        }
+                    }
+                }
+            }
+            return list;
+        }
+        public void DeleteTransaction(Guid transactionId)
+        {
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                connection.Open();
+
+                // Transaction (İşlem Bütünlüğü) Başlatıyoruz
+                // Bu sayede kopyalama başarılı olmazsa silme işlemi de yapılmaz. Veri kaybı önlenir.
+                using (var transaction = connection.BeginTransaction())
+                {
+                    try
+                    {
+                        // 1. ADIM: Veriyi Çöp Kutusuna (DeletedTransactions) Kopyala
+                        var copySql = @"
+                    INSERT INTO DeletedTransactions 
+                    (OriginalTransactionId, UserId, Amount, Type, Category, Description, TransactionDate)
+                    SELECT 
+                        TransactionId, UserId, Amount, Type, Category, Description, TransactionDate
+                    FROM Transactions 
+                    WHERE TransactionId = @TransactionId";
+
+                        using (var copyCmd = new SqlCommand(copySql, connection, transaction))
+                        {
+                            copyCmd.Parameters.AddWithValue("@TransactionId", transactionId);
+                            copyCmd.ExecuteNonQuery();
+                        }
+
+                        // 2. ADIM: Ana Tablodan Sil
+                        var deleteSql = "DELETE FROM Transactions WHERE TransactionId = @TransactionId";
+                        using (var deleteCmd = new SqlCommand(deleteSql, connection, transaction))
+                        {
+                            deleteCmd.Parameters.AddWithValue("@TransactionId", transactionId);
+                            deleteCmd.ExecuteNonQuery();
+                        }
+
+                        // Her şey yolundaysa onayla
+                        transaction.Commit();
+                    }
+                    catch (Exception)
+                    {
+                        // Bir hata olduysa işlemleri geri al (Hiçbir şey silinmemiş gibi olur)
+                        transaction.Rollback();
+                        throw; // Hatayı yukarı fırlat ki kullanıcıya mesaj gösterebilelim
+                    }
+                }
+            }
+        }
+        public List<Transaction> GetDeletedTransactions(Guid userId)
+        {
+            var list = new List<Transaction>();
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                // DeletedTransactions tablosundan çekiyoruz
+                var sql = "SELECT * FROM DeletedTransactions WHERE UserId = @UserId ORDER BY DeletedAt DESC";
+                using (var cmd = new SqlCommand(sql, connection))
+                {
+                    cmd.Parameters.AddWithValue("@UserId", userId);
+                    connection.Open();
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            list.Add(new Transaction
+                            {
+                                // Geçici olarak TransactionId özelliğine OriginalTransactionId'yi atıyoruz ki modelimiz bozulmasın
+                                TransactionId = (Guid)reader["OriginalTransactionId"],
+                                // Transaction modelinde "DeletedId" olmadığı için onu Description'a veya UI tarafında Tag'e gömeceğiz
+                                // Ama en temizi Model'e dokunmadan Tag ile yönetmek.
+                                UserId = (Guid)reader["UserId"],
+                                Amount = (decimal)reader["Amount"],
+                                Type = (string)reader["Type"],
+                                Category = reader["Category"].ToString(),
+                                Description = reader["Description"].ToString() + " || " + reader["DeletedId"], // ID'yi buraya gizledik (Hack)
+                                TransactionDate = (DateTime)reader["TransactionDate"]
+                            });
+                        }
+                    }
+                }
+            }
+            return list;
+        }
+
+        public void RestoreTransaction(int deletedId)
+        {
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                connection.Open();
+                using (var transaction = connection.BeginTransaction())
+                {
+                    try
+                    {
+                        // 1. Ana Tabloya Geri Ekle
+                        var restoreSql = @"
+                            INSERT INTO Transactions (TransactionId, UserId, Amount, Type, Category, Description, TransactionDate)
+                            SELECT OriginalTransactionId, UserId, Amount, Type, Category, Description, TransactionDate
+                            FROM DeletedTransactions 
+                            WHERE DeletedId = @DeletedId";
+
+                        using (var cmd = new SqlCommand(restoreSql, connection, transaction))
+                        {
+                            cmd.Parameters.AddWithValue("@DeletedId", deletedId);
+                            cmd.ExecuteNonQuery();
+                        }
+
+                        // 2. Çöp Kutusundan Sil (Artık geri döndü)
+                        var deleteSql = "DELETE FROM DeletedTransactions WHERE DeletedId = @DeletedId";
+                        using (var cmd = new SqlCommand(deleteSql, connection, transaction))
+                        {
+                            cmd.Parameters.AddWithValue("@DeletedId", deletedId);
+                            cmd.ExecuteNonQuery();
+                        }
+
+                        transaction.Commit();
+                    }
+                    catch
+                    {
+                        transaction.Rollback();
+                        throw;
+                    }
+                }
+            }
+        }
+        
     }
 }
