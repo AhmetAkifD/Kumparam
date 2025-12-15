@@ -302,11 +302,17 @@ namespace Kumparam.Data.Repositories
             var list = new List<Goal>();
             using (var connection = new SqlConnection(_connectionString))
             {
-                // Tüm sütunları isimleriyle çağırıyoruz
+                // SORGULAMA DEĞİŞTİRİLDİ:
+                // 1. CASE WHEN Deadline IS NULL THEN 1 ELSE 0 END -> Tarihi olanlar (0) önce, olmayanlar (1) sonra
+                // 2. Deadline ASC -> Yakın tarih en üstte
+                // 3. CreatedAt DESC -> Aynı günse veya tarih yoksa, en yeni eklenen üstte
                 var sql = @"SELECT GoalId, UserId, Title, TargetAmount, CurrentAmount, Deadline, Description 
                     FROM Goals 
                     WHERE UserId = @UserId 
-                    ORDER BY CreatedAt DESC";
+                    ORDER BY 
+                        CASE WHEN Deadline IS NULL THEN 1 ELSE 0 END, 
+                        Deadline ASC, 
+                        CreatedAt DESC";
 
                 using (var cmd = new SqlCommand(sql, connection))
                 {
