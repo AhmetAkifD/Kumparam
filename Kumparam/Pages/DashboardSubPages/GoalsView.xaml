@@ -11,8 +11,9 @@
              FontFamily="{DynamicResource MaterialDesignFont}">
 
     <UserControl.Resources>
-        <!-- Converter Tanımlaması -->
+        <!-- Converter Tanımlamaları -->
         <local:DeadlineToRemainingDaysConverter x:Key="DeadlineToRemainingDaysConverter"/>
+        <local:DeadlineToColorConverter x:Key="DeadlineToColorConverter"/>
     </UserControl.Resources>
 
     <Grid Margin="20">
@@ -76,13 +77,15 @@
                                             <!-- Başlık (Sola Yaslı) -->
                                             <TextBlock Text="{Binding Title}" FontWeight="Bold" FontSize="18" VerticalAlignment="Center" DockPanel.Dock="Left"/>
                                             
-                                            <!-- Tarih (En Sağa Yaslı - İlk eklenen en sağa gider) -->
+                                            <!-- Tarih (En Sağa Yaslı) -->
                                             <TextBlock Text="{Binding Deadline, StringFormat='{}{0:dd.MM.yyyy}'}" 
                                                        FontSize="12" Opacity="0.6" VerticalAlignment="Center" DockPanel.Dock="Right"/>
                                             
-                                            <!-- Kalan Gün (Tarihin Soluna Yerleşir - İkinci eklenen onun soluna gelir) -->
+                                            <!-- Kalan Gün (Tarihin Solunda) -->
+                                            <!-- HEM METİN HEM RENK CONVERTER KULLANDIK -->
                                             <TextBlock Text="{Binding Deadline, Converter={StaticResource DeadlineToRemainingDaysConverter}}" 
-                                                       FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryHueMidBrush}" 
+                                                       Foreground="{Binding Deadline, Converter={StaticResource DeadlineToColorConverter}}"
+                                                       FontSize="12" FontWeight="Bold" 
                                                        VerticalAlignment="Center" Margin="0,0,10,0" DockPanel.Dock="Right"/>
                                         </DockPanel>
 

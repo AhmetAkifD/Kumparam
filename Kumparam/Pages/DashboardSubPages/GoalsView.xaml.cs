@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
+using System.Windows.Media; // Renkler için (Brush)
 using Kumparam.Core;
 using Kumparam.Core.Interfaces;
 using Kumparam.Data;
@@ -252,21 +253,47 @@ namespace Kumparam.Pages.DashboardSubPages
         }
     }
 
-    // Tarihi "X Gün Kaldı" formatına çeviren Converter
+    // 1. Yazı Dönüştürücü: "3 Gün Kaldı" veya "5 Gün Gecikti"
     public class DeadlineToRemainingDaysConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             if (value is DateTime deadline)
             {
-                var remaining = (deadline.Date - DateTime.Now.Date).TotalDays;
+                // Ceiling ile yukarı yuvarlıyoruz ki "0.1 gün" bile olsa "1 gün" desin
+                var difference = deadline.Date - DateTime.Now.Date;
+                int days = (int)difference.TotalDays;
                 
-                if (remaining < 0) return "Süre Doldu!";
-                if (remaining == 0) return "Bugün Son!";
+                if (days < 0) return $"{Math.Abs(days)} Gün Gecikti!";
+                if (days == 0) return "Bugün Son Gün!";
                 
-                return $"{remaining} Gün Kaldı";
+                return $"{days} Gün Kaldı";
             }
-            return ""; // Tarih yoksa boş döndür
+            return ""; 
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    // 2. Renk Dönüştürücü: Gecikirse Kırmızı, Bugünse Turuncu, Varsa Mavi
+    public class DeadlineToColorConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is DateTime deadline)
+            {
+                var days = (int)(deadline.Date - DateTime.Now.Date).TotalDays;
+
+                if (days < 0) return Brushes.Red;           // Gecikti
+                if (days == 0) return Brushes.OrangeRed;    // Bugün son
+                if (days <= 7) return Brushes.DarkGoldenrod;// Az kaldı (Son 1 hafta)
+                
+                return Brushes.DodgerBlue; // Daha vakit var
+            }
+            return Brushes.Gray;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
