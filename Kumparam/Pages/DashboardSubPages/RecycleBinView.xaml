@@ -17,9 +17,10 @@
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
+            <!-- ÜST BAR -->
             <DockPanel LastChildFill="False" Margin="0,0,0,20">
                 <Button Style="{StaticResource MaterialDesignIconForegroundButton}" 
-                        HorizontalAlignment="Left" Click="BackButton_Click" ToolTip="Geri Dön">
+                        HorizontalAlignment="Left" Click="BackButton_Click" ToolTip="Kapat / Geri Dön">
                     <materialDesign:PackIcon Kind="ArrowLeft" Width="24" Height="24"/>
                 </Button>
                 <TextBlock Text="Geri Dönüşüm Kutusu" Style="{StaticResource HeaderTextStyle}" 
@@ -28,6 +29,7 @@
                                          VerticalAlignment="Center" DockPanel.Dock="Right" Opacity="0.5"/>
             </DockPanel>
 
+            <!-- TABLO -->
             <DataGrid Grid.Row="1" x:Name="DeletedGrid" AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
                       HeadersVisibility="Column" SelectionMode="Single" SelectionUnit="FullRow">
                 <DataGrid.Columns>
@@ -46,6 +48,7 @@
                     <DataGridTemplateColumn Width="80">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
+                                <!-- Tag özelliğine Description bağlı, ID oradan parse edilecek -->
                                 <Button Style="{StaticResource MaterialDesignIconForegroundButton}"
                                         Tag="{Binding Description}" 
                                         Click="RestoreButton_Click"
@@ -58,6 +61,7 @@
                 </DataGrid.Columns>
             </DataGrid>
 
+            <!-- DİPNOT -->
             <TextBlock Grid.Row="2" Text="* Geri yüklenen işlemler bakiyenize tekrar dahil edilecektir." 
                        Opacity="0.6" FontStyle="Italic" Margin="0,10,0,0" HorizontalAlignment="Center"/>
         </Grid>

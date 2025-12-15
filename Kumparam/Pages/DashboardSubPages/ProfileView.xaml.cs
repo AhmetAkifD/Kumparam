@@ -16,7 +16,7 @@ namespace Kumparam.Pages.DashboardSubPages
         private readonly Guid _currentUserId;
         private readonly string _userEmail;
 
-        // Constructor senin yapına sadık kalarak email alıyor
+        // Constructor
         public ProfileView(Guid userId, string email)
         {
             InitializeComponent();
@@ -26,6 +26,7 @@ namespace Kumparam.Pages.DashboardSubPages
             string connectionString = ConfigurationManager.ConnectionStrings["KumparamDB"].ConnectionString;
             _userRepository = new SqlUserRepository(connectionString);
 
+            // İlk açılışta verileri yükle
             LoadProfile();
         }
 
@@ -36,34 +37,33 @@ namespace Kumparam.Pages.DashboardSubPages
 
         private void LoadProfile()
         {
+            if (_currentUserId == Guid.Empty) return;
+
             try
             {
-                // E-posta bilgisini sol taraftaki karta yaz
                 TxtEmailDisplay.Text = _userEmail;
-
                 var profile = _userRepository.GetUserProfile(_currentUserId);
                 
-                // Inputlara veriyi doldur
-                FirstNameTextBox.Text = profile.FirstName;
-                LastNameTextBox.Text = profile.LastName;
+                if (profile != null)
+                {
+                    FirstNameTextBox.Text = profile.FirstName;
+                    LastNameTextBox.Text = profile.LastName;
 
-                // --- SOL KART GÜNCELLEME ---
-                
-                // Tam İsim
-                string fullName = $"{profile.FirstName} {profile.LastName}".Trim();
-                TxtFullName.Text = string.IsNullOrEmpty(fullName) ? "İsimsiz Kullanıcı" : fullName;
+                    // --- SOL KART GÜNCELLEME ---
+                    string fullName = $"{profile.FirstName} {profile.LastName}".Trim();
+                    TxtFullName.Text = string.IsNullOrEmpty(fullName) ? "İsimsiz Kullanıcı" : fullName;
 
-                // Baş Harfler (Avatar)
-                // Örn: Ali Veli -> AV
-                string initials = "";
-                if (!string.IsNullOrEmpty(profile.FirstName)) initials += profile.FirstName[0];
-                if (!string.IsNullOrEmpty(profile.LastName)) initials += profile.LastName[0];
-                
-                TxtInitials.Text = string.IsNullOrEmpty(initials) ? "?" : initials.ToUpper();
+                    // Avatar (Baş Harfler)
+                    string initials = "";
+                    if (!string.IsNullOrEmpty(profile.FirstName)) initials += profile.FirstName[0];
+                    if (!string.IsNullOrEmpty(profile.LastName)) initials += profile.LastName[0];
+                    
+                    TxtInitials.Text = string.IsNullOrEmpty(initials) ? "?" : initials.ToUpper();
+                }
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Profil yüklenirken hata: " + ex.Message);
+                // Hata olursa sessizce yutabilir veya loglayabilirsin
             }
         }
 
@@ -80,8 +80,6 @@ namespace Kumparam.Pages.DashboardSubPages
                 _userRepository.UpdateUserProfile(updatedProfile);
                 
                 MessageBox.Show("Profil bilgileriniz güncellendi! ✅");
-                
-                // Karttaki ismi ve baş harfleri yenilemek için tekrar yükle
                 LoadProfile();
             }
             catch (Exception ex)
@@ -105,7 +103,6 @@ namespace Kumparam.Pages.DashboardSubPages
             {
                 var user = _userRepository.GetUserById(_currentUserId);
                 
-                // PasswordHelper senin projedeki class, aynen kullanıyoruz
                 if (user != null && PasswordHelper.VerifyPassword(oldPass, user.PasswordSalt, user.PasswordHash))
                 {
                     PasswordHelper.HashPassword(newPass, out byte[] newSalt, out byte[] newHash);
@@ -132,7 +129,7 @@ namespace Kumparam.Pages.DashboardSubPages
                 "DİKKAT! Tüm işlemler, yatırımlar ve hedefler silinecek.\n\nBu işlem geri alınamaz. Emin misiniz?", 
                 "Veri Sıfırlama", 
                 MessageBoxButton.YesNo, 
-                MessageBoxImage.Error); // Warning yerine Error ikonu daha ciddi durur
+                MessageBoxImage.Error); 
             
             if (result == MessageBoxResult.Yes)
             {
@@ -140,9 +137,6 @@ namespace Kumparam.Pages.DashboardSubPages
                 {
                     _userRepository.ResetUserData(_currentUserId);
                     MessageBox.Show("Hesabınız temizlendi. Temiz bir başlangıç! 🧹");
-                    
-                    // Veriler silindiği için Dashboard'daki diğer grafiklerin de yenilenmesi gerekebilir.
-                    // Şimdilik sadece mesaj veriyoruz.
                 }
                 catch (Exception ex)
                 {
@@ -153,13 +147,28 @@ namespace Kumparam.Pages.DashboardSubPages
 
         private void OpenRecycleBin_Click(object sender, RoutedEventArgs e)
         {
-            var dashboard = Window.GetWindow(this) as DashboardWindow;
-            if (dashboard != null)
+            // ÇÖZÜM: Geri Dönüşüm Kutusunu AYRI BİR PENCERE (Dialog) olarak açıyoruz.
+            
+            // 1. Yeni, geçici bir pencere oluştur
+            Window recycleWindow = new Window
             {
-                // RecycleBinView'in constructor'ı senin yapında sadece userId alıyor
-                // (Eğer User nesnesi alıyorsa burayı güncellemen gerekebilir)
-                dashboard.MainContentArea.Content = new RecycleBinView(_currentUserId);
-            }
+                Title = "Geri Dönüşüm Kutusu",
+                // Mevcut UserControl'ü bu pencerenin içine koyuyoruz
+                Content = new RecycleBinView(_currentUserId), 
+                Width = 900,
+                Height = 600,
+                WindowStartupLocation = WindowStartupLocation.CenterScreen,
+                // İstersen pencere boyutlandırmasını kapatabilirsin:
+                // ResizeMode = ResizeMode.NoResize
+            };
+
+            // 2. Pencereyi MODAL olarak aç.
+            // Bu satır çalıştığında, kullanıcı pencereyi kapatana kadar kod burada DURUR.
+            recycleWindow.ShowDialog();
+
+            // 3. Pencere kapandığında kod buradan devam eder ve profili yeniler.
+            // Böylece sildiğin veriler geri yüklendiyse anında yansır.
+            LoadProfile();
         }
     }
 }

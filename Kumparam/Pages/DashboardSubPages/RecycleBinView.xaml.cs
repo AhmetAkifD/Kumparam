@@ -6,75 +6,85 @@ using System.Windows.Controls;
 using Kumparam.Core.Interfaces;
 using Kumparam.Data.Repositories;
 
-namespace Kumparam.Pages.DashboardSubPages;
-
-public partial class RecycleBinView : UserControl
+namespace Kumparam.Pages.DashboardSubPages
 {
-    private readonly IUserRepository _userRepository;
-    private readonly Guid _currentUserId;
-
-    public RecycleBinView(Guid userId)
+    public partial class RecycleBinView : UserControl
     {
-        InitializeComponent();
-        _currentUserId = userId;
-        _userRepository = new SqlUserRepository(ConfigurationManager.ConnectionStrings["KumparamDB"].ConnectionString);
-        
-        LoadDeletedItems();
-    }
+        private readonly IUserRepository _userRepository;
+        private readonly Guid _currentUserId;
 
-    private void LoadDeletedItems()
-    {
-        try
+        public RecycleBinView(Guid userId)
         {
-            var items = _userRepository.GetDeletedTransactions(_currentUserId);
+            InitializeComponent();
+            _currentUserId = userId;
+            // Repository bağlantısı
+            _userRepository = new SqlUserRepository(ConfigurationManager.ConnectionStrings["KumparamDB"].ConnectionString);
             
-            // Description içinde gizlediğimiz ID'yi burada ayıklamıyoruz, 
-            // sadece kullanıcıya gösterirken temizlemek isteyebiliriz ama şimdilik kalsın.
-            // Önemli olan butona basınca ID'yi alabilmek.
-            
-            DeletedGrid.ItemsSource = items;
+            LoadDeletedItems();
         }
-        catch (Exception ex)
-        {
-            MessageBox.Show("Yükleme hatası: " + ex.Message);
-        }
-    }
 
-    private void RestoreButton_Click(object sender, RoutedEventArgs e)
-    {
-        // Butonun Tag'inde "Açıklama || 5" gibi bir string var. Oradan ID'yi çekeceğiz.
-        if (sender is Button btn && btn.Tag is string rawData)
+        private void LoadDeletedItems()
         {
             try
             {
-                // String parse işlemi (Hack çözümü)
-                var parts = rawData.Split(new[] { " || " }, StringSplitOptions.None);
-                if (parts.Length < 2) return;
-
-                if (int.TryParse(parts.Last(), out int deletedId))
-                {
-                    if (MessageBox.Show("Bu işlemi geri yüklemek istiyor musunuz?", "Geri Yükle", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
-                    {
-                        _userRepository.RestoreTransaction(deletedId);
-                        MessageBox.Show("İşlem başarıyla geri yüklendi! ✅");
-                        LoadDeletedItems(); // Listeyi yenile
-                    }
-                }
+                var items = _userRepository.GetDeletedTransactions(_currentUserId);
+                
+                // Description içinde gizlediğimiz ID burada.
+                // Kullanıcıya gösterirken " || ID" kısmını temizlemek istersen burada bir ViewModel mapping yapabilirsin
+                // ama şimdilik "Olduğu gibi" bırakıyoruz.
+                
+                DeletedGrid.ItemsSource = items;
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Hata: " + ex.Message);
+                MessageBox.Show("Yükleme hatası: " + ex.Message);
             }
         }
-    }
 
-    private void BackButton_Click(object sender, RoutedEventArgs e)
-    {
-        // Profil Sayfasına Geri Dön
-        var dashboard = Window.GetWindow(this) as DashboardWindow;
-        if (dashboard != null)
+        private void RestoreButton_Click(object sender, RoutedEventArgs e)
         {
-            dashboard.MainContentArea.Content = new ProfileView(); 
+            // Repository'deki "Description + ' || ' + DeletedId" mantığını çözümlüyoruz.
+            if (sender is Button btn && btn.Tag is string rawData)
+            {
+                try
+                {
+                    // String parse işlemi (Senin hack yöntemin, aynen korundu)
+                    var parts = rawData.Split(new[] { " || " }, StringSplitOptions.None);
+                    
+                    // Eğer format bozuksa işlem yapma
+                    if (parts.Length < 2) return;
+
+                    // Son parça ID olmalı
+                    if (int.TryParse(parts.Last(), out int deletedId))
+                    {
+                        if (MessageBox.Show("Bu işlemi geri yüklemek istiyor musunuz?", "Geri Yükle", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+                        {
+                            _userRepository.RestoreTransaction(deletedId);
+                            MessageBox.Show("İşlem başarıyla geri yüklendi! ✅");
+                            LoadDeletedItems(); // Listeyi yenile
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Hata: " + ex.Message);
+                }
+            }
+        }
+
+        private void BackButton_Click(object sender, RoutedEventArgs e)
+        {
+            // DEĞİŞİKLİK BURADA:
+            // Artık Dashboard içindeki sayfayı değiştirmiyoruz.
+            // Bu UserControl bir "Window" (Dialog) içinde açıldığı için, o pencereyi kapatıyoruz.
+            
+            Window parentWindow = Window.GetWindow(this);
+            if (parentWindow != null)
+            {
+                parentWindow.Close();
+                // Pencere kapanınca, ProfileView.xaml.cs içindeki ShowDialog() satırından sonraki kod çalışır
+                // ve LoadProfile() tetiklenir.
+            }
         }
     }
 }
