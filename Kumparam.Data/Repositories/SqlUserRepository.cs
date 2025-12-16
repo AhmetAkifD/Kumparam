@@ -815,7 +815,7 @@ namespace Kumparam.Data.Repositories
             using (var connection = new SqlConnection(_connectionString))
             {
                 // DeletedTransactions tablosundan çekiyoruz
-                var sql = "SELECT * FROM DeletedTransactions WHERE UserId = @UserId ORDER BY DeletedAt DESC";
+                var sql = "SELECT * FROM DeletedTransactions WHERE UserId = @UserId AND IsHidden = 0 ORDER BY DeletedAt DESC";
                 using (var cmd = new SqlCommand(sql, connection))
                 {
                     cmd.Parameters.AddWithValue("@UserId", userId);
@@ -826,10 +826,7 @@ namespace Kumparam.Data.Repositories
                         {
                             list.Add(new Transaction
                             {
-                                // Geçici olarak TransactionId özelliğine OriginalTransactionId'yi atıyoruz ki modelimiz bozulmasın
                                 TransactionId = (Guid)reader["OriginalTransactionId"],
-                                // Transaction modelinde "DeletedId" olmadığı için onu Description'a veya UI tarafında Tag'e gömeceğiz
-                                // Ama en temizi Model'e dokunmadan Tag ile yönetmek.
                                 UserId = (Guid)reader["UserId"],
                                 Amount = (decimal)reader["Amount"],
                                 Type = (string)reader["Type"],
@@ -842,6 +839,23 @@ namespace Kumparam.Data.Repositories
                 }
             }
             return list;
+        }
+        
+        public void PermanentlyDeleteTransaction(int deletedId)
+        {
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                // İLLÜZYON BURADA: DELETE yerine UPDATE yapıyoruz.
+                // Veri tablodan silinmiyor, sadece IsHidden=1 yapılıyor.
+                var sql = "UPDATE DeletedTransactions SET IsHidden = 1 WHERE DeletedId = @DeletedId";
+                
+                using (var cmd = new SqlCommand(sql, connection))
+                {
+                    cmd.Parameters.AddWithValue("@DeletedId", deletedId);
+                    connection.Open();
+                    cmd.ExecuteNonQuery();
+                }
+            }
         }
 
         public void RestoreTransaction(int deletedId)

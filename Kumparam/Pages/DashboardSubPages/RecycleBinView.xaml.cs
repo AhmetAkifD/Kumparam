@@ -6,75 +6,98 @@ using System.Windows.Controls;
 using Kumparam.Core.Interfaces;
 using Kumparam.Data.Repositories;
 
-namespace Kumparam.Pages.DashboardSubPages;
-
-public partial class RecycleBinView : UserControl
+namespace Kumparam.Pages.DashboardSubPages
 {
-    private readonly IUserRepository _userRepository;
-    private readonly Guid _currentUserId;
-
-    public RecycleBinView(Guid userId)
+    public partial class RecycleBinView : UserControl
     {
-        InitializeComponent();
-        _currentUserId = userId;
-        _userRepository = new SqlUserRepository(ConfigurationManager.ConnectionStrings["KumparamDB"].ConnectionString);
-        
-        LoadDeletedItems();
-    }
+        private readonly IUserRepository _userRepository;
+        private readonly Guid _currentUserId;
 
-    private void LoadDeletedItems()
-    {
-        try
+        public RecycleBinView(Guid userId)
         {
-            var items = _userRepository.GetDeletedTransactions(_currentUserId);
+            InitializeComponent();
+            _currentUserId = userId;
             
-            // Description içinde gizlediğimiz ID'yi burada ayıklamıyoruz, 
-            // sadece kullanıcıya gösterirken temizlemek isteyebiliriz ama şimdilik kalsın.
-            // Önemli olan butona basınca ID'yi alabilmek.
+            string connectionString = ConfigurationManager.ConnectionStrings["KumparamDB"].ConnectionString;
+            _userRepository = new SqlUserRepository(connectionString);
             
-            DeletedGrid.ItemsSource = items;
+            LoadDeletedItems();
         }
-        catch (Exception ex)
-        {
-            MessageBox.Show("Yükleme hatası: " + ex.Message);
-        }
-    }
 
-    private void RestoreButton_Click(object sender, RoutedEventArgs e)
-    {
-        // Butonun Tag'inde "Açıklama || 5" gibi bir string var. Oradan ID'yi çekeceğiz.
-        if (sender is Button btn && btn.Tag is string rawData)
+        private void LoadDeletedItems()
         {
             try
             {
-                // String parse işlemi (Hack çözümü)
-                var parts = rawData.Split(new[] { " || " }, StringSplitOptions.None);
-                if (parts.Length < 2) return;
-
-                if (int.TryParse(parts.Last(), out int deletedId))
-                {
-                    if (MessageBox.Show("Bu işlemi geri yüklemek istiyor musunuz?", "Geri Yükle", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
-                    {
-                        _userRepository.RestoreTransaction(deletedId);
-                        MessageBox.Show("İşlem başarıyla geri yüklendi! ✅");
-                        LoadDeletedItems(); // Listeyi yenile
-                    }
-                }
+                // Repository metodumuz artık sadece IsHidden=0 olanları getiriyor.
+                var items = _userRepository.GetDeletedTransactions(_currentUserId);
+                DeletedGrid.ItemsSource = items;
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Hata: " + ex.Message);
+                MessageBox.Show("Yükleme hatası: " + ex.Message);
             }
         }
-    }
 
-    private void BackButton_Click(object sender, RoutedEventArgs e)
-    {
-        // Profil Sayfasına Geri Dön
-        var dashboard = Window.GetWindow(this) as DashboardWindow;
-        if (dashboard != null)
+        private void RestoreButton_Click(object sender, RoutedEventArgs e)
         {
-            dashboard.MainContentArea.Content = new ProfileView(); 
+            ProcessTransactionAction(sender, "Restore");
+        }
+
+        private void PurgeButton_Click(object sender, RoutedEventArgs e)
+        {
+            ProcessTransactionAction(sender, "Purge");
+        }
+
+        private void ProcessTransactionAction(object sender, string actionType)
+        {
+            if (sender is Button btn && btn.Tag is string rawData)
+            {
+                try
+                {
+                    var parts = rawData.Split(new[] { " || " }, StringSplitOptions.None);
+                    if (parts.Length < 2) return;
+
+                    if (int.TryParse(parts.Last(), out int deletedId))
+                    {
+                        if (actionType == "Restore")
+                        {
+                            if (MessageBox.Show("Bu işlemi geri yüklemek istiyor musunuz?", "Geri Yükle", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+                            {
+                                _userRepository.RestoreTransaction(deletedId);
+                                MessageBox.Show("İşlem başarıyla geri yüklendi! ✅");
+                                LoadDeletedItems();
+                            }
+                        }
+                        else if (actionType == "Purge")
+                        {
+                            // Kullanıcıya "Kalıcı Sil" diyoruz (İllüzyon)
+                            if (MessageBox.Show("Bu işlem geri alınamaz ve kayıt kalıcı olarak silinecektir.\nEmin misiniz?", "Kalıcı Silme Onayı", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
+                            {
+                                // ARKA PLAN: Aslında sadece gizliyoruz (Soft Delete)
+                                _userRepository.PermanentlyDeleteTransaction(deletedId);
+                                
+                                MessageBox.Show("İşlem kalıcı olarak silindi.", "Başarılı");
+                                
+                                // Listeyi yeniliyoruz (Artık IsHidden=1 olduğu için listede çıkmayacak)
+                                LoadDeletedItems();
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Hata: " + ex.Message);
+                }
+            }
+        }
+
+        private void BackButton_Click(object sender, RoutedEventArgs e)
+        {
+            Window parentWindow = Window.GetWindow(this);
+            if (parentWindow != null)
+            {
+                parentWindow.Close();
+            }
         }
     }
 }
