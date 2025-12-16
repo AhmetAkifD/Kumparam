@@ -43,6 +43,7 @@ namespace Kumparam.Core.Interfaces
         List<Transaction> GetAllTransactions(Guid userId);
         void DeleteTransaction(Guid transactionId);
         List<Transaction> GetDeletedTransactions(Guid userId);
-        void RestoreTransaction(int deletedId); // DeletedId int olduğu için
+        void RestoreTransaction(int deletedId);
+        void PermanentlyDeleteTransaction(int deletedId);
     }
 }

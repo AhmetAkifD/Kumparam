@@ -17,8 +17,9 @@ namespace Kumparam.Pages.DashboardSubPages
         {
             InitializeComponent();
             _currentUserId = userId;
-            // Repository bağlantısı
-            _userRepository = new SqlUserRepository(ConfigurationManager.ConnectionStrings["KumparamDB"].ConnectionString);
+            
+            string connectionString = ConfigurationManager.ConnectionStrings["KumparamDB"].ConnectionString;
+            _userRepository = new SqlUserRepository(connectionString);
             
             LoadDeletedItems();
         }
@@ -27,12 +28,8 @@ namespace Kumparam.Pages.DashboardSubPages
         {
             try
             {
+                // Repository metodumuz artık sadece IsHidden=0 olanları getiriyor.
                 var items = _userRepository.GetDeletedTransactions(_currentUserId);
-                
-                // Description içinde gizlediğimiz ID burada.
-                // Kullanıcıya gösterirken " || ID" kısmını temizlemek istersen burada bir ViewModel mapping yapabilirsin
-                // ama şimdilik "Olduğu gibi" bırakıyoruz.
-                
                 DeletedGrid.ItemsSource = items;
             }
             catch (Exception ex)
@@ -43,25 +40,47 @@ namespace Kumparam.Pages.DashboardSubPages
 
         private void RestoreButton_Click(object sender, RoutedEventArgs e)
         {
-            // Repository'deki "Description + ' || ' + DeletedId" mantığını çözümlüyoruz.
+            ProcessTransactionAction(sender, "Restore");
+        }
+
+        private void PurgeButton_Click(object sender, RoutedEventArgs e)
+        {
+            ProcessTransactionAction(sender, "Purge");
+        }
+
+        private void ProcessTransactionAction(object sender, string actionType)
+        {
             if (sender is Button btn && btn.Tag is string rawData)
             {
                 try
                 {
-                    // String parse işlemi (Senin hack yöntemin, aynen korundu)
                     var parts = rawData.Split(new[] { " || " }, StringSplitOptions.None);
-                    
-                    // Eğer format bozuksa işlem yapma
                     if (parts.Length < 2) return;
 
-                    // Son parça ID olmalı
                     if (int.TryParse(parts.Last(), out int deletedId))
                     {
-                        if (MessageBox.Show("Bu işlemi geri yüklemek istiyor musunuz?", "Geri Yükle", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+                        if (actionType == "Restore")
                         {
-                            _userRepository.RestoreTransaction(deletedId);
-                            MessageBox.Show("İşlem başarıyla geri yüklendi! ✅");
-                            LoadDeletedItems(); // Listeyi yenile
+                            if (MessageBox.Show("Bu işlemi geri yüklemek istiyor musunuz?", "Geri Yükle", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+                            {
+                                _userRepository.RestoreTransaction(deletedId);
+                                MessageBox.Show("İşlem başarıyla geri yüklendi! ✅");
+                                LoadDeletedItems();
+                            }
+                        }
+                        else if (actionType == "Purge")
+                        {
+                            // Kullanıcıya "Kalıcı Sil" diyoruz (İllüzyon)
+                            if (MessageBox.Show("Bu işlem geri alınamaz ve kayıt kalıcı olarak silinecektir.\nEmin misiniz?", "Kalıcı Silme Onayı", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
+                            {
+                                // ARKA PLAN: Aslında sadece gizliyoruz (Soft Delete)
+                                _userRepository.PermanentlyDeleteTransaction(deletedId);
+                                
+                                MessageBox.Show("İşlem kalıcı olarak silindi.", "Başarılı");
+                                
+                                // Listeyi yeniliyoruz (Artık IsHidden=1 olduğu için listede çıkmayacak)
+                                LoadDeletedItems();
+                            }
                         }
                     }
                 }
@@ -74,16 +93,10 @@ namespace Kumparam.Pages.DashboardSubPages
 
         private void BackButton_Click(object sender, RoutedEventArgs e)
         {
-            // DEĞİŞİKLİK BURADA:
-            // Artık Dashboard içindeki sayfayı değiştirmiyoruz.
-            // Bu UserControl bir "Window" (Dialog) içinde açıldığı için, o pencereyi kapatıyoruz.
-            
             Window parentWindow = Window.GetWindow(this);
             if (parentWindow != null)
             {
                 parentWindow.Close();
-                // Pencere kapanınca, ProfileView.xaml.cs içindeki ShowDialog() satırından sonraki kod çalışır
-                // ve LoadProfile() tetiklenir.
             }
         }
     }

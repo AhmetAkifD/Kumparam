@@ -25,8 +25,6 @@
                 </Button>
                 <TextBlock Text="Geri Dönüşüm Kutusu" Style="{StaticResource HeaderTextStyle}" 
                            VerticalAlignment="Center" Margin="10,0,0,0"/>
-                <materialDesign:PackIcon Kind="DeleteRestore" Width="30" Height="30" 
-                                         VerticalAlignment="Center" DockPanel.Dock="Right" Opacity="0.5"/>
             </DockPanel>
 
             <!-- TABLO -->
@@ -45,16 +43,29 @@
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
 
-                    <DataGridTemplateColumn Width="80">
+                    <!-- İŞLEMLER -->
+                    <DataGridTemplateColumn Header="İşlemler" Width="Auto">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
-                                <!-- Tag özelliğine Description bağlı, ID oradan parse edilecek -->
-                                <Button Style="{StaticResource MaterialDesignIconForegroundButton}"
-                                        Tag="{Binding Description}" 
-                                        Click="RestoreButton_Click"
-                                        ToolTip="Geri Yükle">
-                                    <materialDesign:PackIcon Kind="RestoreFromTrash" Foreground="Green"/>
-                                </Button>
+                                <StackPanel Orientation="Horizontal">
+                                    <!-- Geri Yükle -->
+                                    <Button Style="{StaticResource MaterialDesignIconForegroundButton}"
+                                            Tag="{Binding Description}" 
+                                            Click="RestoreButton_Click"
+                                            ToolTip="Geri Yükle"
+                                            Margin="0,0,10,0">
+                                        <materialDesign:PackIcon Kind="RestoreFromTrash" Foreground="Green"/>
+                                    </Button>
+
+                                    <!-- Kalıcı Sil (Gibi Görünen Buton) -->
+                                    <!-- İkon tekrar Kırmızı Çöp Kovası yapıldı -->
+                                    <Button Style="{StaticResource MaterialDesignIconForegroundButton}"
+                                            Tag="{Binding Description}" 
+                                            Click="PurgeButton_Click"
+                                            ToolTip="Kalıcı Olarak Sil">
+                                        <materialDesign:PackIcon Kind="DeleteForever" Foreground="Red"/>
+                                    </Button>
+                                </StackPanel>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
