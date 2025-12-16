@@ -5,7 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              mc:Ignorable="d" 
-             d:DesignHeight="800" d:DesignWidth="1030"
+             d:DesignHeight="1200" d:DesignWidth="1030"
              TextElement.Foreground="{DynamicResource MaterialDesignBody}"
              FontFamily="{DynamicResource MaterialDesignFont}">
 
@@ -34,6 +34,12 @@
                 
                 <CheckBox x:Name="ToggleLine" Content="Varlık Trendi" 
                           Style="{StaticResource MaterialDesignFilterChipCheckBox}" 
+                          IsChecked="True" Checked="ToggleChart_Checked" Unchecked="ToggleChart_Unchecked"
+                          Margin="0,0,10,0"/>
+
+                <!-- YENİ: Günlük Analiz Toggle -->
+                <CheckBox x:Name="ToggleDays" Content="Günlük Alışkanlıklar" 
+                          Style="{StaticResource MaterialDesignFilterChipCheckBox}" 
                           IsChecked="True" Checked="ToggleChart_Checked" Unchecked="ToggleChart_Unchecked"/>
             </StackPanel>
         </materialDesign:Card>
@@ -50,13 +56,11 @@
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
 
-                        <!-- Kart Başlığı ve Kapat Butonu -->
                         <DockPanel Margin="20,15,20,5" LastChildFill="False">
                             <StackPanel DockPanel.Dock="Left">
                                 <TextBlock Text="Harcama Dağılımı" Style="{StaticResource MaterialDesignHeadline6TextBlock}"/>
                                 <TextBlock Text="Kategorilere göre giderler" Opacity="0.6" FontSize="12"/>
                             </StackPanel>
-                            <!-- Kapat Butonu -->
                             <Button DockPanel.Dock="Right" Style="{StaticResource MaterialDesignIconForegroundButton}" 
                                     Click="CloseCard_Click" Tag="Pie" ToolTip="Gizle">
                                 <materialDesign:PackIcon Kind="Close"/>
@@ -113,6 +117,29 @@
                         </DockPanel>
 
                         <ContentControl x:Name="LineChartContainer" Grid.Row="1" Margin="10"/>
+                    </Grid>
+                </materialDesign:Card>
+
+                <!-- D. YENİ: GÜNLÜK ANALİZ KARTI -->
+                <materialDesign:Card x:Name="CardDays" Margin="0,0,0,20" UniformCornerRadius="10" materialDesign:ElevationAssist.Elevation="Dp2" Height="350">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <DockPanel Margin="20,15,20,5" LastChildFill="False">
+                            <StackPanel DockPanel.Dock="Left">
+                                <TextBlock Text="Haftalık Harcama Alışkanlıkları" Style="{StaticResource MaterialDesignHeadline6TextBlock}"/>
+                                <TextBlock Text="Hangi günlerde daha çok harcama yapıyorsunuz?" Opacity="0.6" FontSize="12"/>
+                            </StackPanel>
+                            <Button DockPanel.Dock="Right" Style="{StaticResource MaterialDesignIconForegroundButton}" 
+                                    Click="CloseCard_Click" Tag="Days" ToolTip="Gizle">
+                                <materialDesign:PackIcon Kind="Close"/>
+                            </Button>
+                        </DockPanel>
+
+                        <ContentControl x:Name="DaysChartContainer" Grid.Row="1" Margin="10"/>
                     </Grid>
                 </materialDesign:Card>
 

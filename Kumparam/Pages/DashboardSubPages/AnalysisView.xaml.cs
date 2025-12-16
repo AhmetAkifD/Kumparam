@@ -42,6 +42,7 @@ namespace Kumparam.Pages.DashboardSubPages
                 if (chk.Name == "TogglePie" && CardPie != null) CardPie.Visibility = Visibility.Visible;
                 if (chk.Name == "ToggleBar" && CardBar != null) CardBar.Visibility = Visibility.Visible;
                 if (chk.Name == "ToggleLine" && CardLine != null) CardLine.Visibility = Visibility.Visible;
+                if (chk.Name == "ToggleDays" && CardDays != null) CardDays.Visibility = Visibility.Visible;
             }
         }
 
@@ -52,6 +53,7 @@ namespace Kumparam.Pages.DashboardSubPages
                 if (chk.Name == "TogglePie" && CardPie != null) CardPie.Visibility = Visibility.Collapsed;
                 if (chk.Name == "ToggleBar" && CardBar != null) CardBar.Visibility = Visibility.Collapsed;
                 if (chk.Name == "ToggleLine" && CardLine != null) CardLine.Visibility = Visibility.Collapsed;
+                if (chk.Name == "ToggleDays" && CardDays != null) CardDays.Visibility = Visibility.Collapsed;
             }
         }
 
@@ -70,6 +72,9 @@ namespace Kumparam.Pages.DashboardSubPages
                     case "Line":
                         ToggleLine.IsChecked = false;
                         break;
+                    case "Days":
+                        ToggleDays.IsChecked = false;
+                        break;
                 }
             }
         }
@@ -84,7 +89,7 @@ namespace Kumparam.Pages.DashboardSubPages
             {
                 var allTransactions = _userRepository.GetAllTransactions(_currentUserId);
 
-                // --- 1. PASTA GRAFİK ---
+                // --- 1. PASTA GRAFİK (GİDERLER) ---
                 var expenseData = allTransactions
                     .Where(t => t.Type == "Expense")
                     .GroupBy(t => t.Category)
@@ -123,7 +128,7 @@ namespace Kumparam.Pages.DashboardSubPages
                     TxtNoPieData.Visibility = Visibility.Visible;
                 }
 
-                // --- 2. SÜTUN GRAFİK ---
+                // --- 2. SÜTUN GRAFİK (SON 6 AY) ---
                 var last6Months = Enumerable.Range(0, 6)
                     .Select(i => DateTime.Now.AddMonths(-5 + i))
                     .ToList();
@@ -203,11 +208,10 @@ namespace Kumparam.Pages.DashboardSubPages
                         }
                     },
                     LegendPosition = LiveChartsCore.Measure.LegendPosition.Bottom,
-                    // Zoom KAPATILDI: Artık 6 ay sabit görünecek.
                     ZoomMode = LiveChartsCore.Measure.ZoomAndPanMode.None 
                 };
 
-                // --- 3. ÇİZGİ GRAFİK ---
+                // --- 3. ÇİZGİ GRAFİK (TREND) ---
                 LineChartContainer.Content = new CartesianChart
                 {
                     Series = new ISeries[]
@@ -242,7 +246,64 @@ namespace Kumparam.Pages.DashboardSubPages
                         }
                     },
                     TooltipPosition = LiveChartsCore.Measure.TooltipPosition.Top,
-                    // Çizgi grafik için de Zoom kapatıldı (İsteğe bağlı, tutarlılık için kapattım)
+                    ZoomMode = LiveChartsCore.Measure.ZoomAndPanMode.None
+                };
+
+                // --- 4. GÜNLÜK HARCAMA ALIŞKANLIKLARI (HAFTANIN GÜNLERİ) ---
+                // Türkçe Gün İsimleri (Pazartesi'den başlayarak)
+                var turkishDays = new[] { "Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar" };
+                
+                // DayOfWeek enum'ı Pazar(0) ile başlar, biz Pazartesi(1) ile başlatıp Pazar'ı sona atacağız.
+                // Verileri (DayOfWeek, ToplamTutar) şeklinde grupla
+                var expensesByDay = allTransactions
+                    .Where(t => t.Type == "Expense")
+                    .GroupBy(t => t.TransactionDate.DayOfWeek)
+                    .Select(g => new { Day = g.Key, Total = g.Sum(t => t.Amount) })
+                    .ToList();
+
+                var dayValues = new List<decimal>();
+
+                // Pazartesi(1) -> Cumartesi(6) arası dön
+                for (int i = 1; i <= 6; i++)
+                {
+                    var dayData = expensesByDay.FirstOrDefault(d => (int)d.Day == i);
+                    dayValues.Add(dayData?.Total ?? 0);
+                }
+                // En son Pazar(0)'ı ekle
+                var sundayData = expensesByDay.FirstOrDefault(d => (int)d.Day == 0);
+                dayValues.Add(sundayData?.Total ?? 0);
+
+                DaysChartContainer.Content = new CartesianChart
+                {
+                    Series = new ISeries[]
+                    {
+                        new ColumnSeries<decimal>
+                        {
+                            Name = "Toplam Harcama",
+                            Values = dayValues.ToArray(),
+                            Fill = new SolidColorPaint(SKColors.SlateBlue),
+                            MaxBarWidth = 50,
+                            Rx = 10, // Köşeleri yuvarlatılmış sütunlar
+                            Ry = 10
+                        }
+                    },
+                    XAxes = new Axis[]
+                    {
+                        new Axis
+                        {
+                            Labels = turkishDays,
+                            TextSize = 13,
+                            LabelsPaint = new SolidColorPaint(SKColors.Black)
+                        }
+                    },
+                    YAxes = new Axis[]
+                    {
+                        new Axis
+                        {
+                            Labeler = value => value.ToString("N0") + "₺",
+                            TextSize = 12
+                        }
+                    },
                     ZoomMode = LiveChartsCore.Measure.ZoomAndPanMode.None
                 };
 
