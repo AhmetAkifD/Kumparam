@@ -85,32 +85,43 @@ namespace Kumparam.Pages.DashboardSubPages
                 var incomeValues = new List<decimal>();
                 var expenseValues = new List<decimal>();
                 var netValues = new List<decimal>();
+                var balanceValues = new List<decimal>(); // Çizgi grafik için
                 var labels = new List<string>();
 
                 foreach (var date in last6Months)
                 {
                     labels.Add(date.ToString("MMMM")); 
 
+                    // O ayın işlemleri
                     var monthTrans = allTransactions
                         .Where(t => t.TransactionDate.Month == date.Month && t.TransactionDate.Year == date.Year)
                         .ToList();
 
                     decimal income = monthTrans.Where(t => t.Type == "Income").Sum(t => t.Amount);
-                    // Giderleri negatif yapıyoruz (Grafikte aşağı doğru)
                     decimal expense = monthTrans.Where(t => t.Type == "Expense").Sum(t => t.Amount) * -1;
                     
                     incomeValues.Add(income);
                     expenseValues.Add(expense);
-                    
-                    // Net Fark (Gider zaten negatif olduğu için topluyoruz)
                     netValues.Add(income + expense);
+
+                    // --- ÇİZGİ GRAFİK İÇİN HESAPLAMA ---
+                    // O tarihe kadar olan TÜM zamanların toplam bakiyesi
+                    // Yani "O ayın sonunda cebimde kaç para vardı?"
+                    var cumulativeDate = new DateTime(date.Year, date.Month, 1).AddMonths(1).AddDays(-1); // Ayın son günü
+                    
+                    var cumulativeIncome = allTransactions
+                        .Where(t => t.TransactionDate <= cumulativeDate && t.Type == "Income")
+                        .Sum(t => t.Amount);
+                        
+                    var cumulativeExpense = allTransactions
+                        .Where(t => t.TransactionDate <= cumulativeDate && t.Type == "Expense")
+                        .Sum(t => t.Amount);
+
+                    balanceValues.Add(cumulativeIncome - cumulativeExpense);
                 }
 
                 BarChartContainer.Content = new CartesianChart
                 {
-                    // StackedColumnSeries kullanarak gruplama yapıyoruz.
-                    // StackGroup: 0 -> Gelir ve Gider (Aynı hizada altlı üstlü)
-                    // StackGroup: 1 -> Fark (Yan tarafta ayrı sütun)
                     Series = new ISeries[]
                     {
                         new StackedColumnSeries<decimal>
@@ -119,7 +130,7 @@ namespace Kumparam.Pages.DashboardSubPages
                             Values = incomeValues.ToArray(),
                             Fill = new SolidColorPaint(SKColors.MediumSeaGreen),
                             MaxBarWidth = 40,
-                            StackGroup = 0 // Grup 0
+                            StackGroup = 0
                         },
                         new StackedColumnSeries<decimal>
                         {
@@ -127,7 +138,7 @@ namespace Kumparam.Pages.DashboardSubPages
                             Values = expenseValues.ToArray(),
                             Fill = new SolidColorPaint(SKColors.IndianRed),
                             MaxBarWidth = 40,
-                            StackGroup = 0 // Grup 0 (Gelir ile aynı hizada)
+                            StackGroup = 0
                         },
                         new StackedColumnSeries<decimal>
                         {
@@ -135,7 +146,7 @@ namespace Kumparam.Pages.DashboardSubPages
                             Values = netValues.ToArray(),
                             Fill = new SolidColorPaint(SKColors.DodgerBlue),
                             MaxBarWidth = 40,
-                            StackGroup = 1 // Grup 1 (Yan tarafta, boşluklu)
+                            StackGroup = 1
                         }
                     },
                     XAxes = new Axis[]
@@ -158,6 +169,43 @@ namespace Kumparam.Pages.DashboardSubPages
                     },
                     LegendPosition = LiveChartsCore.Measure.LegendPosition.Bottom,
                     ZoomMode = LiveChartsCore.Measure.ZoomAndPanMode.X
+                };
+
+                // --- 3. ÇİZGİ GRAFİK (VARLIK GELİŞİMİ) ---
+                LineChartContainer.Content = new CartesianChart
+                {
+                    Series = new ISeries[]
+                    {
+                        new LineSeries<decimal>
+                        {
+                            Name = "Toplam Bakiye",
+                            Values = balanceValues.ToArray(),
+                            Fill = new SolidColorPaint(SKColors.Gold.WithAlpha(50)), // Altın sarısı dolgu (şeffaf)
+                            Stroke = new SolidColorPaint(SKColors.Goldenrod) { StrokeThickness = 4 }, // Çizgi rengi
+                            GeometrySize = 12, // Nokta büyüklüğü
+                            GeometryStroke = new SolidColorPaint(SKColors.Orange), // Nokta kenarı
+                            GeometryFill = new SolidColorPaint(SKColors.White), // Nokta içi
+                            LineSmoothness = 0.5 // Yumuşak kıvrımlar (0 = düz çizgi, 1 = çok kıvrımlı)
+                        }
+                    },
+                    XAxes = new Axis[]
+                    {
+                        new Axis
+                        {
+                            Labels = labels.ToArray(),
+                            TextSize = 13,
+                            LabelsPaint = new SolidColorPaint(SKColors.Black)
+                        }
+                    },
+                    YAxes = new Axis[]
+                    {
+                        new Axis
+                        {
+                            Labeler = value => value.ToString("N0") + "₺",
+                            TextSize = 12
+                        }
+                    },
+                    TooltipPosition = LiveChartsCore.Measure.TooltipPosition.Top,
                 };
 
             }

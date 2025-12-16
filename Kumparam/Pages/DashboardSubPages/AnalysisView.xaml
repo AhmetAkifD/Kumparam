@@ -5,36 +5,40 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              mc:Ignorable="d" 
-             d:DesignHeight="650" d:DesignWidth="1030"
+             d:DesignHeight="700" d:DesignWidth="1030"
              TextElement.Foreground="{DynamicResource MaterialDesignBody}"
              FontFamily="{DynamicResource MaterialDesignFont}">
 
     <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <!-- Üst Sıra: Pasta ve Sütun (Yükseklik %55) -->
+            <RowDefinition Height="1.2*"/>
+            <!-- Alt Sıra: Çizgi Grafik (Yükseklik %45) -->
+            <RowDefinition Height="1*"/>
+        </Grid.RowDefinitions>
+        
         <Grid.ColumnDefinitions>
-            <!-- Sol: Harcama Pastası (Daha Dar) -->
+            <!-- Sol: Harcama Pastası -->
             <ColumnDefinition Width="1*"/> 
-            <!-- Sağ: Zaman Çizelgesi (Daha Geniş) -->
+            <!-- Sağ: Zaman Çizelgesi -->
             <ColumnDefinition Width="1.5*"/> 
         </Grid.ColumnDefinitions>
 
         <!-- 1. SOL KART: HARCAMA DAĞILIMI (PASTA) -->
-        <materialDesign:Card Grid.Column="0" Margin="0,0,10,0" UniformCornerRadius="10" materialDesign:ElevationAssist.Elevation="Dp2">
+        <materialDesign:Card Grid.Row="0" Grid.Column="0" Margin="0,0,10,10" UniformCornerRadius="10" materialDesign:ElevationAssist.Elevation="Dp2">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
 
-                <!-- Başlık -->
-                <StackPanel Margin="20,20,20,10">
+                <StackPanel Margin="20,15,20,5">
                     <TextBlock Text="Harcama Dağılımı" Style="{StaticResource MaterialDesignHeadline6TextBlock}"/>
                     <TextBlock Text="Kategorilere göre giderler" Opacity="0.6" FontSize="12"/>
                 </StackPanel>
 
-                <!-- Grafik Konteyner (C# tarafında doldurulacak) -->
                 <ContentControl x:Name="PieChartContainer" Grid.Row="1" Margin="10"/>
                 
-                <!-- Veri Yoksa Gösterilecek Mesaj -->
                 <TextBlock x:Name="TxtNoPieData" Grid.Row="1" Text="Veri Yok" 
                            HorizontalAlignment="Center" VerticalAlignment="Center" 
                            Visibility="Collapsed" Opacity="0.5"/>
@@ -42,21 +46,37 @@
         </materialDesign:Card>
 
         <!-- 2. SAĞ KART: GELİR / GİDER DENGESİ (SÜTUN) -->
-        <materialDesign:Card Grid.Column="1" Margin="10,0,0,0" UniformCornerRadius="10" materialDesign:ElevationAssist.Elevation="Dp2">
+        <materialDesign:Card Grid.Row="0" Grid.Column="1" Margin="10,0,0,10" UniformCornerRadius="10" materialDesign:ElevationAssist.Elevation="Dp2">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
 
-                <!-- Başlık -->
-                <StackPanel Margin="20,20,20,10">
+                <StackPanel Margin="20,15,20,5">
                     <TextBlock Text="Son 6 Ayın Özeti" Style="{StaticResource MaterialDesignHeadline6TextBlock}"/>
                     <TextBlock Text="Aylık Gelir ve Gider Karşılaştırması" Opacity="0.6" FontSize="12"/>
                 </StackPanel>
 
-                <!-- Grafik Konteyner (C# tarafında doldurulacak) -->
                 <ContentControl x:Name="BarChartContainer" Grid.Row="1" Margin="10"/>
+            </Grid>
+        </materialDesign:Card>
+
+        <!-- 3. ALT KART: VARLIK GELİŞİMİ (ÇİZGİ) - YENİ -->
+        <!-- Grid.ColumnSpan="2" ile boydan boya kaplattık -->
+        <materialDesign:Card Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,10,0,0" UniformCornerRadius="10" materialDesign:ElevationAssist.Elevation="Dp2">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <StackPanel Margin="20,15,20,5">
+                    <TextBlock Text="Varlık Gelişimi" Style="{StaticResource MaterialDesignHeadline6TextBlock}"/>
+                    <TextBlock Text="Toplam bakiyenizin zaman içindeki değişimi" Opacity="0.6" FontSize="12"/>
+                </StackPanel>
+
+                <ContentControl x:Name="LineChartContainer" Grid.Row="1" Margin="10"/>
             </Grid>
         </materialDesign:Card>
     </Grid>
