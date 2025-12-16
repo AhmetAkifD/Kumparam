@@ -31,13 +31,60 @@ namespace Kumparam.Pages.DashboardSubPages
             LoadCharts();
         }
 
+        // ---------------------------------------------------------
+        // GÖRÜNÜRLÜK YÖNETİMİ (TOGGLE & CLOSE)
+        // ---------------------------------------------------------
+
+        private void ToggleChart_Checked(object sender, RoutedEventArgs e)
+        {
+            if (sender is CheckBox chk)
+            {
+                if (chk.Name == "TogglePie" && CardPie != null) CardPie.Visibility = Visibility.Visible;
+                if (chk.Name == "ToggleBar" && CardBar != null) CardBar.Visibility = Visibility.Visible;
+                if (chk.Name == "ToggleLine" && CardLine != null) CardLine.Visibility = Visibility.Visible;
+            }
+        }
+
+        private void ToggleChart_Unchecked(object sender, RoutedEventArgs e)
+        {
+            if (sender is CheckBox chk)
+            {
+                if (chk.Name == "TogglePie" && CardPie != null) CardPie.Visibility = Visibility.Collapsed;
+                if (chk.Name == "ToggleBar" && CardBar != null) CardBar.Visibility = Visibility.Collapsed;
+                if (chk.Name == "ToggleLine" && CardLine != null) CardLine.Visibility = Visibility.Collapsed;
+            }
+        }
+
+        private void CloseCard_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button btn && btn.Tag is string chartTag)
+            {
+                switch (chartTag)
+                {
+                    case "Pie":
+                        TogglePie.IsChecked = false; 
+                        break;
+                    case "Bar":
+                        ToggleBar.IsChecked = false;
+                        break;
+                    case "Line":
+                        ToggleLine.IsChecked = false;
+                        break;
+                }
+            }
+        }
+
+        // ---------------------------------------------------------
+        // GRAFİK OLUŞTURMA
+        // ---------------------------------------------------------
+
         private void LoadCharts()
         {
             try
             {
                 var allTransactions = _userRepository.GetAllTransactions(_currentUserId);
 
-                // --- 1. PASTA GRAFİK (GİDERLER) ---
+                // --- 1. PASTA GRAFİK ---
                 var expenseData = allTransactions
                     .Where(t => t.Type == "Expense")
                     .GroupBy(t => t.Category)
@@ -55,7 +102,7 @@ namespace Kumparam.Pages.DashboardSubPages
                         {
                             Values = new decimal[] { item.Total },
                             Name = item.Category,
-                            InnerRadius = 50, 
+                            InnerRadius = 25, 
                             DataLabelsSize = 12,
                             DataLabelsPaint = new SolidColorPaint(SKColors.Black), 
                             DataLabelsPosition = LiveChartsCore.Measure.PolarLabelsPosition.Outer, 
@@ -76,8 +123,7 @@ namespace Kumparam.Pages.DashboardSubPages
                     TxtNoPieData.Visibility = Visibility.Visible;
                 }
 
-                // --- 2. SÜTUN GRAFİK (SON 6 AY GELİR/GİDER/FARK) ---
-                
+                // --- 2. SÜTUN GRAFİK ---
                 var last6Months = Enumerable.Range(0, 6)
                     .Select(i => DateTime.Now.AddMonths(-5 + i))
                     .ToList();
@@ -85,14 +131,13 @@ namespace Kumparam.Pages.DashboardSubPages
                 var incomeValues = new List<decimal>();
                 var expenseValues = new List<decimal>();
                 var netValues = new List<decimal>();
-                var balanceValues = new List<decimal>(); // Çizgi grafik için
+                var balanceValues = new List<decimal>();
                 var labels = new List<string>();
 
                 foreach (var date in last6Months)
                 {
                     labels.Add(date.ToString("MMMM")); 
 
-                    // O ayın işlemleri
                     var monthTrans = allTransactions
                         .Where(t => t.TransactionDate.Month == date.Month && t.TransactionDate.Year == date.Year)
                         .ToList();
@@ -104,19 +149,9 @@ namespace Kumparam.Pages.DashboardSubPages
                     expenseValues.Add(expense);
                     netValues.Add(income + expense);
 
-                    // --- ÇİZGİ GRAFİK İÇİN HESAPLAMA ---
-                    // O tarihe kadar olan TÜM zamanların toplam bakiyesi
-                    // Yani "O ayın sonunda cebimde kaç para vardı?"
-                    var cumulativeDate = new DateTime(date.Year, date.Month, 1).AddMonths(1).AddDays(-1); // Ayın son günü
-                    
-                    var cumulativeIncome = allTransactions
-                        .Where(t => t.TransactionDate <= cumulativeDate && t.Type == "Income")
-                        .Sum(t => t.Amount);
-                        
-                    var cumulativeExpense = allTransactions
-                        .Where(t => t.TransactionDate <= cumulativeDate && t.Type == "Expense")
-                        .Sum(t => t.Amount);
-
+                    var cumulativeDate = new DateTime(date.Year, date.Month, 1).AddMonths(1).AddDays(-1);
+                    var cumulativeIncome = allTransactions.Where(t => t.TransactionDate <= cumulativeDate && t.Type == "Income").Sum(t => t.Amount);
+                    var cumulativeExpense = allTransactions.Where(t => t.TransactionDate <= cumulativeDate && t.Type == "Expense").Sum(t => t.Amount);
                     balanceValues.Add(cumulativeIncome - cumulativeExpense);
                 }
 
@@ -168,10 +203,11 @@ namespace Kumparam.Pages.DashboardSubPages
                         }
                     },
                     LegendPosition = LiveChartsCore.Measure.LegendPosition.Bottom,
-                    ZoomMode = LiveChartsCore.Measure.ZoomAndPanMode.X
+                    // Zoom KAPATILDI: Artık 6 ay sabit görünecek.
+                    ZoomMode = LiveChartsCore.Measure.ZoomAndPanMode.None 
                 };
 
-                // --- 3. ÇİZGİ GRAFİK (VARLIK GELİŞİMİ) ---
+                // --- 3. ÇİZGİ GRAFİK ---
                 LineChartContainer.Content = new CartesianChart
                 {
                     Series = new ISeries[]
@@ -180,12 +216,12 @@ namespace Kumparam.Pages.DashboardSubPages
                         {
                             Name = "Toplam Bakiye",
                             Values = balanceValues.ToArray(),
-                            Fill = new SolidColorPaint(SKColors.Gold.WithAlpha(50)), // Altın sarısı dolgu (şeffaf)
-                            Stroke = new SolidColorPaint(SKColors.Goldenrod) { StrokeThickness = 4 }, // Çizgi rengi
-                            GeometrySize = 12, // Nokta büyüklüğü
-                            GeometryStroke = new SolidColorPaint(SKColors.Orange), // Nokta kenarı
-                            GeometryFill = new SolidColorPaint(SKColors.White), // Nokta içi
-                            LineSmoothness = 0.5 // Yumuşak kıvrımlar (0 = düz çizgi, 1 = çok kıvrımlı)
+                            Fill = new SolidColorPaint(SKColors.Gold.WithAlpha(50)),
+                            Stroke = new SolidColorPaint(SKColors.Goldenrod) { StrokeThickness = 4 },
+                            GeometrySize = 12,
+                            GeometryStroke = new SolidColorPaint(SKColors.Orange),
+                            GeometryFill = new SolidColorPaint(SKColors.White),
+                            LineSmoothness = 0.5
                         }
                     },
                     XAxes = new Axis[]
@@ -206,6 +242,8 @@ namespace Kumparam.Pages.DashboardSubPages
                         }
                     },
                     TooltipPosition = LiveChartsCore.Measure.TooltipPosition.Top,
+                    // Çizgi grafik için de Zoom kapatıldı (İsteğe bağlı, tutarlılık için kapattım)
+                    ZoomMode = LiveChartsCore.Measure.ZoomAndPanMode.None
                 };
 
             }
