@@ -103,6 +103,14 @@
                             <TextBlock Text="Gelir &amp; Gider"/>
                         </StackPanel>
                     </Button>
+                    
+                    <Button Style="{StaticResource SidebarButtonStyle}"
+                            Click="AnalysisButton_Click">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Poll"/> <!-- Grafik İkonu -->
+                            <TextBlock Text="Analiz &amp; Raporlar"/>
+                        </StackPanel>
+                    </Button>
 
                     <Button Style="{StaticResource SidebarButtonStyle}"
                             Click="InvestmentsButton_Click">
