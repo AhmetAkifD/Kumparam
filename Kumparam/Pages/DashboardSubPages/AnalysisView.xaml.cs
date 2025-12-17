@@ -32,9 +32,8 @@ namespace Kumparam.Pages.DashboardSubPages
         }
 
         // ---------------------------------------------------------
-        // GÖRÜNÜRLÜK YÖNETİMİ (TOGGLE & CLOSE)
+        // GÖRÜNÜRLÜK YÖNETİMİ
         // ---------------------------------------------------------
-
         private void ToggleChart_Checked(object sender, RoutedEventArgs e)
         {
             if (sender is CheckBox chk)
@@ -43,6 +42,8 @@ namespace Kumparam.Pages.DashboardSubPages
                 if (chk.Name == "ToggleBar" && CardBar != null) CardBar.Visibility = Visibility.Visible;
                 if (chk.Name == "ToggleLine" && CardLine != null) CardLine.Visibility = Visibility.Visible;
                 if (chk.Name == "ToggleDays" && CardDays != null) CardDays.Visibility = Visibility.Visible;
+                if (chk.Name == "ToggleStacked" && CardStacked != null) CardStacked.Visibility = Visibility.Visible;
+                if (chk.Name == "ToggleWaterfall" && CardWaterfall != null) CardWaterfall.Visibility = Visibility.Visible;
             }
         }
 
@@ -54,6 +55,8 @@ namespace Kumparam.Pages.DashboardSubPages
                 if (chk.Name == "ToggleBar" && CardBar != null) CardBar.Visibility = Visibility.Collapsed;
                 if (chk.Name == "ToggleLine" && CardLine != null) CardLine.Visibility = Visibility.Collapsed;
                 if (chk.Name == "ToggleDays" && CardDays != null) CardDays.Visibility = Visibility.Collapsed;
+                if (chk.Name == "ToggleStacked" && CardStacked != null) CardStacked.Visibility = Visibility.Collapsed;
+                if (chk.Name == "ToggleWaterfall" && CardWaterfall != null) CardWaterfall.Visibility = Visibility.Collapsed;
             }
         }
 
@@ -63,18 +66,12 @@ namespace Kumparam.Pages.DashboardSubPages
             {
                 switch (chartTag)
                 {
-                    case "Pie":
-                        TogglePie.IsChecked = false; 
-                        break;
-                    case "Bar":
-                        ToggleBar.IsChecked = false;
-                        break;
-                    case "Line":
-                        ToggleLine.IsChecked = false;
-                        break;
-                    case "Days":
-                        ToggleDays.IsChecked = false;
-                        break;
+                    case "Pie": TogglePie.IsChecked = false; break;
+                    case "Bar": ToggleBar.IsChecked = false; break;
+                    case "Line": ToggleLine.IsChecked = false; break;
+                    case "Days": ToggleDays.IsChecked = false; break;
+                    case "Stacked": ToggleStacked.IsChecked = false; break;
+                    case "Waterfall": ToggleWaterfall.IsChecked = false; break;
                 }
             }
         }
@@ -82,14 +79,13 @@ namespace Kumparam.Pages.DashboardSubPages
         // ---------------------------------------------------------
         // GRAFİK OLUŞTURMA
         // ---------------------------------------------------------
-
         private void LoadCharts()
         {
             try
             {
                 var allTransactions = _userRepository.GetAllTransactions(_currentUserId);
 
-                // --- 1. PASTA GRAFİK (GİDERLER) ---
+                // --- 1. PASTA GRAFİK ---
                 var expenseData = allTransactions
                     .Where(t => t.Type == "Expense")
                     .GroupBy(t => t.Category)
@@ -100,7 +96,6 @@ namespace Kumparam.Pages.DashboardSubPages
                 if (expenseData.Any())
                 {
                     var pieSeries = new List<ISeries>();
-
                     foreach (var item in expenseData)
                     {
                         pieSeries.Add(new PieSeries<decimal>
@@ -111,15 +106,14 @@ namespace Kumparam.Pages.DashboardSubPages
                             DataLabelsSize = 12,
                             DataLabelsPaint = new SolidColorPaint(SKColors.Black), 
                             DataLabelsPosition = LiveChartsCore.Measure.PolarLabelsPosition.Outer, 
-                            DataLabelsFormatter = point => $"{point.PrimaryValue:N0}₺",
-                            ToolTipLabelFormatter = point => $"{point.Context.Series.Name}: {point.PrimaryValue:N2} ₺"
+                            DataLabelsFormatter = point => $"{point.PrimaryValue:N0}₺"
+                            // PieSeries için ToolTipLabelFormatter doğru, değiştirmeye gerek yok.
                         });
                     }
-
                     PieChartContainer.Content = new PieChart
                     {
                         Series = pieSeries,
-                        LegendPosition = LiveChartsCore.Measure.LegendPosition.Bottom,
+                        LegendPosition = LiveChartsCore.Measure.LegendPosition.Right, 
                     };
                 }
                 else
@@ -128,24 +122,18 @@ namespace Kumparam.Pages.DashboardSubPages
                     TxtNoPieData.Visibility = Visibility.Visible;
                 }
 
-                // --- 2. SÜTUN GRAFİK (SON 6 AY) ---
-                var last6Months = Enumerable.Range(0, 6)
-                    .Select(i => DateTime.Now.AddMonths(-5 + i))
-                    .ToList();
-
+                // --- 2. SÜTUN GRAFİK (6 Ay) ---
+                var last6Months = Enumerable.Range(0, 6).Select(i => DateTime.Now.AddMonths(-5 + i)).ToList();
+                var labels = new List<string>();
                 var incomeValues = new List<decimal>();
                 var expenseValues = new List<decimal>();
                 var netValues = new List<decimal>();
                 var balanceValues = new List<decimal>();
-                var labels = new List<string>();
 
                 foreach (var date in last6Months)
                 {
                     labels.Add(date.ToString("MMMM")); 
-
-                    var monthTrans = allTransactions
-                        .Where(t => t.TransactionDate.Month == date.Month && t.TransactionDate.Year == date.Year)
-                        .ToList();
+                    var monthTrans = allTransactions.Where(t => t.TransactionDate.Month == date.Month && t.TransactionDate.Year == date.Year).ToList();
 
                     decimal income = monthTrans.Where(t => t.Type == "Income").Sum(t => t.Amount);
                     decimal expense = monthTrans.Where(t => t.Type == "Expense").Sum(t => t.Amount) * -1;
@@ -159,151 +147,198 @@ namespace Kumparam.Pages.DashboardSubPages
                     var cumulativeExpense = allTransactions.Where(t => t.TransactionDate <= cumulativeDate && t.Type == "Expense").Sum(t => t.Amount);
                     balanceValues.Add(cumulativeIncome - cumulativeExpense);
                 }
-
+                
                 BarChartContainer.Content = new CartesianChart
                 {
                     Series = new ISeries[]
                     {
-                        new StackedColumnSeries<decimal>
-                        {
-                            Name = "Gelir",
-                            Values = incomeValues.ToArray(),
-                            Fill = new SolidColorPaint(SKColors.MediumSeaGreen),
-                            MaxBarWidth = 40,
-                            StackGroup = 0
+                        new StackedColumnSeries<decimal> 
+                        { 
+                            Name = "Gelir", Values = incomeValues.ToArray(), Fill = new SolidColorPaint(SKColors.MediumSeaGreen), MaxBarWidth = 25, StackGroup = 0
                         },
-                        new StackedColumnSeries<decimal>
-                        {
-                            Name = "Gider",
-                            Values = expenseValues.ToArray(),
-                            Fill = new SolidColorPaint(SKColors.IndianRed),
-                            MaxBarWidth = 40,
-                            StackGroup = 0
+                        new StackedColumnSeries<decimal> 
+                        { 
+                            Name = "Gider", Values = expenseValues.ToArray(), Fill = new SolidColorPaint(SKColors.IndianRed), MaxBarWidth = 25, StackGroup = 0,
                         },
-                        new StackedColumnSeries<decimal>
-                        {
-                            Name = "Fark (Net)",
-                            Values = netValues.ToArray(),
-                            Fill = new SolidColorPaint(SKColors.DodgerBlue),
-                            MaxBarWidth = 40,
-                            StackGroup = 1
+                        new StackedColumnSeries<decimal> 
+                        { 
+                            Name = "Fark", Values = netValues.ToArray(), Fill = new SolidColorPaint(SKColors.DodgerBlue), MaxBarWidth = 25, StackGroup = 1,
                         }
                     },
-                    XAxes = new Axis[]
-                    {
-                        new Axis
-                        {
-                            Labels = labels.ToArray(),
-                            LabelsRotation = 0,
-                            TextSize = 13,
-                            LabelsPaint = new SolidColorPaint(SKColors.Black)
-                        }
-                    },
-                    YAxes = new Axis[]
-                    {
-                        new Axis
-                        {
-                            Labeler = value => value.ToString("N0") + "₺",
-                            TextSize = 12
-                        }
-                    },
+                    XAxes = new Axis[] { new Axis { Labels = labels.ToArray(), TextSize = 12, LabelsPaint = new SolidColorPaint(SKColors.Black) } },
+                    YAxes = new Axis[] { new Axis { Labeler = value => value.ToString("N0") + "₺", TextSize = 12 } },
                     LegendPosition = LiveChartsCore.Measure.LegendPosition.Bottom,
-                    ZoomMode = LiveChartsCore.Measure.ZoomAndPanMode.None 
+                    ZoomMode = LiveChartsCore.Measure.ZoomAndPanMode.None
                 };
 
-                // --- 3. ÇİZGİ GRAFİK (TREND) ---
+                // --- 3. YIĞILMIŞ SÜTUN (Aylık Kategori Detayı) ---
+                var stackedSeries = new List<ISeries>();
+                var topCategories = allTransactions
+                    .Where(t => t.Type == "Expense" && t.TransactionDate >= DateTime.Now.AddMonths(-6))
+                    .GroupBy(t => t.Category)
+                    .Select(g => new { Cat = g.Key, Total = g.Sum(t => t.Amount) })
+                    .OrderByDescending(x => x.Total)
+                    .Take(5) 
+                    .Select(x => x.Cat)
+                    .ToList();
+
+                foreach (var cat in topCategories)
+                {
+                    var catValues = new List<decimal>();
+                    foreach (var date in last6Months)
+                    {
+                        var sum = allTransactions
+                            .Where(t => t.TransactionDate.Month == date.Month && t.TransactionDate.Year == date.Year 
+                                        && t.Type == "Expense" && t.Category == cat)
+                            .Sum(t => t.Amount);
+                        catValues.Add(sum); 
+                    }
+
+                    stackedSeries.Add(new StackedColumnSeries<decimal>
+                    {
+                        Name = cat,
+                        Values = catValues.ToArray(),
+                        MaxBarWidth = 40,
+                        DataLabelsSize = 0
+                    });
+                }
+
+                var otherValues = new List<decimal>();
+                bool hasOthers = false;
+                foreach (var date in last6Months)
+                {
+                    var sum = allTransactions
+                        .Where(t => t.TransactionDate.Month == date.Month && t.TransactionDate.Year == date.Year 
+                                    && t.Type == "Expense" && !topCategories.Contains(t.Category))
+                        .Sum(t => t.Amount);
+                    otherValues.Add(sum);
+                    if(sum > 0) hasOthers = true;
+                }
+
+                if (hasOthers)
+                {
+                    stackedSeries.Add(new StackedColumnSeries<decimal>
+                    {
+                        Name = "Diğer",
+                        Values = otherValues.ToArray(),
+                        Fill = new SolidColorPaint(SKColors.Gray),
+                        MaxBarWidth = 40,
+                        DataLabelsSize = 0,
+                    });
+                }
+
+                StackedChartContainer.Content = new CartesianChart
+                {
+                    Series = stackedSeries,
+                    XAxes = new Axis[] { new Axis { Labels = labels.ToArray(), TextSize = 12, LabelsPaint = new SolidColorPaint(SKColors.Black) } },
+                    YAxes = new Axis[] { new Axis { Labeler = value => value.ToString("N0") + "₺", TextSize = 12 } },
+                    LegendPosition = LiveChartsCore.Measure.LegendPosition.Right, 
+                    ZoomMode = LiveChartsCore.Measure.ZoomAndPanMode.None
+                };
+
+                // --- 4. WATERFALL (Bu Ayın Bütçe Akışı) ---
+                var thisMonth = DateTime.Now;
+                var thisMonthTrans = allTransactions.Where(t => t.TransactionDate.Month == thisMonth.Month && t.TransactionDate.Year == thisMonth.Year).ToList();
+                
+                decimal thisMonthIncome = thisMonthTrans.Where(t => t.Type == "Income").Sum(t => t.Amount);
+                decimal thisMonthRemaining = thisMonthIncome - thisMonthTrans.Where(t => t.Type == "Expense").Sum(t => t.Amount);
+
+                var waterfallSeries = new List<ISeries>();
+
+                // Sütun 1: Gelir
+                waterfallSeries.Add(new StackedColumnSeries<decimal> 
+                { 
+                    Name = "Gelir", Values = new decimal[] { thisMonthIncome, 0, 0 }, 
+                    Fill = new SolidColorPaint(SKColors.MediumSeaGreen), 
+                    Stroke = new SolidColorPaint(SKColors.White) { StrokeThickness = 2 },
+                    MaxBarWidth = 50, StackGroup = 0
+                });
+
+                // Sütun 2: Giderler (Top 4 + Diğer)
+                var expensesGroups = thisMonthTrans.Where(t => t.Type == "Expense")
+                    .GroupBy(t => t.Category)
+                    .Select(g => new { Cat = g.Key, Sum = g.Sum(t => t.Amount) })
+                    .OrderByDescending(x => x.Sum)
+                    .ToList();
+
+                var topWaterfall = expensesGroups.Take(4).ToList(); 
+                var otherWaterfall = expensesGroups.Skip(4).Sum(x => x.Sum); 
+
+                foreach (var item in topWaterfall)
+                {
+                    waterfallSeries.Add(new StackedColumnSeries<decimal> 
+                    { 
+                        Name = item.Cat, Values = new decimal[] { 0, item.Sum, 0 }, 
+                        MaxBarWidth = 50, StackGroup = 0,
+                        Stroke = new SolidColorPaint(SKColors.White) { StrokeThickness = 1 }
+                    });
+                }
+
+                if (otherWaterfall > 0)
+                {
+                    waterfallSeries.Add(new StackedColumnSeries<decimal> 
+                    { 
+                        Name = "Diğer Giderler", Values = new decimal[] { 0, otherWaterfall, 0 }, 
+                        Fill = new SolidColorPaint(SKColors.Gray),
+                        MaxBarWidth = 50, StackGroup = 0,
+                        Stroke = new SolidColorPaint(SKColors.White) { StrokeThickness = 1 }
+                    });
+                }
+
+                // Sütun 3: Kalan
+                waterfallSeries.Add(new StackedColumnSeries<decimal> 
+                { 
+                    Name = "Kalan", Values = new decimal[] { 0, 0, thisMonthRemaining }, 
+                    Fill = new SolidColorPaint(thisMonthRemaining >= 0 ? SKColors.DodgerBlue : SKColors.Red), 
+                    MaxBarWidth = 50, StackGroup = 0,
+                    Stroke = new SolidColorPaint(SKColors.White) { StrokeThickness = 2 }
+                });
+
+                WaterfallChartContainer.Content = new CartesianChart
+                {
+                    Series = waterfallSeries,
+                    XAxes = new Axis[] { new Axis { Labels = new[] { "Toplam Gelir", "Harcamalar", "Kalan Bakiye" }, TextSize = 13, LabelsPaint = new SolidColorPaint(SKColors.Black) } },
+                    YAxes = new Axis[] { new Axis { Labeler = value => value.ToString("N0") + "₺", TextSize = 12 } },
+                    LegendPosition = LiveChartsCore.Measure.LegendPosition.Right, 
+                    ZoomMode = LiveChartsCore.Measure.ZoomAndPanMode.None
+                };
+
+                // --- 5. ÇİZGİ GRAFİK ---
                 LineChartContainer.Content = new CartesianChart
                 {
                     Series = new ISeries[]
                     {
                         new LineSeries<decimal>
                         {
-                            Name = "Toplam Bakiye",
-                            Values = balanceValues.ToArray(),
-                            Fill = new SolidColorPaint(SKColors.Gold.WithAlpha(50)),
-                            Stroke = new SolidColorPaint(SKColors.Goldenrod) { StrokeThickness = 4 },
-                            GeometrySize = 12,
-                            GeometryStroke = new SolidColorPaint(SKColors.Orange),
-                            GeometryFill = new SolidColorPaint(SKColors.White),
-                            LineSmoothness = 0.5
+                            Name = "Toplam Bakiye", Values = balanceValues.ToArray(),
+                            Fill = new SolidColorPaint(SKColors.Gold.WithAlpha(50)), Stroke = new SolidColorPaint(SKColors.Goldenrod) { StrokeThickness = 4 },
+                            GeometrySize = 12, GeometryStroke = new SolidColorPaint(SKColors.Orange), GeometryFill = new SolidColorPaint(SKColors.White), LineSmoothness = 0.5
                         }
                     },
-                    XAxes = new Axis[]
-                    {
-                        new Axis
-                        {
-                            Labels = labels.ToArray(),
-                            TextSize = 13,
-                            LabelsPaint = new SolidColorPaint(SKColors.Black)
-                        }
-                    },
-                    YAxes = new Axis[]
-                    {
-                        new Axis
-                        {
-                            Labeler = value => value.ToString("N0") + "₺",
-                            TextSize = 12
-                        }
-                    },
+                    XAxes = new Axis[] { new Axis { Labels = labels.ToArray(), TextSize = 13, LabelsPaint = new SolidColorPaint(SKColors.Black) } },
+                    YAxes = new Axis[] { new Axis { Labeler = value => value.ToString("N0") + "₺", TextSize = 12 } },
                     TooltipPosition = LiveChartsCore.Measure.TooltipPosition.Top,
                     ZoomMode = LiveChartsCore.Measure.ZoomAndPanMode.None
                 };
 
-                // --- 4. GÜNLÜK HARCAMA ALIŞKANLIKLARI (HAFTANIN GÜNLERİ) ---
-                // Türkçe Gün İsimleri (Pazartesi'den başlayarak)
+                // --- 6. GÜNLÜK HARCAMA ---
                 var turkishDays = new[] { "Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar" };
-                
-                // DayOfWeek enum'ı Pazar(0) ile başlar, biz Pazartesi(1) ile başlatıp Pazar'ı sona atacağız.
-                // Verileri (DayOfWeek, ToplamTutar) şeklinde grupla
-                var expensesByDay = allTransactions
-                    .Where(t => t.Type == "Expense")
-                    .GroupBy(t => t.TransactionDate.DayOfWeek)
-                    .Select(g => new { Day = g.Key, Total = g.Sum(t => t.Amount) })
-                    .ToList();
-
+                var expensesByDay = allTransactions.Where(t => t.Type == "Expense").GroupBy(t => t.TransactionDate.DayOfWeek).Select(g => new { Day = g.Key, Total = g.Sum(t => t.Amount) }).ToList();
                 var dayValues = new List<decimal>();
-
-                // Pazartesi(1) -> Cumartesi(6) arası dön
-                for (int i = 1; i <= 6; i++)
-                {
-                    var dayData = expensesByDay.FirstOrDefault(d => (int)d.Day == i);
-                    dayValues.Add(dayData?.Total ?? 0);
-                }
-                // En son Pazar(0)'ı ekle
-                var sundayData = expensesByDay.FirstOrDefault(d => (int)d.Day == 0);
-                dayValues.Add(sundayData?.Total ?? 0);
+                for (int i = 1; i <= 6; i++) dayValues.Add(expensesByDay.FirstOrDefault(d => (int)d.Day == i)?.Total ?? 0);
+                dayValues.Add(expensesByDay.FirstOrDefault(d => (int)d.Day == 0)?.Total ?? 0);
 
                 DaysChartContainer.Content = new CartesianChart
                 {
                     Series = new ISeries[]
                     {
-                        new ColumnSeries<decimal>
-                        {
-                            Name = "Toplam Harcama",
-                            Values = dayValues.ToArray(),
-                            Fill = new SolidColorPaint(SKColors.SlateBlue),
-                            MaxBarWidth = 50,
-                            Rx = 10, // Köşeleri yuvarlatılmış sütunlar
-                            Ry = 10
+                        new ColumnSeries<decimal> 
+                        { 
+                            Name = "Toplam Harcama", Values = dayValues.ToArray(), Fill = new SolidColorPaint(SKColors.SlateBlue), MaxBarWidth = 50, Rx = 10, Ry = 10
                         }
                     },
-                    XAxes = new Axis[]
-                    {
-                        new Axis
-                        {
-                            Labels = turkishDays,
-                            TextSize = 13,
-                            LabelsPaint = new SolidColorPaint(SKColors.Black)
-                        }
-                    },
-                    YAxes = new Axis[]
-                    {
-                        new Axis
-                        {
-                            Labeler = value => value.ToString("N0") + "₺",
-                            TextSize = 12
-                        }
-                    },
+                    XAxes = new Axis[] { new Axis { Labels = turkishDays, TextSize = 13, LabelsPaint = new SolidColorPaint(SKColors.Black) } },
+                    YAxes = new Axis[] { new Axis { Labeler = value => value.ToString("N0") + "₺", TextSize = 12 } },
                     ZoomMode = LiveChartsCore.Measure.ZoomAndPanMode.None
                 };
 
