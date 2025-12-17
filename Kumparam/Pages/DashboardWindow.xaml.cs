@@ -47,6 +47,11 @@ public partial class DashboardWindow : Window
     {
         MainContentArea.Content = new IncomeExpenseView(_currentUser.UserId);
     }
+    
+    private void AnalysisButton_Click(object sender, RoutedEventArgs e)
+    {
+        MainContentArea.Content = new AnalysisView(_currentUser.UserId);
+    }
 
     private void InvestmentsButton_Click(object sender, RoutedEventArgs e)
     {
