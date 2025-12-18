@@ -6,21 +6,22 @@ using Kumparam.Core.Models;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
-using Transaction = Kumparam.Core.Transaction;
+
+// GÜNCELLEME: Transaction sınıfının yeri düzeltildi
+using Transaction = Kumparam.Core.Transaction; 
 
 namespace Kumparam.UI.Services
 {
     public class PdfReportService
     {
-        // QuestPDF lisans ayarı (Topluluk lisansı ücretsizdir)
         static PdfReportService()
         {
             QuestPDF.Settings.License = LicenseType.Community;
         }
 
-        public void GeneratePdf(string filePath, UserProfile user, List<Transaction> transactions)
+        // GÜNCELLEME: 'reportPeriod' parametresi eklendi
+        public void GeneratePdf(string filePath, UserProfile user, List<Transaction> transactions, string reportPeriod)
         {
-            // Verileri Hazırla
             var totalIncome = transactions.Where(t => t.Type == "Income").Sum(t => t.Amount);
             var totalExpense = transactions.Where(t => t.Type == "Expense").Sum(t => t.Amount);
             var netBalance = totalIncome - totalExpense;
@@ -29,7 +30,6 @@ namespace Kumparam.UI.Services
             {
                 container.Page(page =>
                 {
-                    // Sayfa Ayarları
                     page.Size(PageSizes.A4);
                     page.Margin(2, Unit.Centimetre);
                     page.PageColor(Colors.White);
@@ -38,25 +38,26 @@ namespace Kumparam.UI.Services
                     // 1. ÜST BİLGİ (HEADER)
                     page.Header().Row(row =>
                     {
-                        // Sol Taraf: Logo ve Başlık
                         row.RelativeItem().Column(col =>
                         {
                             col.Item().Text("KUMPARAM").FontSize(24).SemiBold().FontColor(Colors.Green.Darken2);
                             col.Item().Text("Finansal Hareket Raporu").FontSize(14).FontColor(Colors.Grey.Darken1);
+                            // GÜNCELLEME: Rapor periyodu buraya eklendi
+                            col.Item().Text(reportPeriod).FontSize(10).Italic().FontColor(Colors.Grey.Darken2);
                         });
 
-                        // Sağ Taraf: Tarih ve Kullanıcı
                         row.RelativeItem().AlignRight().Column(col =>
                         {
-                            col.Item().Text($"{user.FirstName} {user.LastName}").FontSize(14).SemiBold();
-                            col.Item().Text($"Rapor Tarihi: {DateTime.Now:dd.MM.yyyy}").FontSize(10);
+                            var userName = user != null ? $"{user.FirstName} {user.LastName}" : "Kullanıcı";
+                            col.Item().Text(userName).FontSize(14).SemiBold();
+                            col.Item().Text($"Oluşturulma: {DateTime.Now:dd.MM.yyyy}").FontSize(10);
                         });
                     });
 
-                    // 2. İÇERİK (CONTENT)
+                    // 2. İÇERİK
                     page.Content().PaddingVertical(1, Unit.Centimetre).Column(col =>
                     {
-                        // A. Özet Kutuları
+                        // Özet Kutuları
                         col.Item().Row(row =>
                         {
                             row.RelativeItem().Component(new StatComponent("Toplam Gelir", totalIncome, Colors.Green.Lighten4, Colors.Green.Darken2));
@@ -68,19 +69,17 @@ namespace Kumparam.UI.Services
 
                         col.Item().PaddingVertical(20).LineHorizontal(1).LineColor(Colors.Grey.Lighten2);
 
-                        // B. İşlem Tablosu
+                        // Tablo
                         col.Item().Table(table =>
                         {
-                            // Sütun Genişlikleri
                             table.ColumnsDefinition(columns =>
                             {
-                                columns.ConstantColumn(80);  // Tarih
-                                columns.RelativeColumn();    // Kategori
-                                columns.RelativeColumn(2);   // Açıklama
-                                columns.ConstantColumn(80);  // Tutar
+                                columns.ConstantColumn(80);
+                                columns.RelativeColumn();
+                                columns.RelativeColumn(2);
+                                columns.ConstantColumn(80);
                             });
 
-                            // Tablo Başlığı
                             table.Header(header =>
                             {
                                 header.Cell().Element(CellStyle).Text("Tarih");
@@ -94,16 +93,15 @@ namespace Kumparam.UI.Services
                                 }
                             });
 
-                            // Tablo Satırları
                             foreach (var item in transactions)
                             {
-                                // Giderler Kırmızı, Gelirler Yeşil görünsün
                                 var color = item.Type == "Income" ? Colors.Green.Darken2 : Colors.Red.Darken2;
                                 var sign = item.Type == "Income" ? "+" : "-";
+                                var dateStr = item.TransactionDate.ToString("dd.MM.yyyy");
 
-                                table.Cell().Element(BlockStyle).Text($"{item.TransactionDate:dd.MM.yyyy}");
-                                table.Cell().Element(BlockStyle).Text(item.Category);
-                                table.Cell().Element(BlockStyle).Text(item.Description);
+                                table.Cell().Element(BlockStyle).Text(dateStr);
+                                table.Cell().Element(BlockStyle).Text(item.Category ?? "-");
+                                table.Cell().Element(BlockStyle).Text(item.Description ?? "-");
                                 table.Cell().Element(BlockStyle).AlignRight().Text($"{sign} {item.Amount:N2} ₺").FontColor(color).SemiBold();
 
                                 static IContainer BlockStyle(IContainer container)
@@ -114,7 +112,7 @@ namespace Kumparam.UI.Services
                         });
                     });
 
-                    // 3. ALT BİLGİ (FOOTER)
+                    // 3. ALT BİLGİ
                     page.Footer().AlignCenter().Text(x =>
                     {
                         x.Span("Sayfa ");
@@ -128,7 +126,6 @@ namespace Kumparam.UI.Services
         }
     }
 
-    // Özet Kutucuğu İçin Yardımcı Bileşen (Tasarım tekrarını önlemek için)
     public class StatComponent : IComponent
     {
         private string Title { get; }
@@ -146,15 +143,11 @@ namespace Kumparam.UI.Services
 
         public void Compose(IContainer container)
         {
-            container
-                .Background(BgColor)
-                .CornerRadius(5)
-                .Padding(10)
-                .Column(column =>
-                {
-                    column.Item().Text(Title).FontSize(10).FontColor(Colors.Grey.Darken2);
-                    column.Item().Text($"{Value:N2} ₺").FontSize(16).SemiBold().FontColor(TextColor);
-                });
+            container.Background(BgColor).CornerRadius(5).Padding(10).Column(column =>
+            {
+                column.Item().Text(Title).FontSize(10).FontColor(Colors.Grey.Darken2);
+                column.Item().Text($"{Value:N2} ₺").FontSize(16).SemiBold().FontColor(TextColor);
+            });
         }
     }
 }

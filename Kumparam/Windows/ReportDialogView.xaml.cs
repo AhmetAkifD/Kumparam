@@ -9,7 +9,8 @@ using Kumparam.Core.Interfaces;
 using Kumparam.Core.Models;
 using Kumparam.Data.Repositories;
 using Kumparam.UI.Services;
-using Transaction = Kumparam.Core.Transaction;
+// GÜNCELLEME: Namespace düzeltildi
+using Transaction = Kumparam.Core.Transaction; 
 
 namespace Kumparam.Pages.DashboardSubPages
 {
@@ -17,7 +18,7 @@ namespace Kumparam.Pages.DashboardSubPages
     {
         private readonly IUserRepository _userRepository;
         private readonly Guid _currentUserId;
-
+        
         public ReportDialogView(Guid userId)
         {
             InitializeComponent();
@@ -26,7 +27,7 @@ namespace Kumparam.Pages.DashboardSubPages
             string connectionString = ConfigurationManager.ConnectionStrings["KumparamDB"].ConnectionString;
             _userRepository = new SqlUserRepository(connectionString);
 
-            // Varsayılan olarak "Bu Ay" seçili gelsin
+            // Varsayılan
             SetDateRange("Month");
         }
 
@@ -39,6 +40,15 @@ namespace Kumparam.Pages.DashboardSubPages
             }
         }
 
+        // Manuel tarih değişirse etiketi "Özel" yap
+        private void DatePicker_SelectedDateChanged(object sender, SelectionChangedEventArgs e)
+        {
+            // Kullanıcı elle değiştirirse "Özel Aralık" moduna geçer
+            // (Bu event, kodla değiştirince de tetiklenir, o yüzden basit bırakıyoruz)
+            // İstersen burada _selectedRangeLabel = "Ozel_Aralik" yapabilirsin ama
+            // QuickSelect sonrası da tetikleneceği için mantığı karıştırmamak adına ellemiyoruz.
+        }
+
         private void SetDateRange(string rangeType)
         {
             DateTime now = DateTime.Now;
@@ -47,10 +57,9 @@ namespace Kumparam.Pages.DashboardSubPages
             {
                 case "Today":
                     StartDatePicker.SelectedDate = now.Date;
-                    EndDatePicker.SelectedDate = now.Date; // Gün sonunu filtrede halledeceğiz
+                    EndDatePicker.SelectedDate = now.Date; 
                     break;
                 case "Week":
-                    // Haftanın başı (Pazartesi)
                     int diff = (7 + (now.DayOfWeek - DayOfWeek.Monday)) % 7;
                     StartDatePicker.SelectedDate = now.AddDays(-1 * diff).Date;
                     EndDatePicker.SelectedDate = now.Date;
@@ -64,7 +73,7 @@ namespace Kumparam.Pages.DashboardSubPages
                     EndDatePicker.SelectedDate = new DateTime(now.Year, 12, 31);
                     break;
                 case "All":
-                    StartDatePicker.SelectedDate = null; // Null "Başlangıçtan beri" demek olsun
+                    StartDatePicker.SelectedDate = null;
                     EndDatePicker.SelectedDate = null;
                     break;
             }
@@ -74,7 +83,6 @@ namespace Kumparam.Pages.DashboardSubPages
         {
             try
             {
-                // 1. Tarihleri Kontrol Et
                 DateTime? start = StartDatePicker.SelectedDate;
                 DateTime? end = EndDatePicker.SelectedDate;
 
@@ -84,10 +92,8 @@ namespace Kumparam.Pages.DashboardSubPages
                     return;
                 }
 
-                // 2. Verileri Çek ve Filtrele
                 var allTransactions = _userRepository.GetAllTransactions(_currentUserId);
                 
-                // Filtreleme (LINQ ile)
                 var filteredTransactions = allTransactions.Where(t => 
                     (!start.HasValue || t.TransactionDate.Date >= start.Value.Date) &&
                     (!end.HasValue || t.TransactionDate.Date <= end.Value.Date)
@@ -99,11 +105,20 @@ namespace Kumparam.Pages.DashboardSubPages
                     return;
                 }
 
-                // 3. Dosya Kaydet ve PDF Oluştur
+                // GÜNCELLEME: Dosya İsmi Oluşturma
+                // Örn: Kumparam_Rapor_Bu_Ay_20240101-20240131.pdf
+                string datePart = "";
+                if (start.HasValue && end.HasValue)
+                    datePart = $"{start.Value:yyyyMMdd}-{end.Value:yyyyMMdd}";
+                else
+                    datePart = DateTime.Now.ToString("yyyyMMdd");
+
+                string fileName = $"Kumparam_Rapor_{datePart}.pdf";
+
                 SaveFileDialog saveFileDialog = new SaveFileDialog
                 {
                     Filter = "PDF Dosyası (*.pdf)|*.pdf",
-                    FileName = $"Kumparam_Rapor_{DateTime.Now:yyyyMMdd_HHmm}.pdf",
+                    FileName = fileName,
                     Title = "Raporu Kaydet"
                 };
 
@@ -112,11 +127,19 @@ namespace Kumparam.Pages.DashboardSubPages
                     var userProfile = _userRepository.GetUserProfile(_currentUserId);
                     var pdfService = new PdfReportService();
                     
-                    pdfService.GeneratePdf(saveFileDialog.FileName, userProfile, filteredTransactions);
+                    // GÜNCELLEME: PDF İçine Yazılacak Metin (Sadece Tarih)
+                    // Parantez içindeki (Bu Ay) vb. kaldırıldı.
+                    string reportPeriodText = "Tarih Aralığı: ";
+                    if (start.HasValue && end.HasValue)
+                        reportPeriodText += $"{start.Value:dd.MM.yyyy} - {end.Value:dd.MM.yyyy}";
+                    else if (start.HasValue)
+                        reportPeriodText += $"{start.Value:dd.MM.yyyy} tarihinden itibaren";
+                    else
+                        reportPeriodText += "Tüm Zamanlar";
+
+                    pdfService.GeneratePdf(saveFileDialog.FileName, userProfile, filteredTransactions, reportPeriodText);
 
                     MessageBox.Show("Rapor başarıyla oluşturuldu! 📄", "Başarılı", MessageBoxButton.OK, MessageBoxImage.Information);
-                    
-                    // İşlem bitince pencereyi kapat
                     CloseWindow();
                 }
             }
