@@ -12,6 +12,9 @@ using LiveChartsCore.SkiaSharpView.Painting;
 using LiveChartsCore.SkiaSharpView.WPF; 
 using SkiaSharp; 
 using LiveChartsCore.SkiaSharpView.VisualElements; 
+using Microsoft.Win32;
+using Kumparam.UI.Services;
+using Kumparam.Core.Models;
 
 namespace Kumparam.Pages.DashboardSubPages
 {
@@ -346,6 +349,39 @@ namespace Kumparam.Pages.DashboardSubPages
             catch (Exception ex)
             {
                 MessageBox.Show("Grafik Hatası: " + ex.Message);
+            }
+        }
+        private void DownloadPdf_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                // 1. Verileri Hazırla
+                var transactions = _userRepository.GetAllTransactions(_currentUserId);
+                var userProfile = _userRepository.GetUserProfile(_currentUserId);
+
+                // 2. Dosya Kaydetme Diyaloğu Aç
+                SaveFileDialog saveFileDialog = new SaveFileDialog
+                {
+                    Filter = "PDF Dosyası (*.pdf)|*.pdf",
+                    FileName = $"Kumparam_Rapor_{DateTime.Now:yyyyMMdd}.pdf",
+                    Title = "Raporu Kaydet"
+                };
+
+                if (saveFileDialog.ShowDialog() == true)
+                {
+                    // 3. PDF'i Oluştur
+                    var pdfService = new PdfReportService();
+                    pdfService.GeneratePdf(saveFileDialog.FileName, userProfile, transactions);
+
+                    MessageBox.Show("Rapor başarıyla oluşturuldu! 📄", "Başarılı", MessageBoxButton.OK, MessageBoxImage.Information);
+            
+                    // İstersen dosyayı otomatik açtırabilirsin:
+                    // System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(saveFileDialog.FileName) { UseShellExecute = true });
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"PDF oluşturulurken hata: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
     }
