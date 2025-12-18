@@ -389,7 +389,6 @@ namespace Kumparam.Pages.DashboardSubPages
             // Gelir yoksa hesaplama yapma (Sıfıra bölünme hatası olmasın)
             if (totalIncome == 0)
             {
-                TxtBudgetComment.Text = "Bu ay henüz gelir kaydı girilmediği için analiz yapılamıyor.";
                 PbNeeds.Value = 0; PbWants.Value = 0; PbSavings.Value = 0;
                 TxtNeeds.Text = "%0"; TxtWants.Text = "%0"; TxtSavings.Text = "%0";
                 return;
@@ -466,8 +465,6 @@ namespace Kumparam.Pages.DashboardSubPages
                 PbSavings.Foreground = System.Windows.Media.Brushes.DodgerBlue;
                 comment += "💰 Harika! %20 birikim hedefini tutturdunuz. ";
             }
-
-            TxtBudgetComment.Text = comment;
         }
     }
 }
