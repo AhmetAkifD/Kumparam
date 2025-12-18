@@ -45,6 +45,16 @@
                 <CheckBox x:Name="ToggleWaterfall" Content="Bu Ayın Bütçe Akışı" 
                           Style="{StaticResource MaterialDesignFilterChipCheckBox}" 
                           IsChecked="True" Checked="ToggleChart_Checked" Unchecked="ToggleChart_Unchecked" Margin="0,0,5,5"/>
+                <Button Style="{StaticResource MaterialDesignRaisedButton}" 
+                        Background="#D32F2F" BorderBrush="#D32F2F"
+                        Click="DownloadPdf_Click" 
+                        Margin="20,0,0,0" Height="30" FontSize="12" Padding="10,0">
+                    <!-- Butonun içeriği tek bir StackPanel -->
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="FilePdfBox" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="PDF İNDİR"/>
+                    </StackPanel>
+                </Button>
             </WrapPanel>
         </materialDesign:Card>
 

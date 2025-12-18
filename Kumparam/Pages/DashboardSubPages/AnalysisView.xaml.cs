@@ -12,6 +12,9 @@ using LiveChartsCore.SkiaSharpView.Painting;
 using LiveChartsCore.SkiaSharpView.WPF; 
 using SkiaSharp; 
 using LiveChartsCore.SkiaSharpView.VisualElements; 
+using Microsoft.Win32;
+using Kumparam.UI.Services;
+using Kumparam.Core.Models;
 
 namespace Kumparam.Pages.DashboardSubPages
 {
@@ -347,6 +350,24 @@ namespace Kumparam.Pages.DashboardSubPages
             {
                 MessageBox.Show("Grafik Hatası: " + ex.Message);
             }
+        }
+        private void DownloadPdf_Click(object sender, RoutedEventArgs e)
+        {
+            // Rapor Filtreleme Penceresini Aç
+            Window reportWindow = new Window
+            {
+                Title = "Rapor Oluştur",
+                Content = new ReportDialogView(_currentUserId), // Yeni oluşturduğumuz view
+                Width = 600,
+                Height = 450,
+                WindowStartupLocation = WindowStartupLocation.CenterScreen,
+                ResizeMode = ResizeMode.NoResize,
+                WindowStyle = WindowStyle.None, // Çerçevesiz modern görünüm (İstersen SingleBorderWindow yapabilirsin)
+                AllowsTransparency = true,      // Köşeleri yuvarlatmak için şeffaflık lazım
+                Background = System.Windows.Media.Brushes.Transparent
+            };
+
+            reportWindow.ShowDialog();
         }
     }
 }

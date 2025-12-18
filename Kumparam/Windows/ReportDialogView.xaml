@@ -1,0 +1,82 @@
+﻿<UserControl x:Class="Kumparam.Pages.DashboardSubPages.ReportDialogView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="600"
+             TextElement.Foreground="{DynamicResource MaterialDesignBody}"
+             FontFamily="{DynamicResource MaterialDesignFont}">
+
+    <materialDesign:Card UniformCornerRadius="10" Margin="10" materialDesign:ElevationAssist.Elevation="Dp4">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/> <!-- Başlık -->
+                <RowDefinition Height="Auto"/> <!-- Kısayollar -->
+                <RowDefinition Height="Auto"/> <!-- Tarih Seçimi -->
+                <RowDefinition Height="*"/>    <!-- Boşluk -->
+                <RowDefinition Height="Auto"/> <!-- Alt Butonlar -->
+            </Grid.RowDefinitions>
+
+            <!-- 1. BAŞLIK -->
+            <Border Grid.Row="0" Background="{DynamicResource PrimaryHueMidBrush}" CornerRadius="10,10,0,0" Padding="20">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <materialDesign:PackIcon Kind="FileDocumentEdit" Foreground="White" Width="30" Height="30" Margin="0,0,15,0"/>
+                    <StackPanel>
+                        <TextBlock Text="Rapor Filtreleme" FontSize="20" FontWeight="Bold" Foreground="White"/>
+                        <TextBlock Text="Hangi tarih aralığındaki verileri yazdırmak istersiniz?" FontSize="12" Foreground="White" Opacity="0.8"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- 2. KISAYOL BUTONLARI (CHIPS) -->
+            <StackPanel Grid.Row="1" Margin="20,20,20,10">
+                <TextBlock Text="Hızlı Seçim" FontWeight="SemiBold" Margin="0,0,0,10" Opacity="0.6"/>
+                <WrapPanel>
+                    <RadioButton Style="{StaticResource MaterialDesignChoiceChipRadioButton}" Content="Bugün" GroupName="DateRange" Click="QuickSelect_Click" Tag="Today" Margin="0,0,5,5"/>
+                    <RadioButton Style="{StaticResource MaterialDesignChoiceChipRadioButton}" Content="Bu Hafta" GroupName="DateRange" Click="QuickSelect_Click" Tag="Week" Margin="0,0,5,5"/>
+                    <RadioButton Style="{StaticResource MaterialDesignChoiceChipRadioButton}" Content="Bu Ay" GroupName="DateRange" Click="QuickSelect_Click" Tag="Month" IsChecked="True" Margin="0,0,5,5"/>
+                    <RadioButton Style="{StaticResource MaterialDesignChoiceChipRadioButton}" Content="Bu Yıl" GroupName="DateRange" Click="QuickSelect_Click" Tag="Year" Margin="0,0,5,5"/>
+                    <RadioButton Style="{StaticResource MaterialDesignChoiceChipRadioButton}" Content="Tüm Zamanlar" GroupName="DateRange" Click="QuickSelect_Click" Tag="All" Margin="0,0,5,5"/>
+                </WrapPanel>
+            </StackPanel>
+
+            <!-- 3. TARİH SEÇİMİ -->
+            <StackPanel Grid.Row="2" Margin="20,10">
+                <TextBlock Text="Tarih Aralığı" FontWeight="SemiBold" Margin="0,0,0,10" Opacity="0.6"/>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="20"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <DatePicker x:Name="StartDatePicker" Grid.Column="0" 
+                                materialDesign:HintAssist.Hint="Başlangıç Tarihi" 
+                                Style="{StaticResource MaterialDesignOutlinedDatePicker}"/>
+
+                    <TextBlock Grid.Column="1" Text="-" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="20" FontWeight="Bold"/>
+
+                    <DatePicker x:Name="EndDatePicker" Grid.Column="2" 
+                                materialDesign:HintAssist.Hint="Bitiş Tarihi" 
+                                Style="{StaticResource MaterialDesignOutlinedDatePicker}"/>
+                </Grid>
+            </StackPanel>
+
+            <!-- 4. ALT BUTONLAR -->
+            <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right" Margin="20">
+                <Button Style="{StaticResource MaterialDesignFlatButton}" Content="İPTAL" Click="BtnCancel_Click" Margin="0,0,10,0"/>
+                
+                <Button Style="{StaticResource MaterialDesignRaisedButton}" 
+                        Background="#D32F2F" BorderBrush="#D32F2F"
+                        Click="BtnGenerate_Click" Height="45" Width="150">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="FilePdfBox" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="PDF OLUŞTUR"/>
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+        </Grid>
+    </materialDesign:Card>
+</UserControl>

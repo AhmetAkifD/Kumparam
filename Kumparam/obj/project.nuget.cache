@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "Mx6IkbvwJ/8=",
+  "dgSpecHash": "nGSpg25faF0=",
   "success": true,
   "projectFilePath": "C:\\RiderProjects\\Kumparam\\Kumparam\\Kumparam.csproj",
   "expectedPackageFiles": [
@@ -37,6 +37,7 @@
     "C:\\Users\\ahmet\\.nuget\\packages\\microsoft.sqlserver.server\\1.0.0\\microsoft.sqlserver.server.1.0.0.nupkg.sha512",
     "C:\\Users\\ahmet\\.nuget\\packages\\microsoft.win32.systemevents\\4.7.0\\microsoft.win32.systemevents.4.7.0.nupkg.sha512",
     "C:\\Users\\ahmet\\.nuget\\packages\\microsoft.xaml.behaviors.wpf\\1.1.39\\microsoft.xaml.behaviors.wpf.1.1.39.nupkg.sha512",
+    "C:\\Users\\ahmet\\.nuget\\packages\\questpdf\\2025.12.0\\questpdf.2025.12.0.nupkg.sha512",
     "C:\\Users\\ahmet\\.nuget\\packages\\skiasharp\\2.88.6\\skiasharp.2.88.6.nupkg.sha512",
     "C:\\Users\\ahmet\\.nuget\\packages\\skiasharp.harfbuzz\\2.88.6\\skiasharp.harfbuzz.2.88.6.nupkg.sha512",
     "C:\\Users\\ahmet\\.nuget\\packages\\skiasharp.nativeassets.macos\\2.88.6\\skiasharp.nativeassets.macos.2.88.6.nupkg.sha512",
