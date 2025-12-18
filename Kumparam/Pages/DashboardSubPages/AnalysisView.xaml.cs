@@ -353,36 +353,21 @@ namespace Kumparam.Pages.DashboardSubPages
         }
         private void DownloadPdf_Click(object sender, RoutedEventArgs e)
         {
-            try
+            // Rapor Filtreleme Penceresini Aç
+            Window reportWindow = new Window
             {
-                // 1. Verileri Hazırla
-                var transactions = _userRepository.GetAllTransactions(_currentUserId);
-                var userProfile = _userRepository.GetUserProfile(_currentUserId);
+                Title = "Rapor Oluştur",
+                Content = new ReportDialogView(_currentUserId), // Yeni oluşturduğumuz view
+                Width = 600,
+                Height = 450,
+                WindowStartupLocation = WindowStartupLocation.CenterScreen,
+                ResizeMode = ResizeMode.NoResize,
+                WindowStyle = WindowStyle.None, // Çerçevesiz modern görünüm (İstersen SingleBorderWindow yapabilirsin)
+                AllowsTransparency = true,      // Köşeleri yuvarlatmak için şeffaflık lazım
+                Background = System.Windows.Media.Brushes.Transparent
+            };
 
-                // 2. Dosya Kaydetme Diyaloğu Aç
-                SaveFileDialog saveFileDialog = new SaveFileDialog
-                {
-                    Filter = "PDF Dosyası (*.pdf)|*.pdf",
-                    FileName = $"Kumparam_Rapor_{DateTime.Now:yyyyMMdd}.pdf",
-                    Title = "Raporu Kaydet"
-                };
-
-                if (saveFileDialog.ShowDialog() == true)
-                {
-                    // 3. PDF'i Oluştur
-                    var pdfService = new PdfReportService();
-                    pdfService.GeneratePdf(saveFileDialog.FileName, userProfile, transactions);
-
-                    MessageBox.Show("Rapor başarıyla oluşturuldu! 📄", "Başarılı", MessageBoxButton.OK, MessageBoxImage.Information);
-            
-                    // İstersen dosyayı otomatik açtırabilirsin:
-                    // System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(saveFileDialog.FileName) { UseShellExecute = true });
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"PDF oluşturulurken hata: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+            reportWindow.ShowDialog();
         }
     }
 }
