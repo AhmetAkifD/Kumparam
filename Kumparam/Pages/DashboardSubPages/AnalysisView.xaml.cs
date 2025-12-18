@@ -4,6 +4,7 @@ using System.Configuration;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using Kumparam.Core;
 using Kumparam.Core.Interfaces;
 using Kumparam.Data.Repositories;
 using LiveChartsCore;
@@ -15,6 +16,7 @@ using LiveChartsCore.SkiaSharpView.VisualElements;
 using Microsoft.Win32;
 using Kumparam.UI.Services;
 using Kumparam.Core.Models;
+using Kumparam.UI.Helpers;
 
 namespace Kumparam.Pages.DashboardSubPages
 {
@@ -47,6 +49,7 @@ namespace Kumparam.Pages.DashboardSubPages
                 if (chk.Name == "ToggleDays" && CardDays != null) CardDays.Visibility = Visibility.Visible;
                 if (chk.Name == "ToggleStacked" && CardStacked != null) CardStacked.Visibility = Visibility.Visible;
                 if (chk.Name == "ToggleWaterfall" && CardWaterfall != null) CardWaterfall.Visibility = Visibility.Visible;
+                if (chk.Name == "ToggleBudget" && CardBudget != null) CardBudget.Visibility = Visibility.Visible;
             }
         }
 
@@ -60,6 +63,7 @@ namespace Kumparam.Pages.DashboardSubPages
                 if (chk.Name == "ToggleDays" && CardDays != null) CardDays.Visibility = Visibility.Collapsed;
                 if (chk.Name == "ToggleStacked" && CardStacked != null) CardStacked.Visibility = Visibility.Collapsed;
                 if (chk.Name == "ToggleWaterfall" && CardWaterfall != null) CardWaterfall.Visibility = Visibility.Collapsed;
+                if (chk.Name == "ToggleBudget" && CardBudget != null) CardBudget.Visibility = Visibility.Collapsed;
             }
         }
 
@@ -75,6 +79,7 @@ namespace Kumparam.Pages.DashboardSubPages
                     case "Days": ToggleDays.IsChecked = false; break;
                     case "Stacked": ToggleStacked.IsChecked = false; break;
                     case "Waterfall": ToggleWaterfall.IsChecked = false; break;
+                    case "Budget": ToggleBudget.IsChecked = false; break;
                 }
             }
         }
@@ -344,6 +349,8 @@ namespace Kumparam.Pages.DashboardSubPages
                     YAxes = new Axis[] { new Axis { Labeler = value => value.ToString("N0") + "₺", TextSize = 12 } },
                     ZoomMode = LiveChartsCore.Measure.ZoomAndPanMode.None
                 };
+                CalculateBudgetRule(allTransactions);
+
 
             }
             catch (Exception ex)
@@ -368,6 +375,99 @@ namespace Kumparam.Pages.DashboardSubPages
             };
 
             reportWindow.ShowDialog();
+        }
+        private void CalculateBudgetRule(List<Transaction> transactions)
+        {
+            // Bu ayın verilerine odaklanalım
+            var thisMonth = DateTime.Now;
+            var monthTrans = transactions
+                .Where(t => t.TransactionDate.Month == thisMonth.Month && t.TransactionDate.Year == thisMonth.Year)
+                .ToList();
+
+            decimal totalIncome = monthTrans.Where(t => t.Type == "Income").Sum(t => t.Amount);
+            
+            // Gelir yoksa hesaplama yapma (Sıfıra bölünme hatası olmasın)
+            if (totalIncome == 0)
+            {
+                TxtBudgetComment.Text = "Bu ay henüz gelir kaydı girilmediği için analiz yapılamıyor.";
+                PbNeeds.Value = 0; PbWants.Value = 0; PbSavings.Value = 0;
+                TxtNeeds.Text = "%0"; TxtWants.Text = "%0"; TxtSavings.Text = "%0";
+                return;
+            }
+
+            decimal needsTotal = 0;
+            decimal wantsTotal = 0;
+            decimal savingsTotal = 0;
+
+            // Giderleri Sınıflandır
+            foreach (var expense in monthTrans.Where(t => t.Type == "Expense"))
+            {
+                var type = BudgetHelper.GetBudgetType(expense.Category);
+                if (type == BudgetType.Needs) needsTotal += expense.Amount;
+                else if (type == BudgetType.Wants) wantsTotal += expense.Amount;
+                else if (type == BudgetType.Savings) savingsTotal += expense.Amount;
+                else wantsTotal += expense.Amount; // Bilinmeyenleri isteklere at (Kötümser yaklaşım)
+            }
+
+            // Kalan bakiyeyi de "Potansiyel Birikim" sayabiliriz ama şimdilik sadece harcananları baz alalım.
+            // VEYA: Gelirden giderleri düştükten sonra kalanı "Savings"e ekleyebilirsin.
+            // Ben şimdilik sadece kategorize edilmiş harcamaları gösteriyorum.
+
+            // Yüzdeleri Hesapla
+            double needsPercent = (double)(needsTotal / totalIncome) * 100;
+            double wantsPercent = (double)(wantsTotal / totalIncome) * 100;
+            double savingsPercent = (double)(savingsTotal / totalIncome) * 100;
+
+            // UI Güncelle
+            PbNeeds.Value = needsPercent;
+            TxtNeeds.Text = $"%{needsPercent:0.0} ({needsTotal:N0}₺)";
+            
+            PbWants.Value = wantsPercent;
+            TxtWants.Text = $"%{wantsPercent:0.0} ({wantsTotal:N0}₺)";
+            
+            PbSavings.Value = savingsPercent;
+            TxtSavings.Text = $"%{savingsPercent:0.0} ({savingsTotal:N0}₺)";
+
+            // Renklendirme ve Yorum
+            string comment = "";
+            
+            // İhtiyaç Kontrolü
+            if (needsPercent > 50) 
+            {
+                PbNeeds.Foreground = System.Windows.Media.Brushes.Red;
+                comment += "⚠️ İhtiyaç harcamalarınız %50 sınırını aşmış. Sabit giderleri gözden geçirin. ";
+            }
+            else
+            {
+                PbNeeds.Foreground = System.Windows.Media.Brushes.Green;
+                comment += "✅ İhtiyaçlar dengeli. ";
+            }
+
+            // İstek Kontrolü
+            if (wantsPercent > 30)
+            {
+                PbWants.Foreground = System.Windows.Media.Brushes.Red;
+                comment += "⚠️ Keyfi harcamalarınız %30'u geçmiş. Biraz tasarruf iyi olabilir. ";
+            }
+            else
+            {
+                PbWants.Foreground = System.Windows.Media.Brushes.Orange; // İstekler her zaman turuncu kalsın
+                comment += "👍 İstekler kontrol altında. ";
+            }
+
+            // Birikim Kontrolü
+            if (savingsPercent < 20)
+            {
+                PbSavings.Foreground = System.Windows.Media.Brushes.Orange; // Uyarı rengi
+                comment += "📉 Birikim oranınız %20'nin altında. ";
+            }
+            else
+            {
+                PbSavings.Foreground = System.Windows.Media.Brushes.DodgerBlue;
+                comment += "💰 Harika! %20 birikim hedefini tutturdunuz. ";
+            }
+
+            TxtBudgetComment.Text = comment;
         }
     }
 }
