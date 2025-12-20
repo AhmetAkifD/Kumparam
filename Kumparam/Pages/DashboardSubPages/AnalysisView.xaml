@@ -5,7 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              mc:Ignorable="d" 
-             d:DesignHeight="1600" d:DesignWidth="1030"
+             d:DesignHeight="1800" d:DesignWidth="1030"
              TextElement.Foreground="{DynamicResource MaterialDesignBody}"
              FontFamily="{DynamicResource MaterialDesignFont}">
 
@@ -37,19 +37,24 @@
                           Style="{StaticResource MaterialDesignFilterChipCheckBox}" 
                           IsChecked="True" Checked="ToggleChart_Checked" Unchecked="ToggleChart_Unchecked" Margin="0,0,5,5"/>
 
-                <!-- YENİLER -->
                 <CheckBox x:Name="ToggleStacked" Content="Aylık Kategori Detayı" 
                           Style="{StaticResource MaterialDesignFilterChipCheckBox}" 
                           IsChecked="True" Checked="ToggleChart_Checked" Unchecked="ToggleChart_Unchecked" Margin="0,0,5,5"/>
 
-                <CheckBox x:Name="ToggleWaterfall" Content="Bu Ayın Bütçe Akışı" 
+                <CheckBox x:Name="ToggleWaterfall" Content="Bütçe Akışı" 
                           Style="{StaticResource MaterialDesignFilterChipCheckBox}" 
                           IsChecked="True" Checked="ToggleChart_Checked" Unchecked="ToggleChart_Unchecked" Margin="0,0,5,5"/>
+
+                <!-- 50/30/20 KURALI -->
+                <CheckBox x:Name="ToggleBudget" Content="50/30/20 Kuralı" 
+                          Style="{StaticResource MaterialDesignFilterChipCheckBox}" 
+                          IsChecked="True" Checked="ToggleChart_Checked" Unchecked="ToggleChart_Unchecked" Margin="0,0,5,5"/>
+
+                <!-- PDF İNDİR BUTONU -->
                 <Button Style="{StaticResource MaterialDesignRaisedButton}" 
                         Background="#D32F2F" BorderBrush="#D32F2F"
                         Click="DownloadPdf_Click" 
                         Margin="20,0,0,0" Height="30" FontSize="12" Padding="10,0">
-                    <!-- Butonun içeriği tek bir StackPanel -->
                     <StackPanel Orientation="Horizontal">
                         <materialDesign:PackIcon Kind="FilePdfBox" Margin="0,0,5,0" VerticalAlignment="Center"/>
                         <TextBlock Text="PDF İNDİR"/>
@@ -107,7 +112,83 @@
                     </materialDesign:Card>
                 </Grid>
 
-                <!-- B. YENİ: YIĞILMIŞ SÜTUN (AYLIK KATEGORİ DETAYI) -->
+                <!-- B. YENİ EKLENEN: 50/30/20 KURALI ANALİZİ -->
+                <materialDesign:Card x:Name="CardBudget" Margin="0,0,0,20" UniformCornerRadius="10" materialDesign:ElevationAssist.Elevation="Dp2">
+                    <Grid Margin="20">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/> <!-- Başlık -->
+                            <RowDefinition Height="Auto"/> <!-- İhtiyaçlar -->
+                            <RowDefinition Height="Auto"/> <!-- İstekler -->
+                            <RowDefinition Height="Auto"/> <!-- Birikim -->
+                        </Grid.RowDefinitions>
+
+                        <!-- Başlık -->
+                        <DockPanel Grid.Row="0" LastChildFill="False" Margin="0,0,0,20">
+                            <StackPanel DockPanel.Dock="Left">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="ScaleBalance" Width="24" Height="24" Foreground="{DynamicResource PrimaryHueMidBrush}" Margin="0,0,10,0"/>
+                                    <TextBlock Text="Bütçe Sağlığı (50/30/20 Kuralı)" Style="{StaticResource MaterialDesignHeadline6TextBlock}"/>
+                                </StackPanel>
+                                <TextBlock Text="Bu ayki harcamalarınızın gelire oranı" Opacity="0.6" FontSize="12" Margin="34,0,0,0"/>
+                            </StackPanel>
+                            <Button DockPanel.Dock="Right" Style="{StaticResource MaterialDesignIconForegroundButton}" Click="CloseCard_Click" Tag="Budget"><materialDesign:PackIcon Kind="Close"/></Button>
+                        </DockPanel>
+
+                        <!-- 1. İHTİYAÇLAR (%50) -->
+                        <Grid Grid.Row="1" Margin="0,0,0,15">
+                            <Grid.RowDefinitions><RowDefinition/><RowDefinition/></Grid.RowDefinitions>
+                            <DockPanel LastChildFill="False" Margin="0,0,0,5">
+                                <TextBlock Text="İhtiyaçlar (Kira, Fatura, Market)" FontWeight="Bold" DockPanel.Dock="Left"/>
+                                <TextBlock Text="İdeal: %50" Opacity="0.5" DockPanel.Dock="Right" FontSize="12"/>
+                            </DockPanel>
+                            
+                            <!-- Progress Bar (Siyah Çerçeveli) -->
+                            <Border Grid.Row="1" BorderBrush="Black" BorderThickness="1" CornerRadius="2" Height="25">
+                                <Grid>
+                                    <ProgressBar Value="50" Maximum="100" Background="Transparent" Foreground="#E0E0E0" BorderBrush="Transparent" Height="25"/>
+                                    <ProgressBar x:Name="PbNeeds" Value="0" Maximum="100" Background="Transparent" Foreground="#43A047" BorderBrush="Transparent" Height="25"/>
+                                    <TextBlock x:Name="TxtNeeds" Text="%0" HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Bold" Foreground="Black" FontSize="12"/>
+                                </Grid>
+                            </Border>
+                        </Grid>
+
+                        <!-- 2. İSTEKLER (%30) -->
+                        <Grid Grid.Row="2" Margin="0,0,0,15">
+                            <Grid.RowDefinitions><RowDefinition/><RowDefinition/></Grid.RowDefinitions>
+                            <DockPanel LastChildFill="False" Margin="0,0,0,5">
+                                <TextBlock Text="İstekler (Eğlence, Yemek, Hobi)" FontWeight="Bold" DockPanel.Dock="Left"/>
+                                <TextBlock Text="İdeal: %30" Opacity="0.5" DockPanel.Dock="Right" FontSize="12"/>
+                            </DockPanel>
+                            
+                            <Border Grid.Row="1" BorderBrush="Black" BorderThickness="1" CornerRadius="2" Height="25">
+                                <Grid>
+                                    <ProgressBar Value="30" Maximum="100" Background="Transparent" Foreground="#E0E0E0" BorderBrush="Transparent" Height="25"/>
+                                    <ProgressBar x:Name="PbWants" Value="0" Maximum="100" Background="Transparent" Foreground="#FB8C00" BorderBrush="Transparent" Height="25"/>
+                                    <TextBlock x:Name="TxtWants" Text="%0" HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Bold" Foreground="Black" FontSize="12"/>
+                                </Grid>
+                            </Border>
+                        </Grid>
+
+                        <!-- 3. BİRİKİM (%20) -->
+                        <Grid Grid.Row="3" Margin="0,0,0,10">
+                            <Grid.RowDefinitions><RowDefinition/><RowDefinition/></Grid.RowDefinitions>
+                            <DockPanel LastChildFill="False" Margin="0,0,0,5">
+                                <TextBlock Text="Birikim &amp; Yatırım" FontWeight="Bold" DockPanel.Dock="Left"/>
+                                <TextBlock Text="İdeal: %20" Opacity="0.5" DockPanel.Dock="Right" FontSize="12"/>
+                            </DockPanel>
+                            
+                            <Border Grid.Row="1" BorderBrush="Black" BorderThickness="1" CornerRadius="2" Height="25">
+                                <Grid>
+                                    <ProgressBar Value="20" Maximum="100" Background="Transparent" Foreground="#E0E0E0" BorderBrush="Transparent" Height="25"/>
+                                    <ProgressBar x:Name="PbSavings" Value="0" Maximum="100" Background="Transparent" Foreground="#1E88E5" BorderBrush="Transparent" Height="25"/>
+                                    <TextBlock x:Name="TxtSavings" Text="%0" HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Bold" Foreground="Black" FontSize="12"/>
+                                </Grid>
+                            </Border>
+                        </Grid>
+                    </Grid>
+                </materialDesign:Card>
+
+                <!-- C. YIĞILMIŞ SÜTUN (AYLIK KATEGORİ DETAYI) -->
                 <materialDesign:Card x:Name="CardStacked" Margin="0,0,0,20" UniformCornerRadius="10" materialDesign:ElevationAssist.Elevation="Dp2" Height="400">
                     <Grid>
                         <Grid.RowDefinitions>
@@ -125,7 +206,7 @@
                     </Grid>
                 </materialDesign:Card>
 
-                <!-- C. YENİ: WATERFALL (BÜTÇE AKIŞI) -->
+                <!-- D. WATERFALL (BÜTÇE AKIŞI) -->
                 <materialDesign:Card x:Name="CardWaterfall" Margin="0,0,0,20" UniformCornerRadius="10" materialDesign:ElevationAssist.Elevation="Dp2" Height="400">
                     <Grid>
                         <Grid.RowDefinitions>
@@ -143,7 +224,7 @@
                     </Grid>
                 </materialDesign:Card>
 
-                <!-- D. ÇİZGİ GRAFİK (TREND) -->
+                <!-- E. ÇİZGİ GRAFİK (TREND) -->
                 <materialDesign:Card x:Name="CardLine" Margin="0,0,0,20" UniformCornerRadius="10" materialDesign:ElevationAssist.Elevation="Dp2" Height="350">
                     <Grid>
                         <Grid.RowDefinitions>
@@ -161,7 +242,7 @@
                     </Grid>
                 </materialDesign:Card>
 
-                <!-- E. GÜNLÜK HARCAMA -->
+                <!-- F. GÜNLÜK HARCAMA -->
                 <materialDesign:Card x:Name="CardDays" Margin="0,0,0,20" UniformCornerRadius="10" materialDesign:ElevationAssist.Elevation="Dp2" Height="350">
                     <Grid>
                         <Grid.RowDefinitions>

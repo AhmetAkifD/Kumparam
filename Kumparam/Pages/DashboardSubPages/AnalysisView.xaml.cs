@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
+using Kumparam.Core;
 using Kumparam.Core.Interfaces;
 using Kumparam.Data.Repositories;
 using LiveChartsCore;
@@ -15,6 +17,7 @@ using LiveChartsCore.SkiaSharpView.VisualElements;
 using Microsoft.Win32;
 using Kumparam.UI.Services;
 using Kumparam.Core.Models;
+using Kumparam.UI.Helpers;
 
 namespace Kumparam.Pages.DashboardSubPages
 {
@@ -47,6 +50,7 @@ namespace Kumparam.Pages.DashboardSubPages
                 if (chk.Name == "ToggleDays" && CardDays != null) CardDays.Visibility = Visibility.Visible;
                 if (chk.Name == "ToggleStacked" && CardStacked != null) CardStacked.Visibility = Visibility.Visible;
                 if (chk.Name == "ToggleWaterfall" && CardWaterfall != null) CardWaterfall.Visibility = Visibility.Visible;
+                if (chk.Name == "ToggleBudget" && CardBudget != null) CardBudget.Visibility = Visibility.Visible;
             }
         }
 
@@ -60,6 +64,7 @@ namespace Kumparam.Pages.DashboardSubPages
                 if (chk.Name == "ToggleDays" && CardDays != null) CardDays.Visibility = Visibility.Collapsed;
                 if (chk.Name == "ToggleStacked" && CardStacked != null) CardStacked.Visibility = Visibility.Collapsed;
                 if (chk.Name == "ToggleWaterfall" && CardWaterfall != null) CardWaterfall.Visibility = Visibility.Collapsed;
+                if (chk.Name == "ToggleBudget" && CardBudget != null) CardBudget.Visibility = Visibility.Collapsed;
             }
         }
 
@@ -75,6 +80,7 @@ namespace Kumparam.Pages.DashboardSubPages
                     case "Days": ToggleDays.IsChecked = false; break;
                     case "Stacked": ToggleStacked.IsChecked = false; break;
                     case "Waterfall": ToggleWaterfall.IsChecked = false; break;
+                    case "Budget": ToggleBudget.IsChecked = false; break;
                 }
             }
         }
@@ -344,6 +350,8 @@ namespace Kumparam.Pages.DashboardSubPages
                     YAxes = new Axis[] { new Axis { Labeler = value => value.ToString("N0") + "₺", TextSize = 12 } },
                     ZoomMode = LiveChartsCore.Measure.ZoomAndPanMode.None
                 };
+                CalculateBudgetRule(allTransactions);
+
 
             }
             catch (Exception ex)
@@ -368,6 +376,99 @@ namespace Kumparam.Pages.DashboardSubPages
             };
 
             reportWindow.ShowDialog();
+        }
+        private void CalculateBudgetRule(List<Transaction> transactions)
+        {
+            var thisMonth = DateTime.Now;
+            var monthTrans = transactions
+                .Where(t => t.TransactionDate.Month == thisMonth.Month && t.TransactionDate.Year == thisMonth.Year)
+                .ToList();
+
+            decimal totalIncome = monthTrans.Where(t => t.Type == "Income").Sum(t => t.Amount);
+            
+            if (totalIncome == 0)
+            {
+                PbNeeds.Value = 0; PbWants.Value = 0; PbSavings.Value = 0;
+                TxtNeeds.Text = "%0"; TxtWants.Text = "%0"; TxtSavings.Text = "%0";
+                // Tooltipleri temizle
+                PbNeeds.ToolTip = null; PbWants.ToolTip = null; PbSavings.ToolTip = null;
+                return;
+            }
+
+            // TOOLTIP İÇİN HAZIRLIK
+            StringBuilder sbNeeds = new StringBuilder();
+            StringBuilder sbWants = new StringBuilder();
+            StringBuilder sbSavings = new StringBuilder();
+
+            // Başlıkları ve süslemeleri kaldırdık. Sadece listeler.
+
+            decimal needsTotal = 0;
+            decimal wantsTotal = 0;
+            decimal savingsTotal = 0;
+
+            // Giderleri Kategoriye Göre Grupla (Daha temiz liste için)
+            var expensesByCategory = monthTrans
+                .Where(t => t.Type == "Expense")
+                .GroupBy(t => t.Category)
+                .Select(g => new { Category = g.Key, Total = g.Sum(t => t.Amount) })
+                .OrderByDescending(x => x.Total) // En yüksek harcamalar üstte
+                .ToList();
+
+            foreach (var item in expensesByCategory)
+            {
+                var type = BudgetHelper.GetBudgetType(item.Category);
+                
+                // Format: "Market: 5.000 ₺"
+                string line = $"{item.Category}: {item.Total:N0} ₺";
+
+                switch (type)
+                {
+                    case BudgetType.Needs:
+                        needsTotal += item.Total;
+                        sbNeeds.AppendLine(line);
+                        break;
+                    case BudgetType.Savings:
+                        savingsTotal += item.Total;
+                        sbSavings.AppendLine(line);
+                        break;
+                    case BudgetType.Wants:
+                    default:
+                        wantsTotal += item.Total;
+                        sbWants.AppendLine(line);
+                        break;
+                }
+            }
+
+            // Toplam satırlarını da sildik, zaten barda yazıyor.
+
+            // Yüzdeleri Hesapla
+            double needsPercent = (double)(needsTotal / totalIncome) * 100;
+            double wantsPercent = (double)(wantsTotal / totalIncome) * 100;
+            double savingsPercent = (double)(savingsTotal / totalIncome) * 100;
+
+            // UI Güncelle
+            PbNeeds.Value = needsPercent;
+            TxtNeeds.Text = $"%{needsPercent:0.0} ({needsTotal:N0}₺)";
+            // Tooltip içeriği varsa göster, yoksa null (hiç çıkmasın)
+            PbNeeds.ToolTip = needsTotal > 0 ? sbNeeds.ToString().TrimEnd() : null;
+            
+            PbWants.Value = wantsPercent;
+            TxtWants.Text = $"%{wantsPercent:0.0} ({wantsTotal:N0}₺)";
+            PbWants.ToolTip = wantsTotal > 0 ? sbWants.ToString().TrimEnd() : null;
+            
+            PbSavings.Value = savingsPercent;
+            TxtSavings.Text = $"%{savingsPercent:0.0} ({savingsTotal:N0}₺)";
+            PbSavings.ToolTip = savingsTotal > 0 ? sbSavings.ToString().TrimEnd() : null;
+
+            // Renklendirme
+            if (needsPercent > 50) PbNeeds.Foreground = System.Windows.Media.Brushes.Red;
+            else PbNeeds.Foreground = System.Windows.Media.Brushes.Green;
+
+            if (wantsPercent > 30) PbWants.Foreground = System.Windows.Media.Brushes.Red;
+            else PbWants.Foreground = System.Windows.Media.Brushes.Orange;
+
+            if (savingsPercent < 20) PbSavings.Foreground = System.Windows.Media.Brushes.Orange;
+            else PbSavings.Foreground = System.Windows.Media.Brushes.DodgerBlue;
         }
     }
 }
