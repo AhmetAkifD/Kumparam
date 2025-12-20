@@ -400,15 +400,7 @@ namespace Kumparam.Pages.DashboardSubPages
             StringBuilder sbWants = new StringBuilder();
             StringBuilder sbSavings = new StringBuilder();
 
-            // Başlıklar
-            sbNeeds.AppendLine("🏠 İHTİYAÇLAR LİSTESİ:");
-            sbNeeds.AppendLine("---------------------");
-            
-            sbWants.AppendLine("🎮 İSTEKLER LİSTESİ:");
-            sbWants.AppendLine("---------------------");
-            
-            sbSavings.AppendLine("💰 BİRİKİM LİSTESİ:");
-            sbSavings.AppendLine("---------------------");
+            // Başlıkları ve süslemeleri kaldırdık. Sadece listeler.
 
             decimal needsTotal = 0;
             decimal wantsTotal = 0;
@@ -425,6 +417,8 @@ namespace Kumparam.Pages.DashboardSubPages
             foreach (var item in expensesByCategory)
             {
                 var type = BudgetHelper.GetBudgetType(item.Category);
+                
+                // Format: "Market: 5.000 ₺"
                 string line = $"{item.Category}: {item.Total:N0} ₺";
 
                 switch (type)
@@ -445,15 +439,7 @@ namespace Kumparam.Pages.DashboardSubPages
                 }
             }
 
-            // Toplamları ekle
-            sbNeeds.AppendLine("---------------------");
-            sbNeeds.Append($"TOPLAM: {needsTotal:N2} ₺");
-
-            sbWants.AppendLine("---------------------");
-            sbWants.Append($"TOPLAM: {wantsTotal:N2} ₺");
-
-            sbSavings.AppendLine("---------------------");
-            sbSavings.Append($"TOPLAM: {savingsTotal:N2} ₺");
+            // Toplam satırlarını da sildik, zaten barda yazıyor.
 
             // Yüzdeleri Hesapla
             double needsPercent = (double)(needsTotal / totalIncome) * 100;
@@ -463,15 +449,16 @@ namespace Kumparam.Pages.DashboardSubPages
             // UI Güncelle
             PbNeeds.Value = needsPercent;
             TxtNeeds.Text = $"%{needsPercent:0.0} ({needsTotal:N0}₺)";
-            PbNeeds.ToolTip = needsTotal > 0 ? sbNeeds.ToString() : "Harcama Yok";
+            // Tooltip içeriği varsa göster, yoksa null (hiç çıkmasın)
+            PbNeeds.ToolTip = needsTotal > 0 ? sbNeeds.ToString().TrimEnd() : null;
             
             PbWants.Value = wantsPercent;
             TxtWants.Text = $"%{wantsPercent:0.0} ({wantsTotal:N0}₺)";
-            PbWants.ToolTip = wantsTotal > 0 ? sbWants.ToString() : "Harcama Yok";
+            PbWants.ToolTip = wantsTotal > 0 ? sbWants.ToString().TrimEnd() : null;
             
             PbSavings.Value = savingsPercent;
             TxtSavings.Text = $"%{savingsPercent:0.0} ({savingsTotal:N0}₺)";
-            PbSavings.ToolTip = savingsTotal > 0 ? sbSavings.ToString() : "Harcama Yok";
+            PbSavings.ToolTip = savingsTotal > 0 ? sbSavings.ToString().TrimEnd() : null;
 
             // Renklendirme
             if (needsPercent > 50) PbNeeds.Foreground = System.Windows.Media.Brushes.Red;
