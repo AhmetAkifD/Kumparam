@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using Kumparam.Core;
@@ -378,7 +379,6 @@ namespace Kumparam.Pages.DashboardSubPages
         }
         private void CalculateBudgetRule(List<Transaction> transactions)
         {
-            // Bu ayın verilerine odaklanalım
             var thisMonth = DateTime.Now;
             var monthTrans = transactions
                 .Where(t => t.TransactionDate.Month == thisMonth.Month && t.TransactionDate.Year == thisMonth.Year)
@@ -386,31 +386,74 @@ namespace Kumparam.Pages.DashboardSubPages
 
             decimal totalIncome = monthTrans.Where(t => t.Type == "Income").Sum(t => t.Amount);
             
-            // Gelir yoksa hesaplama yapma (Sıfıra bölünme hatası olmasın)
             if (totalIncome == 0)
             {
                 PbNeeds.Value = 0; PbWants.Value = 0; PbSavings.Value = 0;
                 TxtNeeds.Text = "%0"; TxtWants.Text = "%0"; TxtSavings.Text = "%0";
+                // Tooltipleri temizle
+                PbNeeds.ToolTip = null; PbWants.ToolTip = null; PbSavings.ToolTip = null;
                 return;
             }
+
+            // TOOLTIP İÇİN HAZIRLIK
+            StringBuilder sbNeeds = new StringBuilder();
+            StringBuilder sbWants = new StringBuilder();
+            StringBuilder sbSavings = new StringBuilder();
+
+            // Başlıklar
+            sbNeeds.AppendLine("🏠 İHTİYAÇLAR LİSTESİ:");
+            sbNeeds.AppendLine("---------------------");
+            
+            sbWants.AppendLine("🎮 İSTEKLER LİSTESİ:");
+            sbWants.AppendLine("---------------------");
+            
+            sbSavings.AppendLine("💰 BİRİKİM LİSTESİ:");
+            sbSavings.AppendLine("---------------------");
 
             decimal needsTotal = 0;
             decimal wantsTotal = 0;
             decimal savingsTotal = 0;
 
-            // Giderleri Sınıflandır
-            foreach (var expense in monthTrans.Where(t => t.Type == "Expense"))
+            // Giderleri Kategoriye Göre Grupla (Daha temiz liste için)
+            var expensesByCategory = monthTrans
+                .Where(t => t.Type == "Expense")
+                .GroupBy(t => t.Category)
+                .Select(g => new { Category = g.Key, Total = g.Sum(t => t.Amount) })
+                .OrderByDescending(x => x.Total) // En yüksek harcamalar üstte
+                .ToList();
+
+            foreach (var item in expensesByCategory)
             {
-                var type = BudgetHelper.GetBudgetType(expense.Category);
-                if (type == BudgetType.Needs) needsTotal += expense.Amount;
-                else if (type == BudgetType.Wants) wantsTotal += expense.Amount;
-                else if (type == BudgetType.Savings) savingsTotal += expense.Amount;
-                else wantsTotal += expense.Amount; // Bilinmeyenleri isteklere at (Kötümser yaklaşım)
+                var type = BudgetHelper.GetBudgetType(item.Category);
+                string line = $"{item.Category}: {item.Total:N0} ₺";
+
+                switch (type)
+                {
+                    case BudgetType.Needs:
+                        needsTotal += item.Total;
+                        sbNeeds.AppendLine(line);
+                        break;
+                    case BudgetType.Savings:
+                        savingsTotal += item.Total;
+                        sbSavings.AppendLine(line);
+                        break;
+                    case BudgetType.Wants:
+                    default:
+                        wantsTotal += item.Total;
+                        sbWants.AppendLine(line);
+                        break;
+                }
             }
 
-            // Kalan bakiyeyi de "Potansiyel Birikim" sayabiliriz ama şimdilik sadece harcananları baz alalım.
-            // VEYA: Gelirden giderleri düştükten sonra kalanı "Savings"e ekleyebilirsin.
-            // Ben şimdilik sadece kategorize edilmiş harcamaları gösteriyorum.
+            // Toplamları ekle
+            sbNeeds.AppendLine("---------------------");
+            sbNeeds.Append($"TOPLAM: {needsTotal:N2} ₺");
+
+            sbWants.AppendLine("---------------------");
+            sbWants.Append($"TOPLAM: {wantsTotal:N2} ₺");
+
+            sbSavings.AppendLine("---------------------");
+            sbSavings.Append($"TOPLAM: {savingsTotal:N2} ₺");
 
             // Yüzdeleri Hesapla
             double needsPercent = (double)(needsTotal / totalIncome) * 100;
@@ -420,51 +463,25 @@ namespace Kumparam.Pages.DashboardSubPages
             // UI Güncelle
             PbNeeds.Value = needsPercent;
             TxtNeeds.Text = $"%{needsPercent:0.0} ({needsTotal:N0}₺)";
+            PbNeeds.ToolTip = needsTotal > 0 ? sbNeeds.ToString() : "Harcama Yok";
             
             PbWants.Value = wantsPercent;
             TxtWants.Text = $"%{wantsPercent:0.0} ({wantsTotal:N0}₺)";
+            PbWants.ToolTip = wantsTotal > 0 ? sbWants.ToString() : "Harcama Yok";
             
             PbSavings.Value = savingsPercent;
             TxtSavings.Text = $"%{savingsPercent:0.0} ({savingsTotal:N0}₺)";
+            PbSavings.ToolTip = savingsTotal > 0 ? sbSavings.ToString() : "Harcama Yok";
 
-            // Renklendirme ve Yorum
-            string comment = "";
-            
-            // İhtiyaç Kontrolü
-            if (needsPercent > 50) 
-            {
-                PbNeeds.Foreground = System.Windows.Media.Brushes.Red;
-                comment += "⚠️ İhtiyaç harcamalarınız %50 sınırını aşmış. Sabit giderleri gözden geçirin. ";
-            }
-            else
-            {
-                PbNeeds.Foreground = System.Windows.Media.Brushes.Green;
-                comment += "✅ İhtiyaçlar dengeli. ";
-            }
+            // Renklendirme
+            if (needsPercent > 50) PbNeeds.Foreground = System.Windows.Media.Brushes.Red;
+            else PbNeeds.Foreground = System.Windows.Media.Brushes.Green;
 
-            // İstek Kontrolü
-            if (wantsPercent > 30)
-            {
-                PbWants.Foreground = System.Windows.Media.Brushes.Red;
-                comment += "⚠️ Keyfi harcamalarınız %30'u geçmiş. Biraz tasarruf iyi olabilir. ";
-            }
-            else
-            {
-                PbWants.Foreground = System.Windows.Media.Brushes.Orange; // İstekler her zaman turuncu kalsın
-                comment += "👍 İstekler kontrol altında. ";
-            }
+            if (wantsPercent > 30) PbWants.Foreground = System.Windows.Media.Brushes.Red;
+            else PbWants.Foreground = System.Windows.Media.Brushes.Orange;
 
-            // Birikim Kontrolü
-            if (savingsPercent < 20)
-            {
-                PbSavings.Foreground = System.Windows.Media.Brushes.Orange; // Uyarı rengi
-                comment += "📉 Birikim oranınız %20'nin altında. ";
-            }
-            else
-            {
-                PbSavings.Foreground = System.Windows.Media.Brushes.DodgerBlue;
-                comment += "💰 Harika! %20 birikim hedefini tutturdunuz. ";
-            }
+            if (savingsPercent < 20) PbSavings.Foreground = System.Windows.Media.Brushes.Orange;
+            else PbSavings.Foreground = System.Windows.Media.Brushes.DodgerBlue;
         }
     }
 }
