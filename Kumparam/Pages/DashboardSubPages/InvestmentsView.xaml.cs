@@ -34,6 +34,7 @@ public partial class InvestmentsView : UserControl
     {
         InitializeComponent();
         _currentUserId = userId;
+        TxtLastUpdate.Text = $"Son: {DateTime.Now:HH:mm}";
         
         string connectionString = ConfigurationManager.ConnectionStrings["KumparamDB"].ConnectionString;
         _userRepository = new SqlUserRepository(connectionString);
