@@ -54,11 +54,28 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/> <RowDefinition Height="Auto"/> <RowDefinition Height="*"/>    </Grid.RowDefinitions>
 
-            <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,15">
-                <materialDesign:PackIcon Kind="Wallet" Width="25" Height="25" VerticalAlignment="Center" Margin="0,0,10,0" Foreground="Gray"/>
-                <TextBlock Text="PORTFÖYÜM" Style="{StaticResource HeaderTextStyle}" Margin="0"/>
-                <TextBlock Text="(Anlık Fiyatlar)" FontSize="12" VerticalAlignment="Bottom" Margin="10,0,0,3" Opacity="0.5" FontStyle="Italic"/>
-            </StackPanel>
+            <DockPanel Grid.Row="0" LastChildFill="False" Margin="0,0,0,15">
+                <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
+                    <materialDesign:PackIcon Kind="Wallet" Width="25" Height="25" VerticalAlignment="Center" Margin="0,0,10,0" Foreground="Gray"/>
+                    <TextBlock Text="PORTFÖYÜM" Style="{StaticResource HeaderTextStyle}" Margin="0" VerticalAlignment="Center"/>
+                    
+                    <!-- Son Güncelleme Bilgisi -->
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom" Margin="15,0,0,3">
+                        <materialDesign:PackIcon Kind="ClockTimeFourOutline" Width="14" Height="14" VerticalAlignment="Center" Opacity="0.5"/>
+                        <TextBlock x:Name="TxtLastUpdate" Text="Güncel" FontSize="11" Opacity="0.5" FontStyle="Italic" Margin="3,0,0,0" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- YENİLE BUTONU -->
+                <Button DockPanel.Dock="Right" Style="{StaticResource MaterialDesignOutlinedButton}"
+                        Click="BtnRefresh_Click" Height="30" Padding="10,0"
+                        ToolTip="Fiyatları İnternetten Güncelle">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="Refresh" Margin="0,0,5,0" Width="16" Height="16" VerticalAlignment="Center"/>
+                        <TextBlock Text="YENİLE" FontSize="12" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+            </DockPanel>
 
             <Grid Grid.Row="1" Margin="0,0,0,15">
                 <Grid.ColumnDefinitions>

@@ -437,6 +437,12 @@ public partial class InvestmentsView : UserControl
         // YENİ YERİ: Döngü bitti, tüm fiyatlar geldi. Şimdi TEK SEFERDE hesapla.
         CalculatePortfolioSummary();
     }
+
+    private void BtnRefresh_Click(object sender, RoutedEventArgs e)
+    {
+        var dashboard = Window.GetWindow(this) as DashboardWindow;
+        dashboard.MainContentArea.Content = new InvestmentsView(_currentUserId);
+    }
 }
 
 // --- YARDIMCI SINIFLAR (Namespace İçine Taşındı - Dışarıda Olmalı) ---
