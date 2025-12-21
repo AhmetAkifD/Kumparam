@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
+using System.Threading.Tasks; // Async işlemler için eklendi
 using System.Windows;
 using System.Windows.Controls;
 using Kumparam.Core;
@@ -10,8 +11,9 @@ using Kumparam.Core.Interfaces;
 using Kumparam.Core.Models;
 using Kumparam.Data.Repositories;
 using Kumparam.UI.Services;
-// GÜNCELLEME: Namespace düzeltildi
+// Transaction çakışmasını önlemek için:
 using Transaction = Kumparam.Core.Transaction; 
+using Kumparam.Data.Services; 
 
 namespace Kumparam.Pages.DashboardSubPages
 {
@@ -41,13 +43,9 @@ namespace Kumparam.Pages.DashboardSubPages
             }
         }
 
-        // Manuel tarih değişirse etiketi "Özel" yap
+        // Manuel tarih değişirse
         private void DatePicker_SelectedDateChanged(object sender, SelectionChangedEventArgs e)
         {
-            // Kullanıcı elle değiştirirse "Özel Aralık" moduna geçer
-            // (Bu event, kodla değiştirince de tetiklenir, o yüzden basit bırakıyoruz)
-            // İstersen burada _selectedRangeLabel = "Ozel_Aralik" yapabilirsin ama
-            // QuickSelect sonrası da tetikleneceği için mantığı karıştırmamak adına ellemiyoruz.
         }
 
         private void SetDateRange(string rangeType)
@@ -80,7 +78,8 @@ namespace Kumparam.Pages.DashboardSubPages
             }
         }
 
-private void BtnGenerate_Click(object sender, RoutedEventArgs e)
+        // DİKKAT: Metot 'async void' yapıldı (Web Scraping beklemek için)
+        private async void BtnGenerate_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -107,10 +106,48 @@ private void BtnGenerate_Click(object sender, RoutedEventArgs e)
                     return;
                 }
 
-                // 2. YENİ: YATIRIMLARI ve HEDEFLERİ ÇEK (Hazırlık)
-                // Bu verileri bir sonraki adımda PDF servisine göndereceğiz.
+                // 2. YATIRIMLARI ve HEDEFLERİ ÇEK
                 List<Investment> investments = _userRepository.GetInvestments(_currentUserId);
                 List<Goal> goals = _userRepository.GetGoals(_currentUserId);
+
+                // =================================================================================
+                // 🚀 KRİTİK ADIM: YATIRIM FİYATLARINI GÜNCELLEME
+                // Veritabanından gelen veride CurrentPrice eski veya boş.
+                // Burada WebScrapingService'i çağırıp fiyatları tazelemeliyiz.
+                // =================================================================================
+                
+                try
+                {
+                    // Lütfen projenizdeki WebScrapingService sınıfını buraya dahil edip 
+                    // aşağıdaki yorum satırlarını açın:
+                    
+                    
+                    var scraper = new WebScrapingService(_userRepository); // Servisinizi başlatın
+                    
+                    foreach (var item in investments)
+                    {
+                        if (!string.IsNullOrEmpty(item.Symbol))
+                        {
+                            // Servisinizdeki metoda göre burayı düzenleyin (örn: GetPrice, GetCurrentRate vb.)
+                            decimal currentPrice = await scraper.GetPriceAsync(item.Symbol);
+                            
+                            if (currentPrice > 0)
+                            {
+                                item.CurrentPrice = currentPrice;
+                            }
+                        }
+                    }
+                    
+
+                    // NOT: Eğer Scraping servisi yoksa veya hata verirse, 
+                    // rapor yine oluşur ama kâr/zarar 0 görünür (Mevcut durum).
+                }
+                catch (Exception ex)
+                {
+                    // Fiyat çekilemezse akışı bozma, sadece logla
+                    System.Diagnostics.Debug.WriteLine("Fiyat güncelleme hatası: " + ex.Message);
+                }
+                // =================================================================================
 
                 // Dosya İsmi Oluşturma
                 string datePart = "";
@@ -144,8 +181,7 @@ private void BtnGenerate_Click(object sender, RoutedEventArgs e)
                     else
                         reportPeriodText += "Tüm Zamanlar";
 
-                    // NOT: Şimdilik eski metodu çağırıyoruz ki hata vermesin.
-                    // Bir sonraki adımda investments ve goals listelerini de buraya ekleyeceğiz.
+                    // Servisi Çağır
                     pdfService.GeneratePdf(saveFileDialog.FileName, userProfile, filteredTransactions, investments, goals, reportPeriodText);
 
                     MessageBox.Show("Rapor başarıyla oluşturuldu! 📄", "Başarılı", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -157,6 +193,7 @@ private void BtnGenerate_Click(object sender, RoutedEventArgs e)
                 MessageBox.Show($"Hata: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+
         private void BtnCancel_Click(object sender, RoutedEventArgs e)
         {
             CloseWindow();
