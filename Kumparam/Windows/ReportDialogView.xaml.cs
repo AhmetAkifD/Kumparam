@@ -2,14 +2,16 @@
 using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using Kumparam.Core;
 using Microsoft.Win32;
 using Kumparam.Core.Interfaces;
 using Kumparam.Core.Models;
 using Kumparam.Data.Repositories;
+using Kumparam.Data.Services;
 using Kumparam.UI.Services;
-// GÜNCELLEME: Namespace düzeltildi
 using Transaction = Kumparam.Core.Transaction; 
 
 namespace Kumparam.Pages.DashboardSubPages
@@ -19,6 +21,9 @@ namespace Kumparam.Pages.DashboardSubPages
         private readonly IUserRepository _userRepository;
         private readonly Guid _currentUserId;
         
+        private DateTime _startDate;
+        private string _periodLabel = "Bu Ay";
+
         public ReportDialogView(Guid userId)
         {
             InitializeComponent();
@@ -27,11 +32,9 @@ namespace Kumparam.Pages.DashboardSubPages
             string connectionString = ConfigurationManager.ConnectionStrings["KumparamDB"].ConnectionString;
             _userRepository = new SqlUserRepository(connectionString);
 
-            // Varsayılan
             SetDateRange("Month");
         }
 
-        // Hızlı Seçim Mantığı
         private void QuickSelect_Click(object sender, RoutedEventArgs e)
         {
             if (sender is RadioButton btn && btn.Tag is string tag)
@@ -40,80 +43,98 @@ namespace Kumparam.Pages.DashboardSubPages
             }
         }
 
-        // Manuel tarih değişirse etiketi "Özel" yap
-        private void DatePicker_SelectedDateChanged(object sender, SelectionChangedEventArgs e)
-        {
-            // Kullanıcı elle değiştirirse "Özel Aralık" moduna geçer
-            // (Bu event, kodla değiştirince de tetiklenir, o yüzden basit bırakıyoruz)
-            // İstersen burada _selectedRangeLabel = "Ozel_Aralik" yapabilirsin ama
-            // QuickSelect sonrası da tetikleneceği için mantığı karıştırmamak adına ellemiyoruz.
-        }
-
         private void SetDateRange(string rangeType)
         {
             DateTime now = DateTime.Now;
+            _startDate = now;
 
             switch (rangeType)
             {
                 case "Today":
-                    StartDatePicker.SelectedDate = now.Date;
-                    EndDatePicker.SelectedDate = now.Date; 
+                    _startDate = now.Date; 
+                    _periodLabel = "Bugun";
                     break;
                 case "Week":
                     int diff = (7 + (now.DayOfWeek - DayOfWeek.Monday)) % 7;
-                    StartDatePicker.SelectedDate = now.AddDays(-1 * diff).Date;
-                    EndDatePicker.SelectedDate = now.Date;
+                    _startDate = now.AddDays(-1 * diff).Date;
+                    _periodLabel = "Bu_Hafta";
                     break;
                 case "Month":
-                    StartDatePicker.SelectedDate = new DateTime(now.Year, now.Month, 1);
-                    EndDatePicker.SelectedDate = new DateTime(now.Year, now.Month, DateTime.DaysInMonth(now.Year, now.Month));
+                    _startDate = new DateTime(now.Year, now.Month, 1);
+                    _periodLabel = "Bu_Ay";
                     break;
                 case "Year":
-                    StartDatePicker.SelectedDate = new DateTime(now.Year, 1, 1);
-                    EndDatePicker.SelectedDate = new DateTime(now.Year, 12, 31);
+                    _startDate = new DateTime(now.Year, 1, 1);
+                    _periodLabel = "Bu_Yil";
                     break;
                 case "All":
-                    StartDatePicker.SelectedDate = null;
-                    EndDatePicker.SelectedDate = null;
+                    _startDate = DateTime.MinValue;
+                    _periodLabel = "Tum_Zamanlar";
                     break;
             }
+
+            if (rangeType == "All")
+                TxtDatePreview.Text = "Başlangıçtan - Bugüne";
+            else
+                TxtDatePreview.Text = $"{_startDate:dd.MM.yyyy} - Bugün";
         }
 
-        private void BtnGenerate_Click(object sender, RoutedEventArgs e)
+        private async void BtnGenerate_Click(object sender, RoutedEventArgs e)
         {
+            // YÜKLEME EKRANINI GÖSTER
+            LoadingOverlay.Visibility = Visibility.Visible;
+            
+            // UI'ın donmaması ve Loading animasyonunun dönmesi için kısa bir bekleme
+            await Task.Delay(100); 
+
             try
             {
-                DateTime? start = StartDatePicker.SelectedDate;
-                DateTime? end = EndDatePicker.SelectedDate;
+                DateTime endDate = DateTime.Now;
 
-                if (start.HasValue && end.HasValue && start > end)
-                {
-                    MessageBox.Show("Başlangıç tarihi bitiş tarihinden büyük olamaz.", "Hata", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-
-                var allTransactions = _userRepository.GetAllTransactions(_currentUserId);
+                // 1. İŞLEMLERİ ÇEK VE FİLTRELE
+                // Bu işlemler veritabanından olduğu için hızlıdır ama yine de Task içinde yapılabilir
+                var allTransactions = await Task.Run(() => _userRepository.GetAllTransactions(_currentUserId));
                 
                 var filteredTransactions = allTransactions.Where(t => 
-                    (!start.HasValue || t.TransactionDate.Date >= start.Value.Date) &&
-                    (!end.HasValue || t.TransactionDate.Date <= end.Value.Date)
+                    t.TransactionDate >= _startDate && t.TransactionDate <= endDate
                 ).ToList();
 
                 if (filteredTransactions.Count == 0)
                 {
-                    MessageBox.Show("Seçilen tarih aralığında hiç işlem bulunamadı.", "Veri Yok", MessageBoxButton.OK, MessageBoxImage.Information);
+                    LoadingOverlay.Visibility = Visibility.Collapsed;
+                    MessageBox.Show("Seçilen dönemde hiç işlem bulunamadı.", "Veri Yok", MessageBoxButton.OK, MessageBoxImage.Information);
                     return;
                 }
 
-                // GÜNCELLEME: Dosya İsmi Oluşturma
-                // Örn: Kumparam_Rapor_Bu_Ay_20240101-20240131.pdf
-                string datePart = "";
-                if (start.HasValue && end.HasValue)
-                    datePart = $"{start.Value:yyyyMMdd}-{end.Value:yyyyMMdd}";
-                else
-                    datePart = DateTime.Now.ToString("yyyyMMdd");
+                // 2. YATIRIMLARI ve HEDEFLERİ ÇEK
+                List<Investment> investments = await Task.Run(() => _userRepository.GetInvestments(_currentUserId));
+                List<Goal> goals = await Task.Run(() => _userRepository.GetGoals(_currentUserId));
 
-                string fileName = $"Kumparam_Rapor_{datePart}.pdf";
+                // ==========================================================
+                // YATIRIM FİYATLARINI GÜNCELLEME (Web Scraping Simülasyonu)
+                // ==========================================================
+                // Burası asıl vakit alan kısım olacak.
+                // await Task.Delay(2000); // Test için 2 saniye bekletme (Scraping simülasyonu)
+                
+                
+                try {
+                    var scraper = new WebScrapingService(_userRepository);
+                    foreach(var item in investments) {
+                         if (!string.IsNullOrEmpty(item.Symbol)) {
+                             decimal price = await scraper.GetPriceAsync(item.Symbol);
+                             if(price > 0) item.CurrentPrice = price;
+                         }
+                    }
+                } catch (Exception ex) {
+                    System.Diagnostics.Debug.WriteLine("Fiyat güncelleme hatası: " + ex.Message);
+                }
+                
+                // ==========================================================
+
+                // Yükleme ekranını kapatıp dosya diyaloğunu açalım
+                LoadingOverlay.Visibility = Visibility.Collapsed;
+
+                string fileName = $"Kumparam_Rapor_{_periodLabel}_{DateTime.Now:yyyyMMdd}.pdf";
 
                 SaveFileDialog saveFileDialog = new SaveFileDialog
                 {
@@ -124,20 +145,18 @@ namespace Kumparam.Pages.DashboardSubPages
 
                 if (saveFileDialog.ShowDialog() == true)
                 {
+                    // PDF oluşturma işlemi de büyük veriyle uzun sürebilir, tekrar loading gösterebilirsin
+                    // Ama genelde QuestPDF çok hızlıdır.
+                    
                     var userProfile = _userRepository.GetUserProfile(_currentUserId);
                     var pdfService = new PdfReportService();
                     
-                    // GÜNCELLEME: PDF İçine Yazılacak Metin (Sadece Tarih)
-                    // Parantez içindeki (Bu Ay) vb. kaldırıldı.
-                    string reportPeriodText = "Tarih Aralığı: ";
-                    if (start.HasValue && end.HasValue)
-                        reportPeriodText += $"{start.Value:dd.MM.yyyy} - {end.Value:dd.MM.yyyy}";
-                    else if (start.HasValue)
-                        reportPeriodText += $"{start.Value:dd.MM.yyyy} tarihinden itibaren";
-                    else
-                        reportPeriodText += "Tüm Zamanlar";
+                    string reportPeriodText = _periodLabel == "Tum_Zamanlar" 
+                        ? "Tüm Zamanlar" 
+                        : $"Dönem: {_startDate:dd.MM.yyyy} - {endDate:dd.MM.yyyy}";
 
-                    pdfService.GeneratePdf(saveFileDialog.FileName, userProfile, filteredTransactions, reportPeriodText);
+                    // PDF işlemini de Task içinde yapalım ki UI donmasın
+                    await Task.Run(() => pdfService.GeneratePdf(saveFileDialog.FileName, userProfile, filteredTransactions, investments, goals, reportPeriodText));
 
                     MessageBox.Show("Rapor başarıyla oluşturuldu! 📄", "Başarılı", MessageBoxButton.OK, MessageBoxImage.Information);
                     CloseWindow();
@@ -145,6 +164,7 @@ namespace Kumparam.Pages.DashboardSubPages
             }
             catch (Exception ex)
             {
+                LoadingOverlay.Visibility = Visibility.Collapsed;
                 MessageBox.Show($"Hata: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
