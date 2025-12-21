@@ -4,6 +4,7 @@ using System.Configuration;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using Kumparam.Core;
 using Microsoft.Win32;
 using Kumparam.Core.Interfaces;
 using Kumparam.Core.Models;
@@ -79,7 +80,7 @@ namespace Kumparam.Pages.DashboardSubPages
             }
         }
 
-        private void BtnGenerate_Click(object sender, RoutedEventArgs e)
+private void BtnGenerate_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -92,6 +93,7 @@ namespace Kumparam.Pages.DashboardSubPages
                     return;
                 }
 
+                // 1. İŞLEMLERİ ÇEK (Mevcut)
                 var allTransactions = _userRepository.GetAllTransactions(_currentUserId);
                 
                 var filteredTransactions = allTransactions.Where(t => 
@@ -105,13 +107,19 @@ namespace Kumparam.Pages.DashboardSubPages
                     return;
                 }
 
-                // GÜNCELLEME: Dosya İsmi Oluşturma
-                // Örn: Kumparam_Rapor_Bu_Ay_20240101-20240131.pdf
+                // 2. YENİ: YATIRIMLARI ve HEDEFLERİ ÇEK (Hazırlık)
+                // Bu verileri bir sonraki adımda PDF servisine göndereceğiz.
+                List<Investment> investments = _userRepository.GetInvestments(_currentUserId);
+                List<Goal> goals = _userRepository.GetGoals(_currentUserId);
+
+                // Dosya İsmi Oluşturma
                 string datePart = "";
                 if (start.HasValue && end.HasValue)
                     datePart = $"{start.Value:yyyyMMdd}-{end.Value:yyyyMMdd}";
+                else if (start.HasValue)
+                    datePart = $"{start.Value:yyyyMMdd}_Sonrasi";
                 else
-                    datePart = DateTime.Now.ToString("yyyyMMdd");
+                    datePart = "Tum_Zamanlar";
 
                 string fileName = $"Kumparam_Rapor_{datePart}.pdf";
 
@@ -127,8 +135,7 @@ namespace Kumparam.Pages.DashboardSubPages
                     var userProfile = _userRepository.GetUserProfile(_currentUserId);
                     var pdfService = new PdfReportService();
                     
-                    // GÜNCELLEME: PDF İçine Yazılacak Metin (Sadece Tarih)
-                    // Parantez içindeki (Bu Ay) vb. kaldırıldı.
+                    // PDF Başlık Metni
                     string reportPeriodText = "Tarih Aralığı: ";
                     if (start.HasValue && end.HasValue)
                         reportPeriodText += $"{start.Value:dd.MM.yyyy} - {end.Value:dd.MM.yyyy}";
@@ -137,7 +144,9 @@ namespace Kumparam.Pages.DashboardSubPages
                     else
                         reportPeriodText += "Tüm Zamanlar";
 
-                    pdfService.GeneratePdf(saveFileDialog.FileName, userProfile, filteredTransactions, reportPeriodText);
+                    // NOT: Şimdilik eski metodu çağırıyoruz ki hata vermesin.
+                    // Bir sonraki adımda investments ve goals listelerini de buraya ekleyeceğiz.
+                    pdfService.GeneratePdf(saveFileDialog.FileName, userProfile, filteredTransactions, investments, goals, reportPeriodText);
 
                     MessageBox.Show("Rapor başarıyla oluşturuldu! 📄", "Başarılı", MessageBoxButton.OK, MessageBoxImage.Information);
                     CloseWindow();
@@ -148,7 +157,6 @@ namespace Kumparam.Pages.DashboardSubPages
                 MessageBox.Show($"Hata: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-
         private void BtnCancel_Click(object sender, RoutedEventArgs e)
         {
             CloseWindow();
