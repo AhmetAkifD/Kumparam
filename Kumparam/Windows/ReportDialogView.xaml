@@ -11,57 +11,70 @@
 
     <materialDesign:Card UniformCornerRadius="10" Margin="10" materialDesign:ElevationAssist.Elevation="Dp4">
         <Grid>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/> <!-- Başlık -->
-                <RowDefinition Height="*"/>    <!-- Seçenekler -->
-                <RowDefinition Height="Auto"/> <!-- Alt Butonlar -->
-            </Grid.RowDefinitions>
+            <!-- ANA İÇERİK -->
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/> <!-- Başlık -->
+                    <RowDefinition Height="*"/>    <!-- Seçenekler -->
+                    <RowDefinition Height="Auto"/> <!-- Alt Butonlar -->
+                </Grid.RowDefinitions>
 
-            <!-- 1. BAŞLIK -->
-            <Border Grid.Row="0" Background="{DynamicResource PrimaryHueMidBrush}" CornerRadius="10,10,0,0" Padding="20">
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <materialDesign:PackIcon Kind="FileDocumentEdit" Foreground="White" Width="30" Height="30" Margin="0,0,15,0"/>
-                    <StackPanel>
-                        <TextBlock Text="Rapor Dönemi" FontSize="20" FontWeight="Bold" Foreground="White"/>
-                        <TextBlock Text="Mevcut durumunuzu analiz etmek için bir dönem seçin." FontSize="12" Foreground="White" Opacity="0.8"/>
-                    </StackPanel>
-                </StackPanel>
-            </Border>
-
-            <!-- 2. SEÇENEKLER -->
-            <StackPanel Grid.Row="1" Margin="20" VerticalAlignment="Center">
-                <TextBlock Text="Hızlı Seçim (Bugüne Kadar)" FontWeight="SemiBold" Margin="0,0,0,10" Opacity="0.6"/>
-                
-                <WrapPanel HorizontalAlignment="Center" Margin="0,0,0,20">
-                    <RadioButton Style="{StaticResource MaterialDesignChoiceChipRadioButton}" Content="Bugün" GroupName="DateRange" Click="QuickSelect_Click" Tag="Today" Margin="5"/>
-                    <RadioButton Style="{StaticResource MaterialDesignChoiceChipRadioButton}" Content="Bu Hafta" GroupName="DateRange" Click="QuickSelect_Click" Tag="Week" Margin="5"/>
-                    <RadioButton Style="{StaticResource MaterialDesignChoiceChipRadioButton}" Content="Bu Ay" GroupName="DateRange" Click="QuickSelect_Click" Tag="Month" IsChecked="True" Margin="5"/>
-                    <RadioButton Style="{StaticResource MaterialDesignChoiceChipRadioButton}" Content="Bu Yıl" GroupName="DateRange" Click="QuickSelect_Click" Tag="Year" Margin="5"/>
-                    <RadioButton Style="{StaticResource MaterialDesignChoiceChipRadioButton}" Content="Tüm Zamanlar" GroupName="DateRange" Click="QuickSelect_Click" Tag="All" Margin="5"/>
-                </WrapPanel>
-
-                <!-- Seçili Aralığı Gösteren Bilgi -->
-                <Border Background="#F5F5F5" CornerRadius="5" Padding="10">
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                        <materialDesign:PackIcon Kind="CalendarClock" VerticalAlignment="Center" Margin="0,0,10,0" Foreground="{DynamicResource PrimaryHueMidBrush}"/>
-                        <TextBlock x:Name="TxtDatePreview" Text="01.01.2024 - Bugün" FontWeight="Bold" VerticalAlignment="Center"/>
+                <!-- 1. BAŞLIK -->
+                <Border Grid.Row="0" Background="{DynamicResource PrimaryHueMidBrush}" CornerRadius="10,10,0,0" Padding="20">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <materialDesign:PackIcon Kind="FileDocumentEdit" Foreground="White" Width="30" Height="30" Margin="0,0,15,0"/>
+                        <StackPanel>
+                            <TextBlock Text="Rapor Dönemi" FontSize="20" FontWeight="Bold" Foreground="White"/>
+                            <TextBlock Text="Mevcut durumunuzu analiz etmek için bir dönem seçin." FontSize="12" Foreground="White" Opacity="0.8"/>
+                        </StackPanel>
                     </StackPanel>
                 </Border>
-            </StackPanel>
 
-            <!-- 3. ALT BUTONLAR -->
-            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="20">
-                <Button Style="{StaticResource MaterialDesignFlatButton}" Content="İPTAL" Click="BtnCancel_Click" Margin="0,0,10,0"/>
-                
-                <Button Style="{StaticResource MaterialDesignRaisedButton}" 
-                        Background="#D32F2F" BorderBrush="#D32F2F"
-                        Click="BtnGenerate_Click" Height="45" Width="160">
-                    <StackPanel Orientation="Horizontal">
-                        <materialDesign:PackIcon Kind="FilePdfBox" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                        <TextBlock Text="RAPORU AL"/>
-                    </StackPanel>
-                </Button>
-            </StackPanel>
+                <!-- 2. SEÇENEKLER -->
+                <StackPanel Grid.Row="1" Margin="20" VerticalAlignment="Center">
+                    <TextBlock Text="Hızlı Seçim (Bugüne Kadar)" FontWeight="SemiBold" Margin="0,0,0,10" Opacity="0.6"/>
+                    
+                    <WrapPanel HorizontalAlignment="Center" Margin="0,0,0,20">
+                        <RadioButton Style="{StaticResource MaterialDesignChoiceChipRadioButton}" Content="Bugün" GroupName="DateRange" Click="QuickSelect_Click" Tag="Today" Margin="5"/>
+                        <RadioButton Style="{StaticResource MaterialDesignChoiceChipRadioButton}" Content="Bu Hafta" GroupName="DateRange" Click="QuickSelect_Click" Tag="Week" Margin="5"/>
+                        <RadioButton Style="{StaticResource MaterialDesignChoiceChipRadioButton}" Content="Bu Ay" GroupName="DateRange" Click="QuickSelect_Click" Tag="Month" IsChecked="True" Margin="5"/>
+                        <RadioButton Style="{StaticResource MaterialDesignChoiceChipRadioButton}" Content="Bu Yıl" GroupName="DateRange" Click="QuickSelect_Click" Tag="Year" Margin="5"/>
+                        <RadioButton Style="{StaticResource MaterialDesignChoiceChipRadioButton}" Content="Tüm Zamanlar" GroupName="DateRange" Click="QuickSelect_Click" Tag="All" Margin="5"/>
+                    </WrapPanel>
+
+                    <!-- Seçili Aralığı Gösteren Bilgi -->
+                    <Border Background="#F5F5F5" CornerRadius="5" Padding="10">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <materialDesign:PackIcon Kind="CalendarClock" VerticalAlignment="Center" Margin="0,0,10,0" Foreground="{DynamicResource PrimaryHueMidBrush}"/>
+                            <TextBlock x:Name="TxtDatePreview" Text="01.01.2024 - Bugün" FontWeight="Bold" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- 3. ALT BUTONLAR -->
+                <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="20">
+                    <Button Style="{StaticResource MaterialDesignFlatButton}" Content="İPTAL" Click="BtnCancel_Click" Margin="0,0,10,0"/>
+                    
+                    <Button Style="{StaticResource MaterialDesignRaisedButton}" 
+                            Background="#D32F2F" BorderBrush="#D32F2F"
+                            Click="BtnGenerate_Click" Height="45" Width="160">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="FilePdfBox" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="RAPORU AL"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+
+            <!-- YÜKLEME EKRANI (LOADING OVERLAY) -->
+            <!-- Başlangıçta Görünmez (Collapsed) -->
+            <Grid x:Name="LoadingOverlay" Visibility="Collapsed" Background="#CCFFFFFF"> <!-- Yarı Saydam Beyaz -->
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                    <ProgressBar Style="{StaticResource MaterialDesignCircularProgressBar}" Value="0" IsIndeterminate="True" Width="50" Height="50" Foreground="{DynamicResource PrimaryHueMidBrush}"/>
+                    <TextBlock Text="Veriler Hazırlanıyor..." Margin="0,15,0,5" FontWeight="Bold" FontSize="16" HorizontalAlignment="Center"/>
+                    <TextBlock Text="Yatırım fiyatları güncelleniyor, lütfen bekleyiniz." FontSize="12" Opacity="0.6" HorizontalAlignment="Center"/>
+                </StackPanel>
+            </Grid>
         </Grid>
     </materialDesign:Card>
 </UserControl>

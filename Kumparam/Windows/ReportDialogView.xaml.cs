@@ -21,9 +21,8 @@ namespace Kumparam.Pages.DashboardSubPages
         private readonly IUserRepository _userRepository;
         private readonly Guid _currentUserId;
         
-        // Sadece başlangıç tarihini tutmamız yeterli, bitiş hep BUGÜN.
         private DateTime _startDate;
-        private string _periodLabel = "Bu Ay"; // Dosya isimlendirme için
+        private string _periodLabel = "Bu Ay";
 
         public ReportDialogView(Guid userId)
         {
@@ -33,7 +32,6 @@ namespace Kumparam.Pages.DashboardSubPages
             string connectionString = ConfigurationManager.ConnectionStrings["KumparamDB"].ConnectionString;
             _userRepository = new SqlUserRepository(connectionString);
 
-            // Varsayılan: Bu Ay
             SetDateRange("Month");
         }
 
@@ -48,16 +46,15 @@ namespace Kumparam.Pages.DashboardSubPages
         private void SetDateRange(string rangeType)
         {
             DateTime now = DateTime.Now;
-            _startDate = now; // Varsayılan
+            _startDate = now;
 
             switch (rangeType)
             {
                 case "Today":
-                    _startDate = now.Date; // Bugün 00:00
+                    _startDate = now.Date; 
                     _periodLabel = "Bugun";
                     break;
                 case "Week":
-                    // Pazartesiye git
                     int diff = (7 + (now.DayOfWeek - DayOfWeek.Monday)) % 7;
                     _startDate = now.AddDays(-1 * diff).Date;
                     _periodLabel = "Bu_Hafta";
@@ -71,12 +68,11 @@ namespace Kumparam.Pages.DashboardSubPages
                     _periodLabel = "Bu_Yil";
                     break;
                 case "All":
-                    _startDate = DateTime.MinValue; // En başa git
+                    _startDate = DateTime.MinValue;
                     _periodLabel = "Tum_Zamanlar";
                     break;
             }
 
-            // Kullanıcıya aralığı gösterelim
             if (rangeType == "All")
                 TxtDatePreview.Text = "Başlangıçtan - Bugüne";
             else
@@ -85,13 +81,19 @@ namespace Kumparam.Pages.DashboardSubPages
 
         private async void BtnGenerate_Click(object sender, RoutedEventArgs e)
         {
+            // YÜKLEME EKRANINI GÖSTER
+            LoadingOverlay.Visibility = Visibility.Visible;
+            
+            // UI'ın donmaması ve Loading animasyonunun dönmesi için kısa bir bekleme
+            await Task.Delay(100); 
+
             try
             {
-                // Bitiş tarihi her zaman ŞU AN (ki yatırım fiyatları tutarlı olsun)
                 DateTime endDate = DateTime.Now;
 
                 // 1. İŞLEMLERİ ÇEK VE FİLTRELE
-                var allTransactions = _userRepository.GetAllTransactions(_currentUserId);
+                // Bu işlemler veritabanından olduğu için hızlıdır ama yine de Task içinde yapılabilir
+                var allTransactions = await Task.Run(() => _userRepository.GetAllTransactions(_currentUserId));
                 
                 var filteredTransactions = allTransactions.Where(t => 
                     t.TransactionDate >= _startDate && t.TransactionDate <= endDate
@@ -99,54 +101,39 @@ namespace Kumparam.Pages.DashboardSubPages
 
                 if (filteredTransactions.Count == 0)
                 {
+                    LoadingOverlay.Visibility = Visibility.Collapsed;
                     MessageBox.Show("Seçilen dönemde hiç işlem bulunamadı.", "Veri Yok", MessageBoxButton.OK, MessageBoxImage.Information);
                     return;
                 }
 
                 // 2. YATIRIMLARI ve HEDEFLERİ ÇEK
-                List<Investment> investments = _userRepository.GetInvestments(_currentUserId);
-                List<Goal> goals = _userRepository.GetGoals(_currentUserId);
+                List<Investment> investments = await Task.Run(() => _userRepository.GetInvestments(_currentUserId));
+                List<Goal> goals = await Task.Run(() => _userRepository.GetGoals(_currentUserId));
 
                 // ==========================================================
-                // YATIRIM FİYATLARINI GÜNCELLEME (Web Scraping Yeri)
+                // YATIRIM FİYATLARINI GÜNCELLEME (Web Scraping Simülasyonu)
                 // ==========================================================
+                // Burası asıl vakit alan kısım olacak.
+                // await Task.Delay(2000); // Test için 2 saniye bekletme (Scraping simülasyonu)
                 
-                try
-                {
-                    // Lütfen projenizdeki WebScrapingService sınıfını buraya dahil edip 
-                    // aşağıdaki yorum satırlarını açın:
-                    
-                    
-                    var scraper = new WebScrapingService(_userRepository); // Servisinizi başlatın
-                    
-                    foreach (var item in investments)
-                    {
-                        if (!string.IsNullOrEmpty(item.Symbol))
-                        {
-                            // Servisinizdeki metoda göre burayı düzenleyin (örn: GetPrice, GetCurrentRate vb.)
-                            decimal currentPrice = await scraper.GetPriceAsync(item.Symbol);
-                            
-                            if (currentPrice > 0)
-                            {
-                                item.CurrentPrice = currentPrice;
-                            }
-                        }
+                
+                try {
+                    var scraper = new WebScrapingService(_userRepository);
+                    foreach(var item in investments) {
+                         if (!string.IsNullOrEmpty(item.Symbol)) {
+                             decimal price = await scraper.GetPriceAsync(item.Symbol);
+                             if(price > 0) item.CurrentPrice = price;
+                         }
                     }
-                    
-
-                    // NOT: Eğer Scraping servisi yoksa veya hata verirse, 
-                    // rapor yine oluşur ama kâr/zarar 0 görünür (Mevcut durum).
-                }
-                catch (Exception ex)
-                {
-                    // Fiyat çekilemezse akışı bozma, sadece logla
+                } catch (Exception ex) {
                     System.Diagnostics.Debug.WriteLine("Fiyat güncelleme hatası: " + ex.Message);
                 }
-                // =================================================================================
                 
                 // ==========================================================
 
-                // Dosya İsmi: Kumparam_Rapor_Bu_Ay_20241225.pdf
+                // Yükleme ekranını kapatıp dosya diyaloğunu açalım
+                LoadingOverlay.Visibility = Visibility.Collapsed;
+
                 string fileName = $"Kumparam_Rapor_{_periodLabel}_{DateTime.Now:yyyyMMdd}.pdf";
 
                 SaveFileDialog saveFileDialog = new SaveFileDialog
@@ -158,15 +145,18 @@ namespace Kumparam.Pages.DashboardSubPages
 
                 if (saveFileDialog.ShowDialog() == true)
                 {
+                    // PDF oluşturma işlemi de büyük veriyle uzun sürebilir, tekrar loading gösterebilirsin
+                    // Ama genelde QuestPDF çok hızlıdır.
+                    
                     var userProfile = _userRepository.GetUserProfile(_currentUserId);
                     var pdfService = new PdfReportService();
                     
-                    // Rapor Başlığı Metni
                     string reportPeriodText = _periodLabel == "Tum_Zamanlar" 
                         ? "Tüm Zamanlar" 
                         : $"Dönem: {_startDate:dd.MM.yyyy} - {endDate:dd.MM.yyyy}";
 
-                    pdfService.GeneratePdf(saveFileDialog.FileName, userProfile, filteredTransactions, investments, goals, reportPeriodText);
+                    // PDF işlemini de Task içinde yapalım ki UI donmasın
+                    await Task.Run(() => pdfService.GeneratePdf(saveFileDialog.FileName, userProfile, filteredTransactions, investments, goals, reportPeriodText));
 
                     MessageBox.Show("Rapor başarıyla oluşturuldu! 📄", "Başarılı", MessageBoxButton.OK, MessageBoxImage.Information);
                     CloseWindow();
@@ -174,6 +164,7 @@ namespace Kumparam.Pages.DashboardSubPages
             }
             catch (Exception ex)
             {
+                LoadingOverlay.Visibility = Visibility.Collapsed;
                 MessageBox.Show($"Hata: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
