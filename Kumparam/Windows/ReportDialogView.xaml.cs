@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
-using System.Threading.Tasks; // Async işlemler için eklendi
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using Kumparam.Core;
@@ -10,10 +10,9 @@ using Microsoft.Win32;
 using Kumparam.Core.Interfaces;
 using Kumparam.Core.Models;
 using Kumparam.Data.Repositories;
+using Kumparam.Data.Services;
 using Kumparam.UI.Services;
-// Transaction çakışmasını önlemek için:
 using Transaction = Kumparam.Core.Transaction; 
-using Kumparam.Data.Services; 
 
 namespace Kumparam.Pages.DashboardSubPages
 {
@@ -22,6 +21,10 @@ namespace Kumparam.Pages.DashboardSubPages
         private readonly IUserRepository _userRepository;
         private readonly Guid _currentUserId;
         
+        // Sadece başlangıç tarihini tutmamız yeterli, bitiş hep BUGÜN.
+        private DateTime _startDate;
+        private string _periodLabel = "Bu Ay"; // Dosya isimlendirme için
+
         public ReportDialogView(Guid userId)
         {
             InitializeComponent();
@@ -30,11 +33,10 @@ namespace Kumparam.Pages.DashboardSubPages
             string connectionString = ConfigurationManager.ConnectionStrings["KumparamDB"].ConnectionString;
             _userRepository = new SqlUserRepository(connectionString);
 
-            // Varsayılan
+            // Varsayılan: Bu Ay
             SetDateRange("Month");
         }
 
-        // Hızlı Seçim Mantığı
         private void QuickSelect_Click(object sender, RoutedEventArgs e)
         {
             if (sender is RadioButton btn && btn.Tag is string tag)
@@ -43,66 +45,61 @@ namespace Kumparam.Pages.DashboardSubPages
             }
         }
 
-        // Manuel tarih değişirse
-        private void DatePicker_SelectedDateChanged(object sender, SelectionChangedEventArgs e)
-        {
-        }
-
         private void SetDateRange(string rangeType)
         {
             DateTime now = DateTime.Now;
+            _startDate = now; // Varsayılan
 
             switch (rangeType)
             {
                 case "Today":
-                    StartDatePicker.SelectedDate = now.Date;
-                    EndDatePicker.SelectedDate = now.Date; 
+                    _startDate = now.Date; // Bugün 00:00
+                    _periodLabel = "Bugun";
                     break;
                 case "Week":
+                    // Pazartesiye git
                     int diff = (7 + (now.DayOfWeek - DayOfWeek.Monday)) % 7;
-                    StartDatePicker.SelectedDate = now.AddDays(-1 * diff).Date;
-                    EndDatePicker.SelectedDate = now.Date;
+                    _startDate = now.AddDays(-1 * diff).Date;
+                    _periodLabel = "Bu_Hafta";
                     break;
                 case "Month":
-                    StartDatePicker.SelectedDate = new DateTime(now.Year, now.Month, 1);
-                    EndDatePicker.SelectedDate = new DateTime(now.Year, now.Month, DateTime.DaysInMonth(now.Year, now.Month));
+                    _startDate = new DateTime(now.Year, now.Month, 1);
+                    _periodLabel = "Bu_Ay";
                     break;
                 case "Year":
-                    StartDatePicker.SelectedDate = new DateTime(now.Year, 1, 1);
-                    EndDatePicker.SelectedDate = new DateTime(now.Year, 12, 31);
+                    _startDate = new DateTime(now.Year, 1, 1);
+                    _periodLabel = "Bu_Yil";
                     break;
                 case "All":
-                    StartDatePicker.SelectedDate = null;
-                    EndDatePicker.SelectedDate = null;
+                    _startDate = DateTime.MinValue; // En başa git
+                    _periodLabel = "Tum_Zamanlar";
                     break;
             }
+
+            // Kullanıcıya aralığı gösterelim
+            if (rangeType == "All")
+                TxtDatePreview.Text = "Başlangıçtan - Bugüne";
+            else
+                TxtDatePreview.Text = $"{_startDate:dd.MM.yyyy} - Bugün";
         }
 
-        // DİKKAT: Metot 'async void' yapıldı (Web Scraping beklemek için)
         private async void BtnGenerate_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                DateTime? start = StartDatePicker.SelectedDate;
-                DateTime? end = EndDatePicker.SelectedDate;
+                // Bitiş tarihi her zaman ŞU AN (ki yatırım fiyatları tutarlı olsun)
+                DateTime endDate = DateTime.Now;
 
-                if (start.HasValue && end.HasValue && start > end)
-                {
-                    MessageBox.Show("Başlangıç tarihi bitiş tarihinden büyük olamaz.", "Hata", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-
-                // 1. İŞLEMLERİ ÇEK (Mevcut)
+                // 1. İŞLEMLERİ ÇEK VE FİLTRELE
                 var allTransactions = _userRepository.GetAllTransactions(_currentUserId);
                 
                 var filteredTransactions = allTransactions.Where(t => 
-                    (!start.HasValue || t.TransactionDate.Date >= start.Value.Date) &&
-                    (!end.HasValue || t.TransactionDate.Date <= end.Value.Date)
+                    t.TransactionDate >= _startDate && t.TransactionDate <= endDate
                 ).ToList();
 
                 if (filteredTransactions.Count == 0)
                 {
-                    MessageBox.Show("Seçilen tarih aralığında hiç işlem bulunamadı.", "Veri Yok", MessageBoxButton.OK, MessageBoxImage.Information);
+                    MessageBox.Show("Seçilen dönemde hiç işlem bulunamadı.", "Veri Yok", MessageBoxButton.OK, MessageBoxImage.Information);
                     return;
                 }
 
@@ -110,11 +107,9 @@ namespace Kumparam.Pages.DashboardSubPages
                 List<Investment> investments = _userRepository.GetInvestments(_currentUserId);
                 List<Goal> goals = _userRepository.GetGoals(_currentUserId);
 
-                // =================================================================================
-                // 🚀 KRİTİK ADIM: YATIRIM FİYATLARINI GÜNCELLEME
-                // Veritabanından gelen veride CurrentPrice eski veya boş.
-                // Burada WebScrapingService'i çağırıp fiyatları tazelemeliyiz.
-                // =================================================================================
+                // ==========================================================
+                // YATIRIM FİYATLARINI GÜNCELLEME (Web Scraping Yeri)
+                // ==========================================================
                 
                 try
                 {
@@ -148,17 +143,11 @@ namespace Kumparam.Pages.DashboardSubPages
                     System.Diagnostics.Debug.WriteLine("Fiyat güncelleme hatası: " + ex.Message);
                 }
                 // =================================================================================
+                
+                // ==========================================================
 
-                // Dosya İsmi Oluşturma
-                string datePart = "";
-                if (start.HasValue && end.HasValue)
-                    datePart = $"{start.Value:yyyyMMdd}-{end.Value:yyyyMMdd}";
-                else if (start.HasValue)
-                    datePart = $"{start.Value:yyyyMMdd}_Sonrasi";
-                else
-                    datePart = "Tum_Zamanlar";
-
-                string fileName = $"Kumparam_Rapor_{datePart}.pdf";
+                // Dosya İsmi: Kumparam_Rapor_Bu_Ay_20241225.pdf
+                string fileName = $"Kumparam_Rapor_{_periodLabel}_{DateTime.Now:yyyyMMdd}.pdf";
 
                 SaveFileDialog saveFileDialog = new SaveFileDialog
                 {
@@ -172,16 +161,11 @@ namespace Kumparam.Pages.DashboardSubPages
                     var userProfile = _userRepository.GetUserProfile(_currentUserId);
                     var pdfService = new PdfReportService();
                     
-                    // PDF Başlık Metni
-                    string reportPeriodText = "Tarih Aralığı: ";
-                    if (start.HasValue && end.HasValue)
-                        reportPeriodText += $"{start.Value:dd.MM.yyyy} - {end.Value:dd.MM.yyyy}";
-                    else if (start.HasValue)
-                        reportPeriodText += $"{start.Value:dd.MM.yyyy} tarihinden itibaren";
-                    else
-                        reportPeriodText += "Tüm Zamanlar";
+                    // Rapor Başlığı Metni
+                    string reportPeriodText = _periodLabel == "Tum_Zamanlar" 
+                        ? "Tüm Zamanlar" 
+                        : $"Dönem: {_startDate:dd.MM.yyyy} - {endDate:dd.MM.yyyy}";
 
-                    // Servisi Çağır
                     pdfService.GeneratePdf(saveFileDialog.FileName, userProfile, filteredTransactions, investments, goals, reportPeriodText);
 
                     MessageBox.Show("Rapor başarıyla oluşturuldu! 📄", "Başarılı", MessageBoxButton.OK, MessageBoxImage.Information);
