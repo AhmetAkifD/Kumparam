@@ -12,42 +12,51 @@
         Background="{DynamicResource MaterialDesignPaper}"
         Style="{StaticResource MaterialDesignWindow}">
 
-    <!--
-    NOT: Transitioner'ı sildik. Ana Grid'in içinde
-    üst üste duran iki Grid'imiz var.
-    -->
     <Grid x:Name="MainGrid">
-
-        <!-- Giriş Ekranı (Varsayılan olarak görünür) -->
         <Grid x:Name="LoginGrid" Background="Transparent">
             <Grid.RenderTransform>
                 <TranslateTransform X="0" />
             </Grid.RenderTransform>
-
             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Width="300">
                 <TextBlock Text="Giriş Yap" FontSize="28" FontWeight="Bold" Margin="0,0,0,20"
                            HorizontalAlignment="Center"
                            Foreground="{DynamicResource MaterialDesignBody}"/>
 
-                <!-- 
-                Textbox ve PasswordBox'lara x:Name veriyoruz ki C#'tan 
-                içeriklerini okuyabilelim (Copilot bunu atlamıştı) 
-                -->
                 <TextBox x:Name="EmailTextBox" materialDesign:HintAssist.Hint="E-posta Adresi" 
                          Style="{StaticResource MaterialDesignOutlinedTextBox}" 
                          Margin="0,10"/>
 
-                <PasswordBox x:Name="SifrePasswordBox" materialDesign:HintAssist.Hint="Şifre" 
-                             Style="{StaticResource MaterialDesignOutlinedPasswordBox}" 
-                             Margin="0,10"
-                             KeyDown="Password_KeyDown"/>
+                <Grid Margin="0,10">
+                    <PasswordBox x:Name="SifrePasswordBox"
+                                 materialDesign:HintAssist.Hint="Şifre"
+                                 Style="{StaticResource MaterialDesignOutlinedPasswordBox}"
+                                 KeyDown="Password_KeyDown"
+                                 VerticalAlignment="Center" />
 
+                    <TextBox x:Name="SifreAcikTextBox"
+                             materialDesign:HintAssist.Hint="Şifre"
+                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                             Visibility="Collapsed"
+                             VerticalAlignment="Center"/>
+
+                    <ToggleButton x:Name="SifreGosterGizleButton"
+                                  Style="{StaticResource MaterialDesignActionToggleButton}"
+                                  HorizontalAlignment="Right"
+                                  VerticalAlignment="Center"
+                                  Width="32" Height="32"
+                                  Margin="0,0,8,0"
+                                  Click="SifreGosterGizle_Click">
+                        <materialDesign:PackIcon Kind="Eye" />
+                        <materialDesign:ToggleButtonAssist.OnContent>
+                            <materialDesign:PackIcon Kind="EyeOff" />
+                        </materialDesign:ToggleButtonAssist.OnContent>
+                    </ToggleButton>
+                </Grid>
                 <Button Content="Giriş Yap" 
                         Style="{StaticResource MaterialDesignRaisedButton}"
                         Margin="0,20,0,10"
                         Click="Login_Button_Click"/>
                 
-                <!-- YENİ: BAĞLANTI DURUMU GÖSTERGESİ -->
                 <TextBlock x:Name="DbConnectionStatusTextBlock"
                            Text="Veritabanı bağlantısı kontrol ediliyor..."
                            Foreground="Gray"
@@ -69,8 +78,6 @@
                         Click="KayitEkraniniGoster_Click"/>
             </StackPanel>
         </Grid>
-
-        <!-- Kayıt Ekranı (başlangıçta gizli) -->
         <Grid x:Name="RegisterGrid" Background="Transparent" Visibility="Collapsed">
             <Grid.RenderTransform>
                 <TranslateTransform X="0" />
@@ -96,17 +103,49 @@
                          Margin="0,10"
                          Name="Register_EmailTextBox"/>
 
-                <PasswordBox materialDesign:HintAssist.Hint="Şifre" 
-                             Style="{StaticResource MaterialDesignOutlinedPasswordBox}" 
-                             Margin="0,10"
-                             Name="Register_SifrePasswordBox"/>
+                <Grid Margin="0,10">
+                    <PasswordBox materialDesign:HintAssist.Hint="Şifre" 
+                                 Style="{StaticResource MaterialDesignOutlinedPasswordBox}" 
+                                 Name="Register_SifrePasswordBox"
+                                 VerticalAlignment="Center"/>
 
-                <PasswordBox materialDesign:HintAssist.Hint="Şifre Tekrar" 
-                             Style="{StaticResource MaterialDesignOutlinedPasswordBox}" 
-                             Margin="0,10"
-                             Name="Register_SifreTekrarPasswordBox"
-                             KeyDown="PasswordAgain_KeyDown"/>
+                    <TextBox materialDesign:HintAssist.Hint="Şifre"
+                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                             Name="Register_SifreAcikTextBox"
+                             Visibility="Collapsed"
+                             VerticalAlignment="Center"/>
 
+                    <ToggleButton Style="{StaticResource MaterialDesignActionToggleButton}"
+                                  HorizontalAlignment="Right" VerticalAlignment="Center"
+                                  Width="32" Height="32" Margin="0,0,8,0"
+                                  Click="Register_SifreGoster_Click"> <materialDesign:PackIcon Kind="Eye" />
+                        <materialDesign:ToggleButtonAssist.OnContent>
+                            <materialDesign:PackIcon Kind="EyeOff" />
+                        </materialDesign:ToggleButtonAssist.OnContent>
+                    </ToggleButton>
+                </Grid>
+                <Grid Margin="0,10">
+                    <PasswordBox materialDesign:HintAssist.Hint="Şifre Tekrar" 
+                                 Style="{StaticResource MaterialDesignOutlinedPasswordBox}" 
+                                 Name="Register_SifreTekrarPasswordBox"
+                                 KeyDown="PasswordAgain_KeyDown"
+                                 VerticalAlignment="Center"/>
+
+                    <TextBox materialDesign:HintAssist.Hint="Şifre Tekrar"
+                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                             Name="Register_SifreTekrarAcikTextBox"
+                             Visibility="Collapsed"
+                             VerticalAlignment="Center"/>
+
+                    <ToggleButton Style="{StaticResource MaterialDesignActionToggleButton}"
+                                  HorizontalAlignment="Right" VerticalAlignment="Center"
+                                  Width="32" Height="32" Margin="0,0,8,0"
+                                  Click="Register_SifreTekrarGoster_Click"> <materialDesign:PackIcon Kind="Eye" />
+                        <materialDesign:ToggleButtonAssist.OnContent>
+                            <materialDesign:PackIcon Kind="EyeOff" />
+                        </materialDesign:ToggleButtonAssist.OnContent>
+                    </ToggleButton>
+                </Grid>
                 <Button Content="Hesap Oluştur" 
                         Style="{StaticResource MaterialDesignRaisedButton}"
                         Margin="0,20,0,10"
