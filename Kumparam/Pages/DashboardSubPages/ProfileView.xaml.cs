@@ -50,6 +50,16 @@ namespace Kumparam.Pages.DashboardSubPages
                     LastNameTextBox.Text = profile.LastName;
 
                     // --- SOL KART GÜNCELLEME ---
+                    if (_userEmail.ToLower().Contains("admin")) 
+                    {
+                        TxtUserRole.Text = "Yönetici (Admin)";
+                        TxtUserRole.Foreground = System.Windows.Media.Brushes.Red; // Admin kırmızı görünsün
+                    }
+                    else
+                    {
+                        TxtUserRole.Text = "Standart Üye";
+                        // TxtUserRole.Foreground = System.Windows.Media.Brushes.Gray;
+                    }
                     string fullName = $"{profile.FirstName} {profile.LastName}".Trim();
                     TxtFullName.Text = string.IsNullOrEmpty(fullName) ? "İsimsiz Kullanıcı" : fullName;
 
@@ -169,6 +179,86 @@ namespace Kumparam.Pages.DashboardSubPages
             // 3. Pencere kapandığında kod buradan devam eder ve profili yeniler.
             // Böylece sildiğin veriler geri yüklendiyse anında yansır.
             LoadProfile();
+        }
+        private void ToggleOldPassword_Click(object sender, RoutedEventArgs e)
+        {
+            var toggleButton = sender as System.Windows.Controls.Primitives.ToggleButton;
+            bool goster = toggleButton.IsChecked == true;
+
+            if (goster)
+            {
+                OldPasswordVisibleBox.Text = OldPasswordBox.Password;
+                OldPasswordBox.Visibility = Visibility.Collapsed;
+                OldPasswordVisibleBox.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                OldPasswordBox.Password = OldPasswordVisibleBox.Text;
+                OldPasswordVisibleBox.Visibility = Visibility.Collapsed;
+                OldPasswordBox.Visibility = Visibility.Visible;
+            }
+        }
+
+        private void ToggleNewPassword_Click(object sender, RoutedEventArgs e)
+        {
+            var toggleButton = sender as System.Windows.Controls.Primitives.ToggleButton;
+            bool goster = toggleButton.IsChecked == true;
+
+            if (goster)
+            {
+                NewPasswordVisibleBox.Text = NewPasswordBox.Password;
+                NewPasswordBox.Visibility = Visibility.Collapsed;
+                NewPasswordVisibleBox.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                NewPasswordBox.Password = NewPasswordVisibleBox.Text;
+                NewPasswordVisibleBox.Visibility = Visibility.Collapsed;
+                NewPasswordBox.Visibility = Visibility.Visible;
+            }
+        }
+        private void DeleteAccount_Click(object sender, RoutedEventArgs e)
+        {
+            var result = MessageBox.Show(
+                "DİKKAT! Hesabınız tamamen silinecek. Bu işlem geri alınamaz!\n\nDevam etmek istiyor musunuz?", 
+                "Hesap Silme", 
+                MessageBoxButton.YesNo, 
+                MessageBoxImage.Warning);
+
+            if (result == MessageBoxResult.Yes)
+            {
+                // İkinci bir onay daha alalım (Çok kritik işlem)
+                var finalConfirm = MessageBox.Show(
+                    "Son kararın mı? Tüm verilerin uçup gidecek.", 
+                    "Son Onay", 
+                    MessageBoxButton.YesNo, 
+                    MessageBoxImage.Question);
+
+                if (finalConfirm == MessageBoxResult.Yes)
+                {
+                    try
+                    {
+                        // 1. Veritabanından sil
+                        // Eğer Repository'de DeleteUser yoksa eklememiz lazım!
+                        _userRepository.DeleteUser(_currentUserId); 
+
+                        MessageBox.Show("Hesabınız silindi. Üzüldük... 😔");
+
+                        // 2. Dashboard'ı kapat ve Login ekranını aç
+                        // UserControl'ün içinde olduğumuz için Parent Window'u bulmamız lazım
+                        Window parentWindow = Window.GetWindow(this);
+                
+                        MainWindow loginWindow = new MainWindow();
+                        loginWindow.Show();
+                
+                        parentWindow?.Close();
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show("Silme işlemi sırasında hata oluştu: " + ex.Message);
+                    }
+                }
+            }
         }
     }
 }
