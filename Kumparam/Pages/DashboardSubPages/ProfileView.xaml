@@ -39,7 +39,8 @@
                 <!-- Üyelik Rozeti -->
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,20,0,10">
                     <materialDesign:PackIcon Kind="WalletMembership" VerticalAlignment="Center" Margin="0,0,8,0" Foreground="{DynamicResource SecondaryHueMidBrush}" Width="24" Height="24"/>
-                    <TextBlock Text="Standart Üye" VerticalAlignment="Center" FontWeight="SemiBold" Opacity="0.7"/>
+    
+                    <TextBlock x:Name="TxtUserRole" Text="Standart Üye" VerticalAlignment="Center" FontWeight="SemiBold" Opacity="0.7"/>
                 </StackPanel>
             </StackPanel>
         </materialDesign:Card>
@@ -94,13 +95,46 @@
                 <materialDesign:Card UniformCornerRadius="8" Margin="0,0,0,20" materialDesign:ElevationAssist.Elevation="Dp2">
                     <Expander Header="Şifre İşlemleri" IsExpanded="False" Padding="10">
                         <StackPanel Margin="10">
-                            <PasswordBox x:Name="OldPasswordBox" materialDesign:HintAssist.Hint="Mevcut Şifre" Style="{StaticResource MaterialDesignOutlinedPasswordBox}" Margin="0,0,0,10"/>
-                            <PasswordBox x:Name="NewPasswordBox" materialDesign:HintAssist.Hint="Yeni Şifre" Style="{StaticResource MaterialDesignOutlinedPasswordBox}" Margin="0,0,0,10"/>
-                            
-                            <Button Content="ŞİFREYİ DEĞİŞTİR" Style="{StaticResource MaterialDesignOutlinedButton}" 
-                                    BorderBrush="{DynamicResource PrimaryHueMidBrush}" Foreground="{DynamicResource PrimaryHueMidBrush}" 
-                                    HorizontalAlignment="Right" Click="ChangePassword_Click"/>
-                        </StackPanel>
+    <Grid Margin="0,0,0,10">
+        <PasswordBox x:Name="OldPasswordBox" materialDesign:HintAssist.Hint="Mevcut Şifre" 
+                     Style="{StaticResource MaterialDesignOutlinedPasswordBox}" 
+                     VerticalAlignment="Center"/>
+        <TextBox x:Name="OldPasswordVisibleBox" materialDesign:HintAssist.Hint="Mevcut Şifre" 
+                 Style="{StaticResource MaterialDesignOutlinedTextBox}" 
+                 Visibility="Collapsed" VerticalAlignment="Center"/>
+        <ToggleButton Style="{StaticResource MaterialDesignActionToggleButton}"
+                      HorizontalAlignment="Right" VerticalAlignment="Center"
+                      Width="32" Height="32" Margin="0,0,8,0"
+                      Click="ToggleOldPassword_Click">
+            <materialDesign:PackIcon Kind="Eye" />
+            <materialDesign:ToggleButtonAssist.OnContent>
+                <materialDesign:PackIcon Kind="EyeOff" />
+            </materialDesign:ToggleButtonAssist.OnContent>
+        </ToggleButton>
+    </Grid>
+
+    <Grid Margin="0,0,0,10">
+        <PasswordBox x:Name="NewPasswordBox" materialDesign:HintAssist.Hint="Yeni Şifre" 
+                     Style="{StaticResource MaterialDesignOutlinedPasswordBox}" 
+                     VerticalAlignment="Center"/>
+        <TextBox x:Name="NewPasswordVisibleBox" materialDesign:HintAssist.Hint="Yeni Şifre" 
+                 Style="{StaticResource MaterialDesignOutlinedTextBox}" 
+                 Visibility="Collapsed" VerticalAlignment="Center"/>
+        <ToggleButton Style="{StaticResource MaterialDesignActionToggleButton}"
+                      HorizontalAlignment="Right" VerticalAlignment="Center"
+                      Width="32" Height="32" Margin="0,0,8,0"
+                      Click="ToggleNewPassword_Click">
+            <materialDesign:PackIcon Kind="Eye" />
+            <materialDesign:ToggleButtonAssist.OnContent>
+                <materialDesign:PackIcon Kind="EyeOff" />
+            </materialDesign:ToggleButtonAssist.OnContent>
+        </ToggleButton>
+    </Grid>
+    
+    <Button Content="ŞİFREYİ DEĞİŞTİR" Style="{StaticResource MaterialDesignOutlinedButton}" 
+            BorderBrush="{DynamicResource PrimaryHueMidBrush}" Foreground="{DynamicResource PrimaryHueMidBrush}" 
+            HorizontalAlignment="Right" Click="ChangePassword_Click"/>
+</StackPanel>
                     </Expander>
                 </materialDesign:Card>
 
@@ -111,12 +145,18 @@
                             <materialDesign:PackIcon Kind="Warning" Foreground="Red" VerticalAlignment="Center" Margin="0,0,10,0"/>
                             <TextBlock Text="Tehlikeli Bölge" FontWeight="Bold" Foreground="Red" FontSize="16" VerticalAlignment="Center"/>
                         </DockPanel>
-                        
-                        <TextBlock Text="Tüm finansal verilerinizi (İşlemler, Yatırımlar, Hedefler) kalıcı olarak siler. Bu işlem geri alınamaz." 
-                                   TextWrapping="Wrap" Margin="0,0,0,15" Opacity="0.7"/>
-                        
-                        <Button Content="TÜM VERİLERİ SIFIRLA" Background="Red" BorderBrush="Red" Foreground="White" 
-                                HorizontalAlignment="Left" Click="ResetData_Click"/>
+    
+                        <TextBlock Text="Tüm finansal verilerinizi (İşlemler, Yatırımlar, Hedefler) kalıcı olarak siler." 
+                                   TextWrapping="Wrap" Margin="0,0,0,5" Opacity="0.7"/>
+                        <Button Content="TÜM VERİLERİ SIFIRLA" Background="#EF5350" BorderBrush="#EF5350" Foreground="White" 
+                                HorizontalAlignment="Left" Click="ResetData_Click" Margin="0,0,0,20"/>
+
+                        <Separator Margin="0,0,0,15"/>
+
+                        <TextBlock Text="Hesabınızı ve tüm verilerinizi kalıcı olarak siler. Bu işlemden sonra giriş yapamazsınız." 
+                                   TextWrapping="Wrap" Margin="0,0,0,5" Opacity="0.7"/>
+                        <Button Content="HESABI KALICI OLARAK SİL" Background="DarkRed" BorderBrush="DarkRed" Foreground="White" 
+                                HorizontalAlignment="Left" Click="DeleteAccount_Click"/>
                     </StackPanel>
                 </materialDesign:Card>
 

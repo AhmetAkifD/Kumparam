@@ -858,6 +858,74 @@ namespace Kumparam.Data.Repositories
             }
         }
 
+        public void DeleteUser(Guid currentUserId)
+        {
+            using (var connection = new SqlConnection(_connectionString))
+    {
+        connection.Open();
+
+        // Transaction başlatıyoruz.
+        // Amaç: Profil silinip User silinemezse, her şeyi geri al (Rollback).
+        using (var transaction = connection.BeginTransaction())
+        {
+            try
+            {
+                // 1. ADIM: Kullanıcıya bağlı yan tabloları temizle
+                
+                // Önce UserProfile silinmeli
+                string deleteProfileQuery = "DELETE FROM UserProfiles WHERE UserId = @UserId";
+                using (var cmd = new SqlCommand(deleteProfileQuery, connection, transaction))
+                {
+                    cmd.Parameters.AddWithValue("@UserId", currentUserId);
+                    cmd.ExecuteNonQuery();
+                }
+
+                // Varsa İşlemler (Gelir/Gider) tablosunu temizle
+                // (Tablo ismin Transactions, GelirGider vb. olabilir, kontrol et)
+                string deleteTransactionsQuery = "DELETE FROM Transactions WHERE UserId = @UserId"; 
+                using (var cmd = new SqlCommand(deleteTransactionsQuery, connection, transaction))
+                {
+                    cmd.Parameters.AddWithValue("@UserId", currentUserId);
+                    cmd.ExecuteNonQuery();
+                }
+
+                // Varsa Yatırımlar tablosunu temizle
+                string deleteInvestmentsQuery = "DELETE FROM Investments WHERE UserId = @UserId";
+                using (var cmd = new SqlCommand(deleteInvestmentsQuery, connection, transaction))
+                {
+                    cmd.Parameters.AddWithValue("@UserId", currentUserId);
+                    cmd.ExecuteNonQuery();
+                }
+                
+                // Varsa Hedefler (Goals) vb. diğer tabloları da buraya ekleyebilirsin...
+
+                // 2. ADIM: En son Ana Kullanıcıyı (Users) sil
+                string deleteUserQuery = "DELETE FROM Users WHERE UserId = @UserId";
+                using (var cmd = new SqlCommand(deleteUserQuery, connection, transaction))
+                {
+                    cmd.Parameters.AddWithValue("@UserId", currentUserId);
+                    int rowsAffected = cmd.ExecuteNonQuery();
+
+                    // Eğer hiç kayıt silinmediyse bir sorun var demektir
+                    if (rowsAffected == 0)
+                    {
+                        throw new Exception("Kullanıcı bulunamadı veya silinemedi.");
+                    }
+                }
+
+                // 3. ADIM: Her şey yolundaysa onayla
+                transaction.Commit();
+            }
+            catch (Exception)
+            {
+                // Hata olursa yapılan tüm silme işlemlerini geri al
+                transaction.Rollback();
+                throw; // Hatayı yukarı fırlat ki UI tarafında MessageBox ile gösterebilelim
+            }
+        }
+    }
+        }
+
         public void RestoreTransaction(int deletedId)
         {
             using (var connection = new SqlConnection(_connectionString))
