@@ -30,7 +30,7 @@ public partial class IncomeExpenseView : UserControl
         TransactionDatePicker.SelectedDate = DateTime.Now;
         StartDatePicker.SelectedDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
         EndDatePicker.SelectedDate = DateTime.Now;
-
+        LoadCategories();
         LoadTransactions();
     }
     
@@ -56,6 +56,30 @@ public partial class IncomeExpenseView : UserControl
         catch (Exception ex)
         {
             MessageBox.Show("Hata: " + ex.Message);
+        }
+    }
+    
+    private void LoadCategories()
+    {
+        try
+        {
+            // 1. Veritabanından kategorileri çek
+            // (Not: IUserRepository ve SqlUserRepository'ye GetCategories'i eklemiştik)
+            var categories = _userRepository.GetCategories();
+
+            // 2. Eğer liste boşsa (veya SQL çalışmadıysa) yedek liste oluştur
+            if (categories == null || categories.Count == 0)
+            {
+                categories = new List<string> { "Genel", "Market", "Fatura", "Yemek" };
+            }
+
+            // 3. ComboBox'a bağla
+            CategoryComboBox.ItemsSource = categories;
+        }
+        catch (Exception ex)
+        {
+            // Hata durumunda boş kalmasın
+            CategoryComboBox.ItemsSource = new List<string> { "Genel", "Diğer" };
         }
     }
 
@@ -150,20 +174,14 @@ public partial class IncomeExpenseView : UserControl
         btn.Content = icon;
     }
 
-    // 4. Karar Motoru (Aynı Kalabilir)
     private bool ShouldRedirect(Transaction t)
     {
-        if (t == null) return false; // Null kontrolü ekledik
-        
+        if (t == null) return false;
         string cat = t.Category?.ToLower(new System.Globalization.CultureInfo("tr-TR")) ?? "";
-        string type = t.Type; 
-
         if (cat.Contains("yatırım")) return true;
-
         if (cat.Contains("hedef") || cat.Contains("birikim"))
         {
-            if (type == "Expense") return true; 
-            if (type == "Income") return false; 
+            return true;
         }
 
         return false;
@@ -246,27 +264,34 @@ public partial class IncomeExpenseView : UserControl
 
     private void SaveButton_Click(object sender, RoutedEventArgs e)
     {
-        if (InputTypeComboBox.SelectedItem == null || string.IsNullOrWhiteSpace(AmountTextBox.Text) || string.IsNullOrWhiteSpace(CategoryTextBox.Text))
+        if (InputTypeComboBox.SelectedItem == null || 
+            string.IsNullOrWhiteSpace(AmountTextBox.Text) || 
+            CategoryComboBox.SelectedItem == null) // <--- DEĞİŞTİ
         {
-            MessageBox.Show("Lütfen Tipi, Tutarı ve Kategoriyi doldurun.");
+            MessageBox.Show("Lütfen Tipi, Tutarı ve Kategoriyi seçin.");
             return;
         }
 
         if (decimal.TryParse(AmountTextBox.Text, out decimal amount))
         {
             var type = ((ComboBoxItem)InputTypeComboBox.SelectedItem).Tag.ToString();
+            string selectedCategory = CategoryComboBox.SelectedItem.ToString();
             _userRepository.AddTransaction(new Transaction
             {
                 UserId = _currentUserId,
                 Amount = amount,
                 Type = type!,
-                Category = CategoryTextBox.Text,
+                Category = selectedCategory,
                 Description = DescriptionTextBox.Text,
                 TransactionDate = TransactionDatePicker.SelectedDate ?? DateTime.Now
             });
 
             MessageBox.Show("Kaydedildi!");
-            AmountTextBox.Clear(); CategoryTextBox.Clear(); DescriptionTextBox.Clear();
+        
+            AmountTextBox.Clear(); 
+            DescriptionTextBox.Clear();
+            CategoryComboBox.SelectedIndex = -1; // <--- DEĞİŞTİ
+        
             LoadTransactions();
         }
     }
