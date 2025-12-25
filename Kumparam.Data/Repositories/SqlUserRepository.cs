@@ -966,6 +966,26 @@ namespace Kumparam.Data.Repositories
                 }
             }
         }
-        
+        public List<string> GetCategories()
+        {
+            var list = new List<string>();
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                connection.Open();
+                // İsim sırasına göre getir (A-Z)
+                string query = "SELECT CategoryName FROM Categories WHERE IsActive = 1 ORDER BY CategoryName";
+                using (var cmd = new SqlCommand(query, connection))
+                {
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            list.Add(reader["CategoryName"].ToString());
+                        }
+                    }
+                }
+            }
+            return list;
+        }
     }
 }

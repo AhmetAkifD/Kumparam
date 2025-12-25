@@ -28,8 +28,11 @@
                 <TextBox x:Name="AmountTextBox" materialDesign:HintAssist.Hint="Tutar" 
                          Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,10"/>
 
-                <TextBox x:Name="CategoryTextBox" materialDesign:HintAssist.Hint="Kategori" 
-                         Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,10"/>
+                <ComboBox x:Name="CategoryComboBox" 
+                          materialDesign:HintAssist.Hint="Kategori" 
+                          Style="{StaticResource MaterialDesignOutlinedComboBox}" 
+                          Margin="0,10"
+                          IsEditable="False"/>
 
                 <DatePicker x:Name="TransactionDatePicker" materialDesign:HintAssist.Hint="İşlem Tarihi" 
                             Style="{StaticResource MaterialDesignOutlinedDatePicker}" Margin="0,10"/>
