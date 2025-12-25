@@ -305,11 +305,37 @@ public partial class InvestmentsView : UserControl
         // XAML'da sol tarafa bir "Expander" veya "Popup" koyup o formu oraya taşıyabiliriz.
         // İstersen bir sonraki adımda "Yeni Ekle" butonuna basınca açılan şık bir pencere yapalım.
     }
-    private void InvestmentComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    private async void InvestmentComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (InvestmentComboBox.SelectedItem is InvestmentOption selectedOption)
         {
+            // 1. Sembolü yaz
             SymbolTextBox.Text = selectedOption.Symbol;
+
+            // 2. Fiyat kutusuna "Yükleniyor" mesajı ver
+            CurrentPriceTextBox.Text = "Fiyat Getiriliyor...";
+            CurrentPriceTextBox.Foreground = System.Windows.Media.Brushes.Gray;
+
+            try
+            {
+                // 3. Web servisinden fiyatı çek (Async olduğu için arayüz donmaz)
+                decimal price = await _scrapingService.GetBuyingPriceAsync(selectedOption.Symbol);
+
+                // 4. Sonucu yazdır
+                if (price > 0)
+                {
+                    CurrentPriceTextBox.Text = $"{price:N2} ₺";
+                    CurrentPriceTextBox.Foreground = System.Windows.Media.Brushes.Black; // Rengi düzelt
+                }
+                else
+                {
+                    CurrentPriceTextBox.Text = "Fiyat Alınamadı";
+                }
+            }
+            catch (Exception ex)
+            {
+                CurrentPriceTextBox.Text = "Hata";
+            }
         }
     }
     // --- YENİ: SİLME (İPTAL) İŞLEMİ ---
