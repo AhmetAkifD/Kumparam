@@ -15,67 +15,78 @@
             <RowDefinition Height="*"/>    <!-- Grafikler -->
         </Grid.RowDefinitions>
 
-        <!-- 1. KONTROL PANELİ -->
-        <materialDesign:Card Grid.Row="0" Margin="0,0,0,20" Padding="15" UniformCornerRadius="8">
-            <WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
-                <materialDesign:PackIcon Kind="FilterVariant" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                <TextBlock Text="Görüntüle:" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,20,0"/>
+        <!-- 1. KONTROL PANELİ: İki kart yan yana (sol: filtreler, sağ: PDF butonu) -->
+        <Grid Grid.Row="0" Margin="0,0,0,20">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
 
-                <CheckBox x:Name="TogglePie" Content="Harcama Pastası" 
-                          Style="{StaticResource MaterialDesignFilterChipCheckBox}" 
-                          IsChecked="True" Checked="ToggleChart_Checked" Unchecked="ToggleChart_Unchecked" Margin="0,0,5,5"/>
-                
-                <CheckBox x:Name="ToggleBar" Content="6 Aylık Özet" 
-                          Style="{StaticResource MaterialDesignFilterChipCheckBox}" 
-                          IsChecked="True" Checked="ToggleChart_Checked" Unchecked="ToggleChart_Unchecked" Margin="0,0,5,5"/>
-                
-                <CheckBox x:Name="ToggleLine" Content="Varlık Trendi" 
-                          Style="{StaticResource MaterialDesignFilterChipCheckBox}" 
-                          IsChecked="True" Checked="ToggleChart_Checked" Unchecked="ToggleChart_Unchecked" Margin="0,0,5,5"/>
+            <!-- Sol Kart: Filtreler ve toggle'lar (PDF butonu çıkarıldı) -->
+            <materialDesign:Card Grid.Column="0" Padding="15" UniformCornerRadius="8" Margin="0,0,10,0">
+                <WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <materialDesign:PackIcon Kind="FilterVariant" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                    <TextBlock Text="Görüntüle:" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,20,0"/>
 
-                <CheckBox x:Name="ToggleDays" Content="Haftalık Alışkanlık" 
-                          Style="{StaticResource MaterialDesignFilterChipCheckBox}" 
-                          IsChecked="True" Checked="ToggleChart_Checked" Unchecked="ToggleChart_Unchecked" Margin="0,0,5,5"/>
+                    <CheckBox x:Name="TogglePie" Content="Harcama Pastası" 
+                              Style="{StaticResource MaterialDesignFilterChipCheckBox}" 
+                              IsChecked="True" Checked="ToggleChart_Checked" Unchecked="ToggleChart_Unchecked" Margin="0,0,5,5"/>
+                    
+                    <CheckBox x:Name="ToggleBar" Content="6 Aylık Özet" 
+                              Style="{StaticResource MaterialDesignFilterChipCheckBox}" 
+                              IsChecked="True" Checked="ToggleChart_Checked" Unchecked="ToggleChart_Unchecked" Margin="0,0,5,5"/>
+                    
+                    <CheckBox x:Name="ToggleLine" Content="Varlık Trendi" 
+                              Style="{StaticResource MaterialDesignFilterChipCheckBox}" 
+                              IsChecked="True" Checked="ToggleChart_Checked" Unchecked="ToggleChart_Unchecked" Margin="0,0,5,5"/>
 
-                <CheckBox x:Name="ToggleStacked" Content="Aylık Kategori Detayı" 
-                          Style="{StaticResource MaterialDesignFilterChipCheckBox}" 
-                          IsChecked="True" Checked="ToggleChart_Checked" Unchecked="ToggleChart_Unchecked" Margin="0,0,5,5"/>
+                    <CheckBox x:Name="ToggleDays" Content="Haftalık Alışkanlık" 
+                              Style="{StaticResource MaterialDesignFilterChipCheckBox}" 
+                              IsChecked="True" Checked="ToggleChart_Checked" Unchecked="ToggleChart_Unchecked" Margin="0,0,5,5"/>
 
-                <CheckBox x:Name="ToggleWaterfall" Content="Bütçe Akışı" 
-                          Style="{StaticResource MaterialDesignFilterChipCheckBox}" 
-                          IsChecked="True" Checked="ToggleChart_Checked" Unchecked="ToggleChart_Unchecked" Margin="0,0,5,5"/>
+                    <CheckBox x:Name="ToggleStacked" Content="Aylık Kategori Detayı" 
+                              Style="{StaticResource MaterialDesignFilterChipCheckBox}" 
+                              IsChecked="True" Checked="ToggleChart_Checked" Unchecked="ToggleChart_Unchecked" Margin="0,0,5,5"/>
 
-                <!-- 50/30/20 KURALI -->
-                <CheckBox x:Name="ToggleBudget" Content="50/30/20 Kuralı" 
-                          Style="{StaticResource MaterialDesignFilterChipCheckBox}" 
-                          IsChecked="True" Checked="ToggleChart_Checked" Unchecked="ToggleChart_Unchecked" Margin="0,0,5,5"/>
+                    <CheckBox x:Name="ToggleWaterfall" Content="Bütçe Akışı" 
+                              Style="{StaticResource MaterialDesignFilterChipCheckBox}" 
+                              IsChecked="True" Checked="ToggleChart_Checked" Unchecked="ToggleChart_Unchecked" Margin="0,0,5,5"/>
 
-                <!-- PDF İNDİR BUTONU -->
-                <Button Style="{StaticResource MaterialDesignRaisedButton}" 
-                        Background="#D32F2F" BorderBrush="#D32F2F"
-                        Click="DownloadPdf_Click" 
-                        Margin="20,0,0,0" Height="30" FontSize="12" Padding="10,0">
-                    <StackPanel Orientation="Horizontal">
-                        <materialDesign:PackIcon Kind="FilePdfBox" Margin="0,0,5,0" VerticalAlignment="Center"/>
-                        <TextBlock Text="PDF İNDİR"/>
-                    </StackPanel>
-                </Button>
-            </WrapPanel>
-        </materialDesign:Card>
+                    <!-- 50/30/20 KURALI -->
+                    <CheckBox x:Name="ToggleBudget" Content="50/30/20 Kuralı" 
+                              Style="{StaticResource MaterialDesignFilterChipCheckBox}" 
+                              IsChecked="True" Checked="ToggleChart_Checked" Unchecked="ToggleChart_Unchecked" Margin="0,0,5,5"/>
+                </WrapPanel>
+            </materialDesign:Card>
+
+            <!-- Sağ Kart: PDF İndir butonunu barındırır -->
+            <materialDesign:Card Grid.Column="1" Padding="10" UniformCornerRadius="8" VerticalAlignment="Center" materialDesign:ElevationAssist.Elevation="Dp1" Height="104" Margin="0,0,17,0">
+                <Grid>
+                    <Button Style="{StaticResource MaterialDesignRaisedButton}" 
+                            Background="#D32F2F" BorderBrush="#D32F2F"
+                            Click="DownloadPdf_Click" 
+                            Height="36" MinWidth="120" FontSize="12" Padding="12,0">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <materialDesign:PackIcon Kind="FilePdfBox" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="PDF İNDİR"/>
+                        </StackPanel>
+                    </Button>
+                </Grid>
+            </materialDesign:Card>
+        </Grid>
 
         <!-- 2. GRAFİK ALANI -->
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
             <StackPanel x:Name="ChartsPanel">
-                
-                <!-- A. PASTA & SÜTUN (YAN YANA) -->
+                <!-- A. PASTA & SÜTUN (ALT ALTA) -->
                 <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="1*"/>
-                        <ColumnDefinition Width="1.5*"/>
-                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
 
                     <!-- Pasta Grafik -->
-                    <materialDesign:Card x:Name="CardPie" Grid.Column="0" Margin="0,0,10,20" UniformCornerRadius="10" materialDesign:ElevationAssist.Elevation="Dp2" Height="400">
+                    <materialDesign:Card x:Name="CardPie" Grid.Row="0" Margin="0,0,0,20" UniformCornerRadius="10" materialDesign:ElevationAssist.Elevation="Dp2" Height="400">
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
@@ -94,7 +105,7 @@
                     </materialDesign:Card>
 
                     <!-- Sütun Grafik (6 Ay) -->
-                    <materialDesign:Card x:Name="CardBar" Grid.Column="1" Margin="10,0,0,20" UniformCornerRadius="10" materialDesign:ElevationAssist.Elevation="Dp2" Height="400">
+                    <materialDesign:Card x:Name="CardBar" Grid.Row="1" Margin="0,0,0,20" UniformCornerRadius="10" materialDesign:ElevationAssist.Elevation="Dp2" Height="400">
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>

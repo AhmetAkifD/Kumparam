@@ -99,6 +99,7 @@ namespace Kumparam.Pages.DashboardSubPages
                     .Where(t => t.Type == "Expense")
                     .GroupBy(t => t.Category)
                     .Select(g => new { Category = g.Key, Total = g.Sum(t => t.Amount) })
+                    .Where(x => x.Total > 0)
                     .OrderByDescending(x => x.Total)
                     .ToList();
 
@@ -111,18 +112,17 @@ namespace Kumparam.Pages.DashboardSubPages
                         {
                             Values = new decimal[] { item.Total },
                             Name = item.Category,
-                            InnerRadius = 25, 
+                            InnerRadius = 25,
                             DataLabelsSize = 12,
-                            DataLabelsPaint = new SolidColorPaint(SKColors.Black), 
-                            DataLabelsPosition = LiveChartsCore.Measure.PolarLabelsPosition.Outer, 
-                            DataLabelsFormatter = point => $"{point.PrimaryValue:N0}₺"
-                            // PieSeries için ToolTipLabelFormatter doğru, değiştirmeye gerek yok.
+                            DataLabelsPaint = new SolidColorPaint(SKColors.Black),
+                            DataLabelsPosition = LiveChartsCore.Measure.PolarLabelsPosition.Outer,
+                            DataLabelsFormatter = point => point.PrimaryValue > 0 ? $"{point.PrimaryValue:N0}₺" : string.Empty
                         });
                     }
                     PieChartContainer.Content = new PieChart
                     {
                         Series = pieSeries,
-                        LegendPosition = LiveChartsCore.Measure.LegendPosition.Right, 
+                        LegendPosition = LiveChartsCore.Measure.LegendPosition.Right,
                     };
                 }
                 else
@@ -141,12 +141,12 @@ namespace Kumparam.Pages.DashboardSubPages
 
                 foreach (var date in last6Months)
                 {
-                    labels.Add(date.ToString("MMMM")); 
+                    labels.Add(date.ToString("MMMM"));
                     var monthTrans = allTransactions.Where(t => t.TransactionDate.Month == date.Month && t.TransactionDate.Year == date.Year).ToList();
 
                     decimal income = monthTrans.Where(t => t.Type == "Income").Sum(t => t.Amount);
                     decimal expense = monthTrans.Where(t => t.Type == "Expense").Sum(t => t.Amount) * -1;
-                    
+
                     incomeValues.Add(income);
                     expenseValues.Add(expense);
                     netValues.Add(income + expense);
@@ -156,22 +156,37 @@ namespace Kumparam.Pages.DashboardSubPages
                     var cumulativeExpense = allTransactions.Where(t => t.TransactionDate <= cumulativeDate && t.Type == "Expense").Sum(t => t.Amount);
                     balanceValues.Add(cumulativeIncome - cumulativeExpense);
                 }
-                
+
                 BarChartContainer.Content = new CartesianChart
                 {
                     Series = new ISeries[]
                     {
-                        new StackedColumnSeries<decimal> 
-                        { 
-                            Name = "Gelir", Values = incomeValues.ToArray(), Fill = new SolidColorPaint(SKColors.MediumSeaGreen), MaxBarWidth = 25, StackGroup = 0
+                        new StackedColumnSeries<decimal>
+                        {
+                            Name = "Gelir",
+                            Values = incomeValues.ToArray(),
+                            Fill = new SolidColorPaint(SKColors.MediumSeaGreen),
+                            MaxBarWidth = 25,
+                            StackGroup = 0,
+                            DataLabelsFormatter = point => point.PrimaryValue > 0 ? $"{point.PrimaryValue:N0}₺" : string.Empty
                         },
-                        new StackedColumnSeries<decimal> 
-                        { 
-                            Name = "Gider", Values = expenseValues.ToArray(), Fill = new SolidColorPaint(SKColors.IndianRed), MaxBarWidth = 25, StackGroup = 0,
+                        new StackedColumnSeries<decimal>
+                        {
+                            Name = "Gider",
+                            Values = expenseValues.ToArray(),
+                            Fill = new SolidColorPaint(SKColors.IndianRed),
+                            MaxBarWidth = 25,
+                            StackGroup = 0,
+                            DataLabelsFormatter = point => point.PrimaryValue > 0 ? $"{point.PrimaryValue:N0}₺" : string.Empty
                         },
-                        new StackedColumnSeries<decimal> 
-                        { 
-                            Name = "Fark", Values = netValues.ToArray(), Fill = new SolidColorPaint(SKColors.DodgerBlue), MaxBarWidth = 25, StackGroup = 1,
+                        new StackedColumnSeries<decimal>
+                        {
+                            Name = "Fark",
+                            Values = netValues.ToArray(),
+                            Fill = new SolidColorPaint(SKColors.DodgerBlue),
+                            MaxBarWidth = 25,
+                            StackGroup = 1,
+                            DataLabelsFormatter = point => point.PrimaryValue > 0 ? $"{point.PrimaryValue:N0}₺" : string.Empty
                         }
                     },
                     XAxes = new Axis[] { new Axis { Labels = labels.ToArray(), TextSize = 12, LabelsPaint = new SolidColorPaint(SKColors.Black) } },
@@ -187,7 +202,8 @@ namespace Kumparam.Pages.DashboardSubPages
                     .GroupBy(t => t.Category)
                     .Select(g => new { Cat = g.Key, Total = g.Sum(t => t.Amount) })
                     .OrderByDescending(x => x.Total)
-                    .Take(5) 
+                    .Where(x => x.Total > 0)       // sadece toplamı sıfırdan büyük olan kategoriler
+                    .Take(5)
                     .Select(x => x.Cat)
                     .ToList();
 
@@ -197,19 +213,24 @@ namespace Kumparam.Pages.DashboardSubPages
                     foreach (var date in last6Months)
                     {
                         var sum = allTransactions
-                            .Where(t => t.TransactionDate.Month == date.Month && t.TransactionDate.Year == date.Year 
+                            .Where(t => t.TransactionDate.Month == date.Month && t.TransactionDate.Year == date.Year
                                         && t.Type == "Expense" && t.Category == cat)
                             .Sum(t => t.Amount);
-                        catValues.Add(sum); 
+                        catValues.Add(sum);
                     }
 
-                    stackedSeries.Add(new StackedColumnSeries<decimal>
+                    // eğer bu kategori için tüm aylar sıfırsa ekleme
+                    if (catValues.Any(v => v > 0))
                     {
-                        Name = cat,
-                        Values = catValues.ToArray(),
-                        MaxBarWidth = 40,
-                        DataLabelsSize = 0
-                    });
+                        stackedSeries.Add(new StackedColumnSeries<decimal>
+                        {
+                            Name = cat,
+                            Values = catValues.ToArray(),
+                            MaxBarWidth = 40,
+                            DataLabelsSize = 10,
+                            DataLabelsFormatter = point => point.PrimaryValue > 0 ? $"{point.PrimaryValue:N0}₺" : string.Empty
+                        });
+                    }
                 }
 
                 var otherValues = new List<decimal>();
@@ -217,11 +238,11 @@ namespace Kumparam.Pages.DashboardSubPages
                 foreach (var date in last6Months)
                 {
                     var sum = allTransactions
-                        .Where(t => t.TransactionDate.Month == date.Month && t.TransactionDate.Year == date.Year 
+                        .Where(t => t.TransactionDate.Month == date.Month && t.TransactionDate.Year == date.Year
                                     && t.Type == "Expense" && !topCategories.Contains(t.Category))
                         .Sum(t => t.Amount);
                     otherValues.Add(sum);
-                    if(sum > 0) hasOthers = true;
+                    if (sum > 0) hasOthers = true;
                 }
 
                 if (hasOthers)
@@ -232,7 +253,8 @@ namespace Kumparam.Pages.DashboardSubPages
                         Values = otherValues.ToArray(),
                         Fill = new SolidColorPaint(SKColors.Gray),
                         MaxBarWidth = 40,
-                        DataLabelsSize = 0,
+                        DataLabelsSize = 10,
+                        DataLabelsFormatter = point => point.PrimaryValue > 0 ? $"{point.PrimaryValue:N0}₺" : string.Empty
                     });
                 }
 
@@ -241,74 +263,92 @@ namespace Kumparam.Pages.DashboardSubPages
                     Series = stackedSeries,
                     XAxes = new Axis[] { new Axis { Labels = labels.ToArray(), TextSize = 12, LabelsPaint = new SolidColorPaint(SKColors.Black) } },
                     YAxes = new Axis[] { new Axis { Labeler = value => value.ToString("N0") + "₺", TextSize = 12 } },
-                    LegendPosition = LiveChartsCore.Measure.LegendPosition.Right, 
+                    LegendPosition = LiveChartsCore.Measure.LegendPosition.Right,
                     ZoomMode = LiveChartsCore.Measure.ZoomAndPanMode.None
                 };
 
                 // --- 4. WATERFALL (Bu Ayın Bütçe Akışı) ---
                 var thisMonth = DateTime.Now;
                 var thisMonthTrans = allTransactions.Where(t => t.TransactionDate.Month == thisMonth.Month && t.TransactionDate.Year == thisMonth.Year).ToList();
-                
+
                 decimal thisMonthIncome = thisMonthTrans.Where(t => t.Type == "Income").Sum(t => t.Amount);
                 decimal thisMonthRemaining = thisMonthIncome - thisMonthTrans.Where(t => t.Type == "Expense").Sum(t => t.Amount);
 
                 var waterfallSeries = new List<ISeries>();
 
-                // Sütun 1: Gelir
-                waterfallSeries.Add(new StackedColumnSeries<decimal> 
-                { 
-                    Name = "Gelir", Values = new decimal[] { thisMonthIncome, 0, 0 }, 
-                    Fill = new SolidColorPaint(SKColors.MediumSeaGreen), 
-                    Stroke = new SolidColorPaint(SKColors.White) { StrokeThickness = 2 },
-                    MaxBarWidth = 50, StackGroup = 0
-                });
+                // Sütun 1: Gelir (ekle, ama tooltip için gösterim sadece >0 olacak)
+                if (thisMonthIncome > 0)
+                {
+                    waterfallSeries.Add(new StackedColumnSeries<decimal>
+                    {
+                        Name = "Gelir",
+                        Values = new decimal[] { thisMonthIncome, 0, 0 },
+                        Fill = new SolidColorPaint(SKColors.MediumSeaGreen),
+                        Stroke = new SolidColorPaint(SKColors.White) { StrokeThickness = 2 },
+                        MaxBarWidth = 50,
+                        StackGroup = 0,
+                        DataLabelsFormatter = point => point.PrimaryValue > 0 ? $"{point.PrimaryValue:N0}₺" : string.Empty
+                    });
+                }
 
-                // Sütun 2: Giderler (Top 4 + Diğer)
+                // Sütun 2: Giderler (Top 4 + Diğer) - sadece >0 olanları ekle
                 var expensesGroups = thisMonthTrans.Where(t => t.Type == "Expense")
                     .GroupBy(t => t.Category)
                     .Select(g => new { Cat = g.Key, Sum = g.Sum(t => t.Amount) })
                     .OrderByDescending(x => x.Sum)
                     .ToList();
 
-                var topWaterfall = expensesGroups.Take(4).ToList(); 
-                var otherWaterfall = expensesGroups.Skip(4).Sum(x => x.Sum); 
+                var topWaterfall = expensesGroups.Where(x => x.Sum > 0).Take(4).ToList();
+                var otherWaterfall = expensesGroups.Where(x => x.Sum > 0).Skip(4).Sum(x => x.Sum);
 
                 foreach (var item in topWaterfall)
                 {
-                    waterfallSeries.Add(new StackedColumnSeries<decimal> 
-                    { 
-                        Name = item.Cat, Values = new decimal[] { 0, item.Sum, 0 }, 
-                        MaxBarWidth = 50, StackGroup = 0,
-                        Stroke = new SolidColorPaint(SKColors.White) { StrokeThickness = 1 }
+                    waterfallSeries.Add(new StackedColumnSeries<decimal>
+                    {
+                        Name = item.Cat,
+                        Values = new decimal[] { 0, item.Sum, 0 },
+                        MaxBarWidth = 50,
+                        StackGroup = 0,
+                        Stroke = new SolidColorPaint(SKColors.White) { StrokeThickness = 1 },
+                        DataLabelsFormatter = point => point.PrimaryValue > 0 ? $"{point.PrimaryValue:N0}₺" : string.Empty
                     });
                 }
 
                 if (otherWaterfall > 0)
                 {
-                    waterfallSeries.Add(new StackedColumnSeries<decimal> 
-                    { 
-                        Name = "Diğer Giderler", Values = new decimal[] { 0, otherWaterfall, 0 }, 
+                    waterfallSeries.Add(new StackedColumnSeries<decimal>
+                    {
+                        Name = "Diğer Giderler",
+                        Values = new decimal[] { 0, otherWaterfall, 0 },
                         Fill = new SolidColorPaint(SKColors.Gray),
-                        MaxBarWidth = 50, StackGroup = 0,
-                        Stroke = new SolidColorPaint(SKColors.White) { StrokeThickness = 1 }
+                        MaxBarWidth = 50,
+                        StackGroup = 0,
+                        Stroke = new SolidColorPaint(SKColors.White) { StrokeThickness = 1 },
+                        DataLabelsFormatter = point => point.PrimaryValue > 0 ? $"{point.PrimaryValue:N0}₺" : string.Empty
                     });
                 }
 
-                // Sütun 3: Kalan
-                waterfallSeries.Add(new StackedColumnSeries<decimal> 
-                { 
-                    Name = "Kalan", Values = new decimal[] { 0, 0, thisMonthRemaining }, 
-                    Fill = new SolidColorPaint(thisMonthRemaining >= 0 ? SKColors.DodgerBlue : SKColors.Red), 
-                    MaxBarWidth = 50, StackGroup = 0,
-                    Stroke = new SolidColorPaint(SKColors.White) { StrokeThickness = 2 }
-                });
+                // Sütun 3: Kalan (ekle yalnızca gerçek değeri göster)
+                if (thisMonthRemaining != 0)
+                {
+                    waterfallSeries.Add(new StackedColumnSeries<decimal>
+                    {
+                        Name = "Kalan",
+                        Values = new decimal[] { 0, 0, thisMonthRemaining },
+                        Fill = new SolidColorPaint(thisMonthRemaining >= 0 ? SKColors.DodgerBlue : SKColors.Red),
+                        MaxBarWidth = 50,
+                        StackGroup = 0,
+                        Stroke = new SolidColorPaint(SKColors.White) { StrokeThickness = 2 },
+                        DataLabelsFormatter = point => point.PrimaryValue > 0 ? $"{point.PrimaryValue:N0}₺" : string.Empty
+                    });
+                }
 
                 WaterfallChartContainer.Content = new CartesianChart
                 {
                     Series = waterfallSeries,
                     XAxes = new Axis[] { new Axis { Labels = new[] { "Toplam Gelir", "Harcamalar", "Kalan Bakiye" }, TextSize = 13, LabelsPaint = new SolidColorPaint(SKColors.Black) } },
                     YAxes = new Axis[] { new Axis { Labeler = value => value.ToString("N0") + "₺", TextSize = 12 } },
-                    LegendPosition = LiveChartsCore.Measure.LegendPosition.Right, 
+                    LegendPosition = LiveChartsCore.Measure.LegendPosition.Right,
                     ZoomMode = LiveChartsCore.Measure.ZoomAndPanMode.None
                 };
 
@@ -321,7 +361,8 @@ namespace Kumparam.Pages.DashboardSubPages
                         {
                             Name = "Toplam Bakiye", Values = balanceValues.ToArray(),
                             Fill = new SolidColorPaint(SKColors.Gold.WithAlpha(50)), Stroke = new SolidColorPaint(SKColors.Goldenrod) { StrokeThickness = 4 },
-                            GeometrySize = 12, GeometryStroke = new SolidColorPaint(SKColors.Orange), GeometryFill = new SolidColorPaint(SKColors.White), LineSmoothness = 0.5
+                            GeometrySize = 12, GeometryStroke = new SolidColorPaint(SKColors.Orange), GeometryFill = new SolidColorPaint(SKColors.White), LineSmoothness = 0.5,
+                            DataLabelsFormatter = point => point.PrimaryValue > 0 ? $"{point.PrimaryValue:N0}₺" : string.Empty
                         }
                     },
                     XAxes = new Axis[] { new Axis { Labels = labels.ToArray(), TextSize = 13, LabelsPaint = new SolidColorPaint(SKColors.Black) } },
@@ -341,18 +382,18 @@ namespace Kumparam.Pages.DashboardSubPages
                 {
                     Series = new ISeries[]
                     {
-                        new ColumnSeries<decimal> 
-                        { 
-                            Name = "Toplam Harcama", Values = dayValues.ToArray(), Fill = new SolidColorPaint(SKColors.SlateBlue), MaxBarWidth = 50, Rx = 10, Ry = 10
+                        new ColumnSeries<decimal>
+                        {
+                            Name = "Toplam Harcama", Values = dayValues.ToArray(), Fill = new SolidColorPaint(SKColors.SlateBlue), MaxBarWidth = 50, Rx = 10, Ry = 10,
+                            DataLabelsFormatter = point => point.PrimaryValue > 0 ? $"{point.PrimaryValue:N0}₺" : string.Empty
                         }
                     },
                     XAxes = new Axis[] { new Axis { Labels = turkishDays, TextSize = 13, LabelsPaint = new SolidColorPaint(SKColors.Black) } },
                     YAxes = new Axis[] { new Axis { Labeler = value => value.ToString("N0") + "₺", TextSize = 12 } },
                     ZoomMode = LiveChartsCore.Measure.ZoomAndPanMode.None
                 };
+
                 CalculateBudgetRule(allTransactions);
-
-
             }
             catch (Exception ex)
             {
