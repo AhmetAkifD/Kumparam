@@ -30,7 +30,7 @@
             <StackPanel>
                 <TextBlock Text="🎯 Yeni Hedef" Style="{StaticResource MaterialDesignHeadline6TextBlock}" Margin="0,0,0,15"/>
 
-                <TextBox x:Name="TitleTextBox" materialDesign:HintAssist.Hint="Hedef Başlığı (Örn: Araba)" 
+                <TextBox x:Name="TitleTextBox" materialDesign:HintAssist.Hint="Hedef Başlığı" 
                          Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,10"/>
 
                 <TextBox x:Name="TargetAmountTextBox" materialDesign:HintAssist.Hint="Hedeflenen Tutar (₺)" 
