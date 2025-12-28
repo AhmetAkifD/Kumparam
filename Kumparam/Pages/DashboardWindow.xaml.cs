@@ -36,12 +36,20 @@ public partial class DashboardWindow : Window
             // Eğer profil boşsa veya isim girilmemişse, eski usül E-posta göster
             WelcomeText.Text = _currentUser.Email;
         }
-        MainContentArea.Content = new SummaryView(_currentUser.UserId);
+        NavigateTo(new SummaryView(_currentUser.UserId));
         CheckScreenResolution();
         if (_currentUser.IsAdmin)
         {
             AdminPanelButton.Visibility = Visibility.Visible;
         }
+    }
+    
+    private void NavigateTo(UserControl newPage)
+    {
+        MainContentArea.Content = null;
+        System.GC.Collect();
+        System.GC.WaitForPendingFinalizers();
+        MainContentArea.Content = newPage;
     }
     
     private void Logout_Button_Click(object sender, RoutedEventArgs e)
@@ -50,51 +58,46 @@ public partial class DashboardWindow : Window
         loginWindow.Show();
         this.Close();
     }
+    
     private void AdminPanelButton_Click(object sender, RoutedEventArgs e)
     {
-        MainContentArea.Content = new AdminView(); // Admin sayfasını aç
+        NavigateTo(new AdminView()); 
     }
 
-    // Yeni: Metotları güncelledik, artık ID gönderiyoruz
     private void SummaryButton_Click(object sender, RoutedEventArgs e)
     {
-        MainContentArea.Content = new SummaryView(_currentUser.UserId);
+        NavigateTo(new SummaryView(_currentUser.UserId));
     }
 
     private void IncomeExpenseButton_Click(object sender, RoutedEventArgs e)
     {
-        MainContentArea.Content = new IncomeExpenseView(_currentUser.UserId);
+        NavigateTo(new IncomeExpenseView(_currentUser.UserId));
     }
-    
+
     private void AnalysisButton_Click(object sender, RoutedEventArgs e)
     {
-        MainContentArea.Content = new AnalysisView(_currentUser.UserId);
+        NavigateTo(new AnalysisView(_currentUser.UserId));
     }
 
     private void InvestmentsButton_Click(object sender, RoutedEventArgs e)
     {
-        MainContentArea.Content = new InvestmentsView(_currentUser.UserId);
+        NavigateTo(new InvestmentsView(_currentUser.UserId));
     }
 
     private void GoalsButton_Click(object sender, RoutedEventArgs e)
     {
         try
         {
-            // Hata muhtemelen bu satır çalışırken (Constructor veya LoadGoals içinde) oluyor
-            MainContentArea.Content = new GoalsView(_currentUser.UserId);
+            NavigateTo(new GoalsView(_currentUser.UserId));
         }
         catch (Exception ex)
         {
-            // Uygulamayı kapatma, hatayı yüzümüze söyle!
-            MessageBox.Show($"HATA DETAYI:\n\n{ex.Message}\n\nKAYNAK:\n{ex.StackTrace}", 
-                "Hedefler Sayfası Açılmadı", 
-                MessageBoxButton.OK, 
-                MessageBoxImage.Error);
+            MessageBox.Show($"Hata: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
     private void ProfileButton_Click(object sender, RoutedEventArgs e)
     {
-        MainContentArea.Content = new ProfileView(_currentUser.UserId, _currentUser.Email);
+        NavigateTo(new ProfileView(_currentUser.UserId, _currentUser.Email));
     }
     private void CheckScreenResolution()
     {
