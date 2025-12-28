@@ -52,7 +52,7 @@ namespace Kumparam.Pages.DashboardSubPages
                     // --- SOL KART GÜNCELLEME ---
                     if (_userEmail.ToLower().Contains("admin")) 
                     {
-                        TxtUserRole.Text = "Yönetici (Admin)";
+                        TxtUserRole.Text = "Yönetici";
                         TxtUserRole.Foreground = System.Windows.Media.Brushes.Red; // Admin kırmızı görünsün
                     }
                     else
@@ -146,7 +146,7 @@ namespace Kumparam.Pages.DashboardSubPages
                 try
                 {
                     _userRepository.ResetUserData(_currentUserId);
-                    MessageBox.Show("Hesabınız temizlendi. Temiz bir başlangıç! 🧹");
+                    MessageBox.Show("Hesabınız temizlendi. 🧹");
                 }
                 catch (Exception ex)
                 {
@@ -220,7 +220,7 @@ namespace Kumparam.Pages.DashboardSubPages
         private void DeleteAccount_Click(object sender, RoutedEventArgs e)
         {
             var result = MessageBox.Show(
-                "DİKKAT! Hesabınız tamamen silinecek. Bu işlem geri alınamaz!\n\nDevam etmek istiyor musunuz?", 
+                "DİKKAT! Hesabınız tamamen silinecek. Bu işlem geri alınamaz!\n", 
                 "Hesap Silme", 
                 MessageBoxButton.YesNo, 
                 MessageBoxImage.Warning);
@@ -229,7 +229,7 @@ namespace Kumparam.Pages.DashboardSubPages
             {
                 // İkinci bir onay daha alalım (Çok kritik işlem)
                 var finalConfirm = MessageBox.Show(
-                    "Son kararın mı? Tüm verilerin uçup gidecek.", 
+                    "Verilerinizin silinmesi için bir kere daha onaylayınız.", 
                     "Son Onay", 
                     MessageBoxButton.YesNo, 
                     MessageBoxImage.Question);
@@ -242,7 +242,7 @@ namespace Kumparam.Pages.DashboardSubPages
                         // Eğer Repository'de DeleteUser yoksa eklememiz lazım!
                         _userRepository.DeleteUser(_currentUserId); 
 
-                        MessageBox.Show("Hesabınız silindi. Üzüldük... 😔");
+                        MessageBox.Show("Hesabınız silindi.");
 
                         // 2. Dashboard'ı kapat ve Login ekranını aç
                         // UserControl'ün içinde olduğumuz için Parent Window'u bulmamız lazım
