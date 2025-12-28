@@ -346,10 +346,10 @@ public partial class InvestmentsView : UserControl
             // Kullanıcıya ne olacağını net anlatan bir uyarı
             var result = MessageBox.Show(
                 $"DİKKAT: '{item.Name}' varlığını tamamen silmek üzeresiniz.\n\n" +
-                $"Bu bir 'Satış' değildir. Kayıt hatalı olduğu için siliniyorsa:\n" +
+                $"Bu bir 'Satış' değildir.\n" +
                 $"Bu varlık için harcanan toplam {item.TotalQuantity * item.AverageCost:N2} ₺ bakiyenize İADE edilecektir.\n\n" +
                 "Onaylıyor musunuz?", 
-                "Yatırım Silme / İptal", 
+                "Yatırım Silme", 
                 MessageBoxButton.YesNo, 
                 MessageBoxImage.Warning);
 

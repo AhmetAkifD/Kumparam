@@ -1,8 +1,10 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
+using System.Configuration;
 using Kumparam.Core;
 using Kumparam.Core.Models;
-// YENİ NAMESPACE'İ BURAYA EKLEDİK
+using Kumparam.Core.Interfaces;
+using Kumparam.Data.Repositories;
 using Kumparam.Pages.DashboardSubPages; 
 
 namespace Kumparam.Pages;
@@ -15,9 +17,25 @@ public partial class DashboardWindow : Window
     {
         InitializeComponent();
         _currentUser = user;
-        WelcomeText.Text = _currentUser.Email;
+        
+        // 1. Veritabanı bağlantısını hazırla
+        string connectionString = ConfigurationManager.ConnectionStrings["KumparamDB"].ConnectionString;
+        IUserRepository userRepository = new SqlUserRepository(connectionString);
 
-        // Varsayılan sayfa: Özet Durum
+        // 2. Kullanıcının profil bilgilerini çek (Ad, Soyad vb.)
+        var userProfile = userRepository.GetUserProfile(_currentUser.UserId);
+
+        // 3. İsim var mı kontrol et ve yazdır
+        if (userProfile != null && (!string.IsNullOrEmpty(userProfile.FirstName) || !string.IsNullOrEmpty(userProfile.LastName)))
+        {
+            // Ad ve Soyadı birleştirip yaz (Ör: Ahmet Yılmaz)
+            WelcomeText.Text = $"{userProfile.FirstName} {userProfile.LastName}";
+        }
+        else
+        {
+            // Eğer profil boşsa veya isim girilmemişse, eski usül E-posta göster
+            WelcomeText.Text = _currentUser.Email;
+        }
         MainContentArea.Content = new SummaryView(_currentUser.UserId);
         CheckScreenResolution();
         if (_currentUser.IsAdmin)

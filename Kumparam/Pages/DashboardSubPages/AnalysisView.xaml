@@ -28,7 +28,7 @@
                     <materialDesign:PackIcon Kind="FilterVariant" VerticalAlignment="Center" Margin="0,0,10,0"/>
                     <TextBlock Text="Görüntüle:" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,20,0"/>
 
-                    <CheckBox x:Name="TogglePie" Content="Harcama Pastası" 
+                    <CheckBox x:Name="TogglePie" Content="Harcama Dağılımı" 
                               Style="{StaticResource MaterialDesignFilterChipCheckBox}" 
                               IsChecked="True" Checked="ToggleChart_Checked" Unchecked="ToggleChart_Unchecked" Margin="0,0,5,5"/>
                     
@@ -36,7 +36,7 @@
                               Style="{StaticResource MaterialDesignFilterChipCheckBox}" 
                               IsChecked="True" Checked="ToggleChart_Checked" Unchecked="ToggleChart_Unchecked" Margin="0,0,5,5"/>
                     
-                    <CheckBox x:Name="ToggleLine" Content="Varlık Trendi" 
+                    <CheckBox x:Name="ToggleLine" Content="Varlık Gelişimi" 
                               Style="{StaticResource MaterialDesignFilterChipCheckBox}" 
                               IsChecked="True" Checked="ToggleChart_Checked" Unchecked="ToggleChart_Unchecked" Margin="0,0,5,5"/>
 
@@ -44,7 +44,7 @@
                               Style="{StaticResource MaterialDesignFilterChipCheckBox}" 
                               IsChecked="True" Checked="ToggleChart_Checked" Unchecked="ToggleChart_Unchecked" Margin="0,0,5,5"/>
 
-                    <CheckBox x:Name="ToggleStacked" Content="Aylık Kategori Detayı" 
+                    <CheckBox x:Name="ToggleStacked" Content="Aylık Gider" 
                               Style="{StaticResource MaterialDesignFilterChipCheckBox}" 
                               IsChecked="True" Checked="ToggleChart_Checked" Unchecked="ToggleChart_Unchecked" Margin="0,0,5,5"/>
 
@@ -53,7 +53,7 @@
                               IsChecked="True" Checked="ToggleChart_Checked" Unchecked="ToggleChart_Unchecked" Margin="0,0,5,5"/>
 
                     <!-- 50/30/20 KURALI -->
-                    <CheckBox x:Name="ToggleBudget" Content="50/30/20 Kuralı" 
+                    <CheckBox x:Name="ToggleBudget" Content="Bütçe Sağlığı" 
                               Style="{StaticResource MaterialDesignFilterChipCheckBox}" 
                               IsChecked="True" Checked="ToggleChart_Checked" Unchecked="ToggleChart_Unchecked" Margin="0,0,5,5"/>
                 </WrapPanel>
@@ -138,7 +138,7 @@
                             <StackPanel DockPanel.Dock="Left">
                                 <StackPanel Orientation="Horizontal">
                                     <materialDesign:PackIcon Kind="ScaleBalance" Width="24" Height="24" Foreground="{DynamicResource PrimaryHueMidBrush}" Margin="0,0,10,0"/>
-                                    <TextBlock Text="Bütçe Sağlığı (50/30/20 Kuralı)" Style="{StaticResource MaterialDesignHeadline6TextBlock}"/>
+                                    <TextBlock Text="Bütçe Sağlığı" Style="{StaticResource MaterialDesignHeadline6TextBlock}"/>
                                 </StackPanel>
                                 <TextBlock Text="Bu ayki harcamalarınızın gelire oranı" Opacity="0.6" FontSize="12" Margin="34,0,0,0"/>
                             </StackPanel>
@@ -149,7 +149,7 @@
                         <Grid Grid.Row="1" Margin="0,0,0,15">
                             <Grid.RowDefinitions><RowDefinition/><RowDefinition/></Grid.RowDefinitions>
                             <DockPanel LastChildFill="False" Margin="0,0,0,5">
-                                <TextBlock Text="İhtiyaçlar (Kira, Fatura, Market)" FontWeight="Bold" DockPanel.Dock="Left"/>
+                                <TextBlock Text="İhtiyaçlar" FontWeight="Bold" DockPanel.Dock="Left"/>
                                 <TextBlock Text="İdeal: %50" Opacity="0.5" DockPanel.Dock="Right" FontSize="12"/>
                             </DockPanel>
                             
@@ -167,7 +167,7 @@
                         <Grid Grid.Row="2" Margin="0,0,0,15">
                             <Grid.RowDefinitions><RowDefinition/><RowDefinition/></Grid.RowDefinitions>
                             <DockPanel LastChildFill="False" Margin="0,0,0,5">
-                                <TextBlock Text="İstekler (Eğlence, Yemek, Hobi)" FontWeight="Bold" DockPanel.Dock="Left"/>
+                                <TextBlock Text="İstekler" FontWeight="Bold" DockPanel.Dock="Left"/>
                                 <TextBlock Text="İdeal: %30" Opacity="0.5" DockPanel.Dock="Right" FontSize="12"/>
                             </DockPanel>
                             

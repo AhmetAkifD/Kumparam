@@ -122,7 +122,7 @@ namespace Kumparam.Pages.DashboardSubPages
             if (sender is Button btn && btn.Tag is Goal goal)
             {
                 var result = MessageBox.Show($"'{goal.Title}' hedefini silmek istediğinize emin misiniz?\n" +
-                                             $"(İçindeki {goal.CurrentAmount:N2} ₺ bakiyenize iade edilecek.)", 
+                                             $"({goal.CurrentAmount:N2} ₺ bakiyenize iade edilecek.)", 
                     "Silme ve İade Onayı", 
                     MessageBoxButton.YesNo, 
                     MessageBoxImage.Warning);
@@ -189,7 +189,7 @@ namespace Kumparam.Pages.DashboardSubPages
                             };
                             _userRepository.AddTransaction(transaction);
 
-                            MessageBox.Show($"{amount:N0} ₺ hedefe eklendi ve bakiyeden düşüldü! 🎯");
+                            MessageBox.Show($"{amount:N0} ₺ hedefe eklendi 🎯");
                             LoadGoals();
                         }
                         catch (Exception ex)
