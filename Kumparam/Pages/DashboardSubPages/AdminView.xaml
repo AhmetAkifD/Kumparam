@@ -22,7 +22,7 @@
 
                 <DockPanel LastChildFill="False" Margin="0,0,0,10">
                     <TextBlock Text="Web Scraping Ayarları" Style="{StaticResource HeaderTextStyle}" VerticalAlignment="Center"/>
-                    <Button Content="YENİ EKLE" Style="{StaticResource MaterialDesignOutlinedButton}" 
+                    <Button Content="YENİ EKLE" 
                             DockPanel.Dock="Right" Click="NewConfig_Click"/>
                 </DockPanel>
 
@@ -94,10 +94,10 @@
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
                     
-                    <Button Grid.Column="0" Content="TEST ET 🧪" Style="{StaticResource MaterialDesignOutlinedButton}" 
+                    <Button Grid.Column="0" Content="TEST ET 🧪" 
                             Margin="0,0,5,0" Click="TestConfig_Click"/>
                     
-                    <Button Grid.Column="1" Content="KAYDET 💾" Style="{StaticResource MaterialDesignRaisedButton}" 
+                    <Button Grid.Column="1" Content="KAYDET 💾" 
                             Margin="5,0,0,0" Click="SaveConfig_Click"/>
                 </Grid>
             </StackPanel>

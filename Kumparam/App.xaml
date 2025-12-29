@@ -8,54 +8,60 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <materialDesign:BundledTheme BaseTheme="Light" PrimaryColor="Green" SecondaryColor="Lime"/>
+                
                 <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesign3.Defaults.xaml" />
-                <ResourceDictionary Source="pack://application:,,,/MaterialDesignColors;component/Themes/Recommended/Primary/MaterialDesignColor.Green.xaml" />
-                <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.Light.xaml" />
             </ResourceDictionary.MergedDictionaries>
 
-            <!-- ToolBarTray Gizleme -->
-            <Style TargetType="{x:Type ToolBarTray}">
-                <Setter Property="Visibility" Value="Collapsed" />
-            </Style>
-
-            <!-- ======================================================== -->
-            <!-- 1. CARD STYLE (Bilgi Kartları İçin) -->
-            <!-- ======================================================== -->
-            <!-- Kullanımı: <materialDesign:Card Style="{StaticResource DashboardCardStyle}"> ... </materialDesign:Card> -->
             <Style x:Key="DashboardCardStyle" TargetType="materialDesign:Card">
-                <Setter Property="Background" Value="White"/>
+                <Setter Property="Background" Value="{DynamicResource MaterialDesignPaper}"/>
                 <Setter Property="Padding" Value="20"/>
                 <Setter Property="Margin" Value="10"/>
-                <Setter Property="UniformCornerRadius" Value="15"/> <!-- Yuvarlak Köşeler -->
-                <Setter Property="materialDesign:ElevationAssist.Elevation" Value="Dp2"/> <!-- Hafif Gölge -->
+                <Setter Property="UniformCornerRadius" Value="15"/>
+                <Setter Property="materialDesign:ElevationAssist.Elevation" Value="Dp2"/>
+                <Setter Property="TextElement.Foreground" Value="{DynamicResource MaterialDesignBody}"/>
             </Style>
 
-            <!-- ======================================================== -->
-            <!-- 2. HEADER TEXT STYLE (Başlıklar İçin) -->
-            <!-- ======================================================== -->
-            <!-- Kullanımı: <TextBlock Text="Gelirler" Style="{StaticResource HeaderTextStyle}"/> -->
             <Style x:Key="HeaderTextStyle" TargetType="TextBlock">
                 <Setter Property="FontSize" Value="18"/>
                 <Setter Property="FontWeight" Value="SemiBold"/>
-                <Setter Property="Foreground" Value="#37474F"/> <!-- Koyu Gri/Mavi Tonu -->
+                <Setter Property="Foreground" Value="{DynamicResource MaterialDesignBody}"/>
                 <Setter Property="Margin" Value="0,0,0,10"/>
             </Style>
 
-            <!-- ======================================================== -->
-            <!-- 3. ACTION ICON BUTTON (Sil/Düzenle İşlemleri İçin) -->
-            <!-- ======================================================== -->
-            <!-- Kullanımı: <Button Style="{StaticResource ActionIconButtonStyle}"> <PackIcon Kind="Delete"/> </Button> -->
-            <Style x:Key="ActionIconButtonStyle" TargetType="Button" BasedOn="{StaticResource MaterialDesignIconForegroundButton}">
-                <Setter Property="Width" Value="32"/>
-                <Setter Property="Height" Value="32"/>
-                <Setter Property="Margin" Value="5,0"/>
-                <Setter Property="ToolTip" Value="İşlem Yap"/>
-                <Setter Property="Foreground" Value="#757575"/> <!-- Gri İkon -->
-                <Style.Triggers>
-                    <Trigger Property="IsMouseOver" Value="True">
-                        <Setter Property="Foreground" Value="{DynamicResource PrimaryHueMidBrush}"/> <!-- Üzerine gelince Yeşil olur -->
-                    </Trigger>
-                </Style.Triggers>
+            <Style TargetType="TextBox" BasedOn="{StaticResource MaterialDesignOutlinedTextBox}">
+                <Setter Property="Foreground" Value="{DynamicResource MaterialDesignBody}"/>
+                <Setter Property="Background" Value="{DynamicResource MaterialDesignPaper}"/>
+                <Setter Property="CaretBrush" Value="{DynamicResource MaterialDesignBody}"/>
+                <Setter Property="BorderBrush" Value="{DynamicResource MaterialDesignDivider}"/>
+                <Setter Property="materialDesign:HintAssist.Background" Value="{DynamicResource MaterialDesignPaper}"/>
+            </Style>
+
+            <Style TargetType="ComboBoxItem" BasedOn="{StaticResource MaterialDesignComboBoxItemStyle}">
+                <Setter Property="Foreground" Value="{DynamicResource MaterialDesignBody}"/>
+                <Setter Property="Background" Value="{DynamicResource MaterialDesignPaper}"/>
+            </Style>
+
+            <Style TargetType="ComboBox" BasedOn="{StaticResource MaterialDesignOutlinedComboBox}">
+                <Setter Property="Foreground" Value="{DynamicResource MaterialDesignBody}"/>
+                <Setter Property="Background" Value="{DynamicResource MaterialDesignPaper}"/>
+                <Setter Property="BorderBrush" Value="{DynamicResource MaterialDesignDivider}"/>
+                <Setter Property="materialDesign:HintAssist.Background" Value="{DynamicResource MaterialDesignPaper}"/>
+            </Style>
+
+            <Style TargetType="DatePicker" BasedOn="{StaticResource MaterialDesignOutlinedDatePicker}">
+                <Setter Property="Foreground" Value="{DynamicResource MaterialDesignBody}"/>
+                <Setter Property="Background" Value="{DynamicResource MaterialDesignPaper}"/>
+                <Setter Property="BorderBrush" Value="{DynamicResource MaterialDesignDivider}"/>
+                <Setter Property="materialDesign:HintAssist.Background" Value="{DynamicResource MaterialDesignPaper}"/>
+    
+                <Setter Property="MinWidth" Value="110"/> <Setter Property="HorizontalAlignment" Value="Stretch"/> <Setter Property="VerticalAlignment" Value="Center"/>
+            </Style>
+
+            <Style TargetType="{x:Type ToolBarTray}">
+                <Setter Property="Visibility" Value="Collapsed" />
+            </Style>
+            <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignRaisedButton}">
+                <Setter Property="Foreground" Value="{DynamicResource MaterialDesignPaper}"></Setter>
             </Style>
 
         </ResourceDictionary>

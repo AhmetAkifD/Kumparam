@@ -20,28 +20,26 @@
                 <TextBlock Text="Yeni İşlem Ekle" Style="{StaticResource HeaderTextStyle}"/>
 
                 <ComboBox x:Name="InputTypeComboBox" materialDesign:HintAssist.Hint="İşlem Tipi" 
-                          Style="{StaticResource MaterialDesignOutlinedComboBox}" Margin="0,10">
-                    <ComboBoxItem Content="Gelir" Tag="Income" Foreground="Green"/>
-                    <ComboBoxItem Content="Gider" Tag="Expense" Foreground="Red"/>
-                </ComboBox>
+                          Margin="0,10">
+                    <ComboBoxItem Content="Gelir" Tag="Income" Foreground="#66BB6A"/> <ComboBoxItem Content="Gider" Tag="Expense" Foreground="#EF5350"/> </ComboBox>
 
-                <TextBox x:Name="AmountTextBox" materialDesign:HintAssist.Hint="Tutar" 
-                         Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,10"/>
+                <TextBox x:Name="AmountTextBox" 
+                         materialDesign:HintAssist.Hint="Tutar" 
+                         Margin="0,10"/>
 
                 <ComboBox x:Name="CategoryComboBox" 
                           materialDesign:HintAssist.Hint="Kategori" 
-                          Style="{StaticResource MaterialDesignOutlinedComboBox}" 
                           Margin="0,10"
                           IsEditable="False"/>
 
                 <DatePicker x:Name="TransactionDatePicker" materialDesign:HintAssist.Hint="İşlem Tarihi" 
-                            Style="{StaticResource MaterialDesignOutlinedDatePicker}" Margin="0,10"/>
+                            Margin="0,10"/>
 
                 <TextBox x:Name="DescriptionTextBox" materialDesign:HintAssist.Hint="Açıklama" 
-                         Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,10"
+                         Margin="0,10"
                          Height="80" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" AcceptsReturn="True"/>
 
-                <Button Content="KAYDET" Style="{StaticResource MaterialDesignRaisedButton}" 
+                <Button Content="KAYDET"
                         Margin="0,20,0,0" Height="50" Click="SaveButton_Click"/>
             </StackPanel>
         </materialDesign:Card>
@@ -49,23 +47,27 @@
         <materialDesign:Card Grid.Column="1" Style="{StaticResource DashboardCardStyle}" VerticalAlignment="Stretch">
             <Grid>
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/> <RowDefinition Height="Auto"/> <RowDefinition Height="Auto"/> <RowDefinition Height="*"/>    </Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/> 
+                    <RowDefinition Height="Auto"/> 
+                    <RowDefinition Height="Auto"/> 
+                    <RowDefinition Height="*"/>    
+                </Grid.RowDefinitions>
 
                 <WrapPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,15">
                     <materialDesign:PackIcon Kind="FilterVariant" VerticalAlignment="Center" Margin="0,0,10,0"/>
                     
-                    <DatePicker x:Name="StartDatePicker" Width="100" materialDesign:HintAssist.Hint="Başlangıç" Margin="0,0,10,0" SelectedDateChanged="Filter_Changed"/>
-                    <DatePicker x:Name="EndDatePicker" Width="100" materialDesign:HintAssist.Hint="Bitiş" Margin="0,0,10,0" SelectedDateChanged="Filter_Changed"/>
+                    <DatePicker x:Name="StartDatePicker" materialDesign:HintAssist.Hint="Başlangıç" Margin="0,0,10,0" SelectedDateChanged="Filter_Changed"/>
+                    <DatePicker x:Name="EndDatePicker" materialDesign:HintAssist.Hint="Bitiş" Margin="0,0,10,0" SelectedDateChanged="Filter_Changed"/>
 
                     <ComboBox x:Name="FilterTypeCombo" Width="90" materialDesign:HintAssist.Hint="Tür" Margin="0,0,10,0" SelectionChanged="Filter_Changed">
                         <ComboBoxItem Content="Tümü" Tag="All" IsSelected="True"/>
-                        <ComboBoxItem Content="Gelir" Tag="Income"/>
-                        <ComboBoxItem Content="Gider" Tag="Expense"/>
+                        <ComboBoxItem Content="Gelir" Tag="Income" Foreground="#66BB6A"/>
+                        <ComboBoxItem Content="Gider" Tag="Expense" Foreground="#EF5350"/>
                     </ComboBox>
 
                     <ComboBox x:Name="FilterCategoryCombo" Width="110" materialDesign:HintAssist.Hint="Kategori" Margin="0,0,10,0" SelectionChanged="Filter_Changed"/>
 
-                    <Button Style="{StaticResource MaterialDesignOutlinedButton}" Content="TEMİZLE" Height="30" Padding="10,0" Click="ClearFilters_Click"/>
+                    <Button Content="TEMİZLE" Height="30" Padding="10,0" Click="ClearFilters_Click"/>
                 </WrapPanel>
 
                 <Grid Grid.Row="1" Margin="0,0,0,20">
@@ -75,22 +77,24 @@
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
                     
-                    <Border Grid.Column="0" Background="#E8F5E9" CornerRadius="5" Margin="0,0,5,0" Padding="10">
+                    <Border Grid.Column="0" BorderBrush="#66BB6A" BorderThickness="1" CornerRadius="5" Margin="0,0,5,0" Padding="10">
                         <StackPanel>
                             <TextBlock Text="Toplam Gelir" FontSize="11" Opacity="0.7"/>
-                            <TextBlock x:Name="TotalIncomeText" Text="₺ 0,00" FontSize="14" FontWeight="Bold" Foreground="Green"/>
+                            <TextBlock x:Name="TotalIncomeText" Text="₺ 0,00" FontSize="14" FontWeight="Bold" Foreground="#66BB6A"/>
                         </StackPanel>
                     </Border>
-                    <Border Grid.Column="1" Background="#FFEBEE" CornerRadius="5" Margin="5,0,5,0" Padding="10">
+                    
+                    <Border Grid.Column="1" BorderBrush="#EF5350" BorderThickness="1" CornerRadius="5" Margin="5,0,5,0" Padding="10">
                         <StackPanel>
                             <TextBlock Text="Toplam Gider" FontSize="11" Opacity="0.7"/>
-                            <TextBlock x:Name="TotalExpenseText" Text="₺ 0,00" FontSize="14" FontWeight="Bold" Foreground="Red"/>
+                            <TextBlock x:Name="TotalExpenseText" Text="₺ 0,00" FontSize="14" FontWeight="Bold" Foreground="#EF5350"/>
                         </StackPanel>
                     </Border>
-                    <Border Grid.Column="2" Background="#E3F2FD" CornerRadius="5" Margin="5,0,0,0" Padding="10">
+                    
+                    <Border Grid.Column="2" BorderBrush="#42A5F5" BorderThickness="1" CornerRadius="5" Margin="5,0,0,0" Padding="10">
                         <StackPanel>
                             <TextBlock Text="Net Fark" FontSize="11" Opacity="0.7"/>
-                            <TextBlock x:Name="NetBalanceText" Text="₺ 0,00" FontSize="14" FontWeight="Bold" Foreground="#1565C0"/>
+                            <TextBlock x:Name="NetBalanceText" Text="₺ 0,00" FontSize="14" FontWeight="Bold" Foreground="#42A5F5"/>
                         </StackPanel>
                     </Border>
                 </Grid>
@@ -100,66 +104,64 @@
                 <DataGrid Grid.Row="3" x:Name="TransactionsGrid" AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True" 
                           HeadersVisibility="Column" SelectionMode="Single" SelectionUnit="FullRow" VerticalScrollBarVisibility="Auto">
                     <DataGrid.Columns>
-    <DataGridTextColumn Header="Tarih" 
-                        Binding="{Binding TransactionDate, StringFormat='dd.MM.yyyy'}" 
-                        Width="140"
-                        IsReadOnly="True"/>
-    
-    <DataGridTextColumn Header="Kategori" 
-                        Binding="{Binding Category}" 
-                        Width="150" 
-                        FontWeight="Bold"
-                        IsReadOnly="True"/>
-    
-    <DataGridTemplateColumn Header="Açıklama" Width="*">
-        <DataGridTemplateColumn.CellTemplate>
-            <DataTemplate>
-                <TextBlock Text="{Binding Description}" 
-                           TextWrapping="Wrap" 
-                           VerticalAlignment="Center" 
-                           Margin="5"/>
-            </DataTemplate>
-        </DataGridTemplateColumn.CellTemplate>
-    </DataGridTemplateColumn>
+                        <DataGridTextColumn Header="Tarih" 
+                                            Binding="{Binding TransactionDate, StringFormat='dd.MM.yyyy'}" 
+                                            Width="140"
+                                            IsReadOnly="True"/>
+                        
+                        <DataGridTextColumn Header="Kategori" 
+                                            Binding="{Binding Category}" 
+                                            Width="150" 
+                                            FontWeight="Bold"
+                                            IsReadOnly="True"/>
+                        
+                        <DataGridTemplateColumn Header="Açıklama" Width="*">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Description}" 
+                                               TextWrapping="Wrap" 
+                                               VerticalAlignment="Center" 
+                                               Margin="5"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
 
-    <DataGridTemplateColumn Header="Tutar" Width="120">
-        <DataGridTemplateColumn.CellTemplate>
-            <DataTemplate>
-                <TextBlock FontWeight="Bold" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,0,10,0">
-                    <TextBlock.Style>
-                        <Style TargetType="TextBlock">
-                            <Setter Property="Text" Value="{Binding Amount, StringFormat='{}{0:N2} ₺'}"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding Type}" Value="Income">
-                                    <Setter Property="Foreground" Value="Green"/>
-                                    <Setter Property="Text" Value="{Binding Amount, StringFormat='+{0:N2} ₺'}"/>
-                                </DataTrigger>
-                                <DataTrigger Binding="{Binding Type}" Value="Expense">
-                                    <Setter Property="Foreground" Value="Red"/>
-                                    <Setter Property="Text" Value="{Binding Amount, StringFormat='-{0:N2} ₺'}"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </TextBlock.Style>
-                </TextBlock>
-            </DataTemplate>
-        </DataGridTemplateColumn.CellTemplate>
-    </DataGridTemplateColumn>
+                        <DataGridTemplateColumn Header="Tutar" Width="120">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock FontWeight="Bold" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,0,10,0">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Text" Value="{Binding Amount, StringFormat='{}{0:N2} ₺'}"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Type}" Value="Income">
+                                                        <Setter Property="Foreground" Value="#66BB6A"/> <Setter Property="Text" Value="{Binding Amount, StringFormat='+{0:N2} ₺'}"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding Type}" Value="Expense">
+                                                        <Setter Property="Foreground" Value="#EF5350"/> <Setter Property="Text" Value="{Binding Amount, StringFormat='-{0:N2} ₺'}"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
 
-    <DataGridTemplateColumn Width="80">
-        <DataGridTemplateColumn.CellTemplate>
-            <DataTemplate>
-                <Button x:Name="ActionBtn"
-                        Style="{StaticResource MaterialDesignIconForegroundButton}"
-                        Tag="{Binding}"
-                        Click="ActionButton_Click"
-                        Loaded="ActionButton_Loaded"
-                        HorizontalAlignment="Center"/> 
-            </DataTemplate>
-        </DataGridTemplateColumn.CellTemplate>
-    </DataGridTemplateColumn>
+                        <DataGridTemplateColumn Width="80">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Button x:Name="ActionBtn"
+                                            Style="{StaticResource MaterialDesignIconForegroundButton}"
+                                            Tag="{Binding}"
+                                            Click="ActionButton_Click"
+                                            Loaded="ActionButton_Loaded"
+                                            HorizontalAlignment="Center"/> 
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
 
-</DataGrid.Columns>
+                    </DataGrid.Columns>
                 </DataGrid>
             </Grid>
         </materialDesign:Card>

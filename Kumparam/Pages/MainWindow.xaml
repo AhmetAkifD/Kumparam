@@ -157,5 +157,17 @@
                         Click="GirisEkraniniGoster_Click"/>
             </StackPanel>
         </Grid>
+        <ToggleButton x:Name="ThemeToggle"
+                      HorizontalAlignment="Right"
+                      VerticalAlignment="Top"
+                      Margin="20"
+                      Style="{StaticResource MaterialDesignActionToggleButton}"
+                      Click="ThemeToggle_Click">
+            <ToggleButton.Content>
+                <materialDesign:PackIcon Kind="WeatherNight" Width="25" Height="25" Foreground="#FDB813"/>
+            </ToggleButton.Content>
+            <materialDesign:ToggleButtonAssist.OnContent>
+                <materialDesign:PackIcon Kind="WeatherSunny" Width="25" Height="25" Foreground="#673AB7"/> </materialDesign:ToggleButtonAssist.OnContent>
+        </ToggleButton>
     </Grid>
 </Window>

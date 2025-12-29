@@ -4,26 +4,23 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:lvc="clr-namespace:LiveChartsCore.SkiaSharpView.WPF;assembly=LiveChartsCore.SkiaSharpView.WPF"
              mc:Ignorable="d" 
              d:DesignHeight="1800" d:DesignWidth="1030"
              TextElement.Foreground="{DynamicResource MaterialDesignBody}"
              FontFamily="{DynamicResource MaterialDesignFont}">
 
-    <Grid Margin="20">
+    <Grid Margin="10">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/> <!-- Kontrol Paneli -->
-            <RowDefinition Height="*"/>    <!-- Grafikler -->
-        </Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/> <RowDefinition Height="*"/>    </Grid.RowDefinitions>
 
-        <!-- 1. KONTROL PANELİ: İki kart yan yana (sol: filtreler, sağ: PDF butonu) -->
-        <Grid Grid.Row="0" Margin="0,0,0,20">
+        <Grid Grid.Row="0" Margin="0,0,0,10">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
 
-            <!-- Sol Kart: Filtreler ve toggle'lar (PDF butonu çıkarıldı) -->
-            <materialDesign:Card Grid.Column="0" Padding="15" UniformCornerRadius="8" Margin="0,0,10,0">
+            <materialDesign:Card Grid.Column="0" Style="{StaticResource DashboardCardStyle}" Margin="5">
                 <WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
                     <materialDesign:PackIcon Kind="FilterVariant" VerticalAlignment="Center" Margin="0,0,10,0"/>
                     <TextBlock Text="Görüntüle:" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,20,0"/>
@@ -52,18 +49,15 @@
                               Style="{StaticResource MaterialDesignFilterChipCheckBox}" 
                               IsChecked="True" Checked="ToggleChart_Checked" Unchecked="ToggleChart_Unchecked" Margin="0,0,5,5"/>
 
-                    <!-- 50/30/20 KURALI -->
                     <CheckBox x:Name="ToggleBudget" Content="Bütçe Sağlığı" 
                               Style="{StaticResource MaterialDesignFilterChipCheckBox}" 
                               IsChecked="True" Checked="ToggleChart_Checked" Unchecked="ToggleChart_Unchecked" Margin="0,0,5,5"/>
                 </WrapPanel>
             </materialDesign:Card>
 
-            <!-- Sağ Kart: PDF İndir butonunu barındırır -->
-            <materialDesign:Card Grid.Column="1" Padding="10" UniformCornerRadius="8" VerticalAlignment="Center" materialDesign:ElevationAssist.Elevation="Dp1" Height="104" Margin="0,0,17,0">
-                <Grid>
-                    <Button Style="{StaticResource MaterialDesignRaisedButton}" 
-                            Background="#D32F2F" BorderBrush="#D32F2F"
+            <materialDesign:Card Grid.Column="1" Style="{StaticResource DashboardCardStyle}" Margin="5" VerticalAlignment="Stretch">
+                <Grid VerticalAlignment="Center">
+                    <Button Background="#D32F2F" BorderBrush="#D32F2F"
                             Click="DownloadPdf_Click" 
                             Height="36" MinWidth="120" FontSize="12" Padding="12,0">
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
@@ -75,24 +69,21 @@
             </materialDesign:Card>
         </Grid>
 
-        <!-- 2. GRAFİK ALANI -->
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
             <StackPanel x:Name="ChartsPanel">
-                <!-- A. PASTA & SÜTUN (ALT ALTA) -->
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <!-- Pasta Grafik -->
-                    <materialDesign:Card x:Name="CardPie" Grid.Row="0" Margin="0,0,0,20" UniformCornerRadius="10" materialDesign:ElevationAssist.Elevation="Dp2" Height="400">
+                    <materialDesign:Card x:Name="CardPie" Grid.Row="0" Style="{StaticResource DashboardCardStyle}" Height="400">
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="*"/>
                             </Grid.RowDefinitions>
-                            <DockPanel Margin="20,15,20,5" LastChildFill="False">
+                            <DockPanel Margin="0,0,0,10" LastChildFill="False">
                                 <StackPanel DockPanel.Dock="Left">
                                     <TextBlock Text="Harcama Dağılımı" Style="{StaticResource MaterialDesignHeadline6TextBlock}"/>
                                     <TextBlock Text="Toplam harcamaların kategorilere oranı" Opacity="0.6" FontSize="12"/>
@@ -104,14 +95,13 @@
                         </Grid>
                     </materialDesign:Card>
 
-                    <!-- Sütun Grafik (6 Ay) -->
-                    <materialDesign:Card x:Name="CardBar" Grid.Row="1" Margin="0,0,0,20" UniformCornerRadius="10" materialDesign:ElevationAssist.Elevation="Dp2" Height="400">
+                    <materialDesign:Card x:Name="CardBar" Grid.Row="1" Style="{StaticResource DashboardCardStyle}" Height="400">
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="*"/>
                             </Grid.RowDefinitions>
-                            <DockPanel Margin="20,15,20,5" LastChildFill="False">
+                            <DockPanel Margin="0,0,0,10" LastChildFill="False">
                                 <StackPanel DockPanel.Dock="Left">
                                     <TextBlock Text="Son 6 Ayın Özeti" Style="{StaticResource MaterialDesignHeadline6TextBlock}"/>
                                     <TextBlock Text="Aylık Gelir ve Gider Karşılaştırması" Opacity="0.6" FontSize="12"/>
@@ -123,21 +113,19 @@
                     </materialDesign:Card>
                 </Grid>
 
-                <!-- B. YENİ EKLENEN: 50/30/20 KURALI ANALİZİ -->
-                <materialDesign:Card x:Name="CardBudget" Margin="0,0,0,20" UniformCornerRadius="10" materialDesign:ElevationAssist.Elevation="Dp2">
-                    <Grid Margin="20">
+                <materialDesign:Card x:Name="CardBudget" Style="{StaticResource DashboardCardStyle}">
+                    <Grid>
                         <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/> <!-- Başlık -->
-                            <RowDefinition Height="Auto"/> <!-- İhtiyaçlar -->
-                            <RowDefinition Height="Auto"/> <!-- İstekler -->
-                            <RowDefinition Height="Auto"/> <!-- Birikim -->
+                            <RowDefinition Height="Auto"/> 
+                            <RowDefinition Height="Auto"/> 
+                            <RowDefinition Height="Auto"/> 
+                            <RowDefinition Height="Auto"/> 
                         </Grid.RowDefinitions>
 
-                        <!-- Başlık -->
                         <DockPanel Grid.Row="0" LastChildFill="False" Margin="0,0,0,20">
                             <StackPanel DockPanel.Dock="Left">
                                 <StackPanel Orientation="Horizontal">
-                                    <materialDesign:PackIcon Kind="ScaleBalance" Width="24" Height="24" Foreground="{DynamicResource PrimaryHueMidBrush}" Margin="0,0,10,0"/>
+                                    <materialDesign:PackIcon Kind="ScaleBalance" Width="24" Height="24" Foreground="{DynamicResource PrimaryHueLightBrush}" Margin="0,0,10,0"/>
                                     <TextBlock Text="Bütçe Sağlığı" Style="{StaticResource MaterialDesignHeadline6TextBlock}"/>
                                 </StackPanel>
                                 <TextBlock Text="Bu ayki harcamalarınızın gelire oranı" Opacity="0.6" FontSize="12" Margin="34,0,0,0"/>
@@ -145,7 +133,6 @@
                             <Button DockPanel.Dock="Right" Style="{StaticResource MaterialDesignIconForegroundButton}" Click="CloseCard_Click" Tag="Budget"><materialDesign:PackIcon Kind="Close"/></Button>
                         </DockPanel>
 
-                        <!-- 1. İHTİYAÇLAR (%50) -->
                         <Grid Grid.Row="1" Margin="0,0,0,15">
                             <Grid.RowDefinitions><RowDefinition/><RowDefinition/></Grid.RowDefinitions>
                             <DockPanel LastChildFill="False" Margin="0,0,0,5">
@@ -153,17 +140,15 @@
                                 <TextBlock Text="İdeal: %50" Opacity="0.5" DockPanel.Dock="Right" FontSize="12"/>
                             </DockPanel>
                             
-                            <!-- Progress Bar (Siyah Çerçeveli) -->
-                            <Border Grid.Row="1" BorderBrush="Black" BorderThickness="1" CornerRadius="2" Height="25">
+                            <Border Grid.Row="1" BorderBrush="{DynamicResource MaterialDesignDivider}" BorderThickness="1" CornerRadius="2" Height="25">
                                 <Grid>
-                                    <ProgressBar Value="50" Maximum="100" Background="Transparent" Foreground="#E0E0E0" BorderBrush="Transparent" Height="25"/>
-                                    <ProgressBar x:Name="PbNeeds" Value="0" Maximum="100" Background="Transparent" Foreground="#43A047" BorderBrush="Transparent" Height="25"/>
-                                    <TextBlock x:Name="TxtNeeds" Text="%0" HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Bold" Foreground="Black" FontSize="12"/>
+                                    <ProgressBar Value="50" Maximum="100" Background="Transparent" Foreground="{DynamicResource MaterialDesignDivider}" BorderBrush="Transparent" Height="25" Opacity="0.3"/>
+                                    <ProgressBar x:Name="PbNeeds" Value="0" Maximum="100" Background="Transparent" Foreground="#66BB6A" BorderBrush="Transparent" Height="25"/>
+                                    <TextBlock x:Name="TxtNeeds" Text="%0" HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Bold" Foreground="{DynamicResource MaterialDesignBody}" FontSize="12"/>
                                 </Grid>
                             </Border>
                         </Grid>
 
-                        <!-- 2. İSTEKLER (%30) -->
                         <Grid Grid.Row="2" Margin="0,0,0,15">
                             <Grid.RowDefinitions><RowDefinition/><RowDefinition/></Grid.RowDefinitions>
                             <DockPanel LastChildFill="False" Margin="0,0,0,5">
@@ -171,16 +156,15 @@
                                 <TextBlock Text="İdeal: %30" Opacity="0.5" DockPanel.Dock="Right" FontSize="12"/>
                             </DockPanel>
                             
-                            <Border Grid.Row="1" BorderBrush="Black" BorderThickness="1" CornerRadius="2" Height="25">
+                            <Border Grid.Row="1" BorderBrush="{DynamicResource MaterialDesignDivider}" BorderThickness="1" CornerRadius="2" Height="25">
                                 <Grid>
-                                    <ProgressBar Value="30" Maximum="100" Background="Transparent" Foreground="#E0E0E0" BorderBrush="Transparent" Height="25"/>
-                                    <ProgressBar x:Name="PbWants" Value="0" Maximum="100" Background="Transparent" Foreground="#FB8C00" BorderBrush="Transparent" Height="25"/>
-                                    <TextBlock x:Name="TxtWants" Text="%0" HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Bold" Foreground="Black" FontSize="12"/>
+                                    <ProgressBar Value="30" Maximum="100" Background="Transparent" Foreground="{DynamicResource MaterialDesignDivider}" BorderBrush="Transparent" Height="25" Opacity="0.3"/>
+                                    <ProgressBar x:Name="PbWants" Value="0" Maximum="100" Background="Transparent" Foreground="#FFA726" BorderBrush="Transparent" Height="25"/>
+                                    <TextBlock x:Name="TxtWants" Text="%0" HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Bold" Foreground="{DynamicResource MaterialDesignBody}" FontSize="12"/>
                                 </Grid>
                             </Border>
                         </Grid>
 
-                        <!-- 3. BİRİKİM (%20) -->
                         <Grid Grid.Row="3" Margin="0,0,0,10">
                             <Grid.RowDefinitions><RowDefinition/><RowDefinition/></Grid.RowDefinitions>
                             <DockPanel LastChildFill="False" Margin="0,0,0,5">
@@ -188,25 +172,24 @@
                                 <TextBlock Text="İdeal: %20" Opacity="0.5" DockPanel.Dock="Right" FontSize="12"/>
                             </DockPanel>
                             
-                            <Border Grid.Row="1" BorderBrush="Black" BorderThickness="1" CornerRadius="2" Height="25">
+                            <Border Grid.Row="1" BorderBrush="{DynamicResource MaterialDesignDivider}" BorderThickness="1" CornerRadius="2" Height="25">
                                 <Grid>
-                                    <ProgressBar Value="20" Maximum="100" Background="Transparent" Foreground="#E0E0E0" BorderBrush="Transparent" Height="25"/>
-                                    <ProgressBar x:Name="PbSavings" Value="0" Maximum="100" Background="Transparent" Foreground="#1E88E5" BorderBrush="Transparent" Height="25"/>
-                                    <TextBlock x:Name="TxtSavings" Text="%0" HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Bold" Foreground="Black" FontSize="12"/>
+                                    <ProgressBar Value="20" Maximum="100" Background="Transparent" Foreground="{DynamicResource MaterialDesignDivider}" BorderBrush="Transparent" Height="25" Opacity="0.3"/>
+                                    <ProgressBar x:Name="PbSavings" Value="0" Maximum="100" Background="Transparent" Foreground="#42A5F5" BorderBrush="Transparent" Height="25"/>
+                                    <TextBlock x:Name="TxtSavings" Text="%0" HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Bold" Foreground="{DynamicResource MaterialDesignBody}" FontSize="12"/>
                                 </Grid>
                             </Border>
                         </Grid>
                     </Grid>
                 </materialDesign:Card>
 
-                <!-- C. YIĞILMIŞ SÜTUN (AYLIK KATEGORİ DETAYI) -->
-                <materialDesign:Card x:Name="CardStacked" Margin="0,0,0,20" UniformCornerRadius="10" materialDesign:ElevationAssist.Elevation="Dp2" Height="400">
+                <materialDesign:Card x:Name="CardStacked" Style="{StaticResource DashboardCardStyle}" Height="400">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
-                        <DockPanel Margin="20,15,20,5" LastChildFill="False">
+                        <DockPanel Margin="0,0,0,10" LastChildFill="False">
                             <StackPanel DockPanel.Dock="Left">
                                 <TextBlock Text="Aylık Gider Detayları" Style="{StaticResource MaterialDesignHeadline6TextBlock}"/>
                                 <TextBlock Text="Her ay hangi kategoriye ne kadar harcandı?" Opacity="0.6" FontSize="12"/>
@@ -217,14 +200,13 @@
                     </Grid>
                 </materialDesign:Card>
 
-                <!-- D. WATERFALL (BÜTÇE AKIŞI) -->
-                <materialDesign:Card x:Name="CardWaterfall" Margin="0,0,0,20" UniformCornerRadius="10" materialDesign:ElevationAssist.Elevation="Dp2" Height="400">
+                <materialDesign:Card x:Name="CardWaterfall" Style="{StaticResource DashboardCardStyle}" Height="400">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
-                        <DockPanel Margin="20,15,20,5" LastChildFill="False">
+                        <DockPanel Margin="0,0,0,10" LastChildFill="False">
                             <StackPanel DockPanel.Dock="Left">
                                 <TextBlock Text="Bu Ayın Bütçe Akışı" Style="{StaticResource MaterialDesignHeadline6TextBlock}"/>
                                 <TextBlock Text="Gelirler, Giderler ve Kalan Bakiye" Opacity="0.6" FontSize="12"/>
@@ -235,14 +217,13 @@
                     </Grid>
                 </materialDesign:Card>
 
-                <!-- E. ÇİZGİ GRAFİK (TREND) -->
-                <materialDesign:Card x:Name="CardLine" Margin="0,0,0,20" UniformCornerRadius="10" materialDesign:ElevationAssist.Elevation="Dp2" Height="350">
+                <materialDesign:Card x:Name="CardLine" Style="{StaticResource DashboardCardStyle}" Height="350">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
-                        <DockPanel Margin="20,15,20,5" LastChildFill="False">
+                        <DockPanel Margin="0,0,0,10" LastChildFill="False">
                             <StackPanel DockPanel.Dock="Left">
                                 <TextBlock Text="Varlık Gelişimi" Style="{StaticResource MaterialDesignHeadline6TextBlock}"/>
                                 <TextBlock Text="Toplam bakiyenizin zaman içindeki değişimi" Opacity="0.6" FontSize="12"/>
@@ -253,14 +234,13 @@
                     </Grid>
                 </materialDesign:Card>
 
-                <!-- F. GÜNLÜK HARCAMA -->
-                <materialDesign:Card x:Name="CardDays" Margin="0,0,0,20" UniformCornerRadius="10" materialDesign:ElevationAssist.Elevation="Dp2" Height="350">
+                <materialDesign:Card x:Name="CardDays" Style="{StaticResource DashboardCardStyle}" Height="350">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
-                        <DockPanel Margin="20,15,20,5" LastChildFill="False">
+                        <DockPanel Margin="0,0,0,10" LastChildFill="False">
                             <StackPanel DockPanel.Dock="Left">
                                 <TextBlock Text="Haftalık Harcama Alışkanlıkları" Style="{StaticResource MaterialDesignHeadline6TextBlock}"/>
                                 <TextBlock Text="Hangi günlerde daha çok harcama yapıyorsunuz?" Opacity="0.6" FontSize="12"/>

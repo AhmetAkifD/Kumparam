@@ -8,10 +8,14 @@
     
     <materialDesign:Card UniformCornerRadius="10" Padding="20" Margin="10">
         <StackPanel>
-            <TextBlock x:Name="MessageTextBlock" Text="Değer Giriniz:" FontWeight="Bold" Margin="0,0,0,10"/>
+            <TextBlock x:Name="MessageTextBlock" Text="Değer Giriniz:" FontWeight="Bold" Margin="0,0,0,10"
+                       Foreground="{DynamicResource MaterialDesignBody}"/>
             
             <TextBox x:Name="InputTextBox" materialDesign:HintAssist.Hint="Örn: 50" 
-                     Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,20"/>
+                     Style="{StaticResource MaterialDesignOutlinedTextBox}" 
+                     Background="{DynamicResource MaterialDesignPaper}" 
+                     Foreground="{DynamicResource MaterialDesignBody}" 
+                     Margin="0,0,0,20"/>
             
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                 <Button Content="İPTAL" Style="{StaticResource MaterialDesignFlatButton}" 

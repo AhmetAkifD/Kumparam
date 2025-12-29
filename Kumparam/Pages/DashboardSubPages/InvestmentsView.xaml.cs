@@ -312,29 +312,34 @@ public partial class InvestmentsView : UserControl
             // 1. Sembolü yaz
             SymbolTextBox.Text = selectedOption.Symbol;
 
-            // 2. Fiyat kutusuna "Yükleniyor" mesajı ver
+            // 2. Yüklenirken GRİ yap (Bu kalabilir, gri her iki temada da idare eder)
             CurrentPriceTextBox.Text = "Fiyat Getiriliyor...";
-            CurrentPriceTextBox.Foreground = System.Windows.Media.Brushes.Gray;
+            CurrentPriceTextBox.SetResourceReference(Control.ForegroundProperty, "MaterialDesignBody");
 
             try
             {
-                // 3. Web servisinden fiyatı çek (Async olduğu için arayüz donmaz)
                 decimal price = await _scrapingService.GetBuyingPriceAsync(selectedOption.Symbol);
 
-                // 4. Sonucu yazdır
                 if (price > 0)
                 {
                     CurrentPriceTextBox.Text = $"{price:N2} ₺";
-                    CurrentPriceTextBox.Foreground = System.Windows.Media.Brushes.Black; // Rengi düzelt
+                
+                    // --- İŞTE ÇÖZÜM BURASI ---
+                    // "Rengi siyah yap" DEMİYORUZ.
+                    // "Rengi, temanın Body (Yazı) rengine bağla" diyoruz.
+                    CurrentPriceTextBox.SetResourceReference(Control.ForegroundProperty, "MaterialDesignBody");
                 }
                 else
                 {
                     CurrentPriceTextBox.Text = "Fiyat Alınamadı";
+                    // Hata durumunda kırmızı yapabilirsin istersen
+                    CurrentPriceTextBox.Foreground = System.Windows.Media.Brushes.Red; 
                 }
             }
             catch (Exception ex)
             {
                 CurrentPriceTextBox.Text = "Hata";
+                CurrentPriceTextBox.Foreground = System.Windows.Media.Brushes.Red;
             }
         }
     }

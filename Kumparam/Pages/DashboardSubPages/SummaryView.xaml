@@ -4,7 +4,6 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
-             xmlns:lvc="clr-namespace:LiveChartsCore.SkiaSharpView.WPF;assembly=LiveChartsCore.SkiaSharpView.WPF"
              mc:Ignorable="d" 
              d:DesignHeight="650" d:DesignWidth="900"
              TextElement.Foreground="{DynamicResource MaterialDesignBody}"
@@ -12,9 +11,13 @@
     
     <Grid Margin="20">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/> <RowDefinition Height="Auto"/> <RowDefinition Height="*"/>    </Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/> 
+            <RowDefinition Height="Auto"/> 
+            <RowDefinition Height="*"/>    
+        </Grid.RowDefinitions>
 
-        <TextBlock Text="Finansal Özet" Style="{StaticResource HeaderTextStyle}"/>
+        <TextBlock Text="Finansal Özet" 
+                   Style="{StaticResource HeaderTextStyle}"/>
 
         <Grid Grid.Row="1" Margin="0,10,0,20">
             <Grid.ColumnDefinitions>
@@ -30,37 +33,57 @@
                         <materialDesign:PackIcon Kind="Wallet" Width="24" Height="24" Foreground="{DynamicResource PrimaryHueMidBrush}" DockPanel.Dock="Left"/>
                         <TextBlock Text="Toplam Bakiye" VerticalAlignment="Center" Margin="10,0,0,0" Opacity="0.6" FontWeight="SemiBold"/>
                     </DockPanel>
-                    <TextBlock x:Name="TotalBalanceText" Text="₺ 0.00" FontSize="24" FontWeight="Bold" Margin="0,10,0,0" Foreground="#2E7D32"/>
+                    <TextBlock x:Name="TotalBalanceText" 
+                               Text="₺ 0.00" 
+                               FontSize="24" 
+                               FontWeight="Bold" 
+                               Margin="0,10,0,0" 
+                               Foreground="{DynamicResource MaterialDesignBody}"/>
                 </StackPanel>
             </materialDesign:Card>
 
             <materialDesign:Card Grid.Column="1" Style="{StaticResource DashboardCardStyle}" Margin="10,0">
                 <StackPanel>
                     <DockPanel LastChildFill="False">
-                        <materialDesign:PackIcon Kind="ArrowUpBoldCircle" Width="24" Height="24" Foreground="Green" DockPanel.Dock="Left"/>
+                        <materialDesign:PackIcon Kind="ArrowUpBoldCircle" Width="24" Height="24" Foreground="#66BB6A" DockPanel.Dock="Left"/>
                         <TextBlock Text="Bu Ay Gelir" VerticalAlignment="Center" Margin="10,0,0,0" Opacity="0.6" FontWeight="SemiBold"/>
                     </DockPanel>
-                    <TextBlock x:Name="MonthlyIncomeText" Text="₺ 0.00" FontSize="24" FontWeight="Bold" Margin="0,10,0,0"/>
+                    <TextBlock x:Name="MonthlyIncomeText" 
+                               Text="₺ 0.00" 
+                               FontSize="24" 
+                               FontWeight="Bold" 
+                               Margin="0,10,0,0" 
+                               Foreground="#66BB6A"/>
                 </StackPanel>
             </materialDesign:Card>
 
             <materialDesign:Card Grid.Column="2" Style="{StaticResource DashboardCardStyle}" Margin="10,0">
                 <StackPanel>
                     <DockPanel LastChildFill="False">
-                        <materialDesign:PackIcon Kind="ArrowDownBoldCircle" Width="24" Height="24" Foreground="Red" DockPanel.Dock="Left"/>
+                        <materialDesign:PackIcon Kind="ArrowDownBoldCircle" Width="24" Height="24" Foreground="#EF5350" DockPanel.Dock="Left"/>
                         <TextBlock Text="Bu Ay Gider" VerticalAlignment="Center" Margin="10,0,0,0" Opacity="0.6" FontWeight="SemiBold"/>
                     </DockPanel>
-                    <TextBlock x:Name="MonthlyExpenseText" Text="₺ 0.00" FontSize="24" FontWeight="Bold" Margin="0,10,0,0"/>
+                    <TextBlock x:Name="MonthlyExpenseText" 
+                               Text="₺ 0.00" 
+                               FontSize="24" 
+                               FontWeight="Bold" 
+                               Margin="0,10,0,0" 
+                               Foreground="#EF5350"/>
                 </StackPanel>
             </materialDesign:Card>
 
             <materialDesign:Card Grid.Column="3" Style="{StaticResource DashboardCardStyle}" Margin="10,0,0,0">
                 <StackPanel>
                     <DockPanel LastChildFill="False">
-                        <materialDesign:PackIcon Kind="Target" Width="24" Height="24" Foreground="Orange" DockPanel.Dock="Left"/>
+                        <materialDesign:PackIcon Kind="Target" Width="24" Height="24" Foreground="#FFA726" DockPanel.Dock="Left"/>
                         <TextBlock Text="Hedef İlerlemesi" VerticalAlignment="Center" Margin="10,0,0,0" Opacity="0.6" FontWeight="SemiBold"/>
                     </DockPanel>
-                    <ProgressBar x:Name="SavingsProgressBar" Value="0" Height="10" Margin="0,15,0,5" Foreground="Orange" Background="#EEE"/>
+                    
+                    <ProgressBar x:Name="SavingsProgressBar" Value="0" Height="10" Margin="0,15,0,5" 
+                                 Foreground="#FFA726" 
+                                 Background="{DynamicResource MaterialDesignDivider}" 
+                                 BorderThickness="0"/>
+                    
                     <TextBlock x:Name="SavingsText" Text="%0 Tamamlandı" FontSize="11" Opacity="0.5" HorizontalAlignment="Right"/>
                 </StackPanel>
             </materialDesign:Card>
@@ -86,7 +109,7 @@
                                 Style="{StaticResource MaterialDesignFlatButton}"
                                 Content="Tümünü Gör >"
                                 FontSize="16"
-                                Foreground="Green"
+                                Foreground="{DynamicResource MaterialDesignBody}" 
                                 Click="SeeAllTransactions_Click"
                                 Cursor="Hand"/>
                     </DockPanel>
@@ -95,21 +118,22 @@
                         <ItemsControl x:Name="TransactionsList">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Border BorderBrush="#EEE" BorderThickness="0,0,0,1" Padding="5,10">
+                                    <Border BorderBrush="{DynamicResource MaterialDesignDivider}" BorderThickness="0,0,0,1" Padding="5,10">
                                         <Grid>
                                             <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="Auto"/> <ColumnDefinition Width="*"/>    <ColumnDefinition Width="Auto"/> </Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/> 
+                                                <ColumnDefinition Width="*"/>    
+                                                <ColumnDefinition Width="Auto"/> 
+                                            </Grid.ColumnDefinitions>
 
                                             <materialDesign:PackIcon Grid.Column="0" Width="24" Height="24" VerticalAlignment="Center" Margin="0,0,10,0">
                                                 <materialDesign:PackIcon.Style>
                                                     <Style TargetType="materialDesign:PackIcon">
                                                         <Setter Property="Kind" Value="ArrowDownBoldCircle"/>
-                                                        <Setter Property="Foreground" Value="Red"/>
-                                                        <Style.Triggers>
+                                                        <Setter Property="Foreground" Value="#EF5350"/> <Style.Triggers>
                                                             <DataTrigger Binding="{Binding Type}" Value="Income">
                                                                 <Setter Property="Kind" Value="ArrowUpBoldCircle"/>
-                                                                <Setter Property="Foreground" Value="Green"/>
-                                                            </DataTrigger>
+                                                                <Setter Property="Foreground" Value="#66BB6A"/> </DataTrigger>
                                                         </Style.Triggers>
                                                     </Style>
                                                 </materialDesign:PackIcon.Style>
@@ -125,12 +149,10 @@
                                                 <TextBlock.Style>
                                                     <Style TargetType="TextBlock">
                                                         <Setter Property="Text" Value="{Binding Amount, StringFormat='-₺ {0:N2}'}"/>
-                                                        <Setter Property="Foreground" Value="Red"/>
-                                                        <Style.Triggers>
+                                                        <Setter Property="Foreground" Value="#EF5350"/> <Style.Triggers>
                                                             <DataTrigger Binding="{Binding Type}" Value="Income">
                                                                 <Setter Property="Text" Value="{Binding Amount, StringFormat='+₺ {0:N2}'}"/>
-                                                                <Setter Property="Foreground" Value="Green"/>
-                                                            </DataTrigger>
+                                                                <Setter Property="Foreground" Value="#66BB6A"/> </DataTrigger>
                                                         </Style.Triggers>
                                                     </Style>
                                                 </TextBlock.Style>
