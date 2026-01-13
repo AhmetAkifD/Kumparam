@@ -19,7 +19,6 @@ namespace Kumparam.UI.Services
             QuestPDF.Settings.License = LicenseType.Community;
         }
 
-        // Metod imzası değişti: Yatırımlar ve Hedefler eklendi
         public void GeneratePdf(string filePath, UserProfile user, List<Transaction> transactions, List<Investment> investments, List<Goal> goals, string reportPeriod)
         {
             // --- 1. HESAPLAMALAR ---
@@ -30,7 +29,6 @@ namespace Kumparam.UI.Services
             var netBalance = totalIncome - totalExpense;
 
             // Yatırım Durumu
-            // Not: CurrentPrice normalde web'den güncellenmeli. Burada veritabanındaki son değeri kullanıyoruz.
             decimal totalInvestmentCost = investments.Sum(i => i.TotalCost);
             decimal totalInvestmentValue = investments.Sum(i => i.CurrentTotalValue); 
             decimal investmentProfit = totalInvestmentValue - totalInvestmentCost;
@@ -39,7 +37,7 @@ namespace Kumparam.UI.Services
             decimal totalGoalSaved = goals.Sum(g => g.CurrentAmount);
             decimal totalGoalTarget = goals.Sum(g => g.TargetAmount);
 
-            // 50/30/20 Analizi (Sadece Giderler Üzerinden)
+            // 50/30/20 Analizi
             decimal needsTotal = 0, wantsTotal = 0, savingsTotal = 0;
             
             foreach (var expense in transactions.Where(t => t.Type == "Expense"))
@@ -47,7 +45,7 @@ namespace Kumparam.UI.Services
                 var type = BudgetHelper.GetBudgetType(expense.Category);
                 if (type == BudgetType.Needs) needsTotal += expense.Amount;
                 else if (type == BudgetType.Wants) wantsTotal += expense.Amount;
-                else savingsTotal += expense.Amount; // Savings veya Other
+                else savingsTotal += expense.Amount; 
             }
 
             // --- 2. PDF OLUŞTURMA ---
@@ -70,7 +68,7 @@ namespace Kumparam.UI.Services
                             row.RelativeItem().Column(c =>
                             {
                                 c.Item().Text("KUMPARAM").FontSize(24).SemiBold().FontColor(Colors.Green.Darken2);
-                                c.Item().Text("Finansal Durum Karnesi").FontSize(14).FontColor(Colors.Grey.Darken1);
+                                c.Item().Text("Finansal Durum Raporu").FontSize(14).FontColor(Colors.Grey.Darken1);
                                 c.Item().Text(reportPeriod).FontSize(10).Italic().FontColor(Colors.Grey.Darken2);
                             });
 
@@ -84,7 +82,7 @@ namespace Kumparam.UI.Services
 
                         col.Item().PaddingVertical(15).LineHorizontal(1).LineColor(Colors.Grey.Lighten2);
 
-                        // 1. BÖLÜM: VARLIK ÖZETİ (Executive Summary)
+                        // 1. BÖLÜM: VARLIK ÖZETİ
                         col.Item().Text("Varlık Özeti").FontSize(12).SemiBold().FontColor(Colors.Black);
                         col.Item().PaddingVertical(5).Row(row =>
                         {
@@ -100,7 +98,7 @@ namespace Kumparam.UI.Services
 
                         col.Item().PaddingVertical(10);
 
-                        // 2. BÖLÜM: YATIRIM PERFORMANSI & BÜTÇE SAĞLIĞI (Yan Yana)
+                        // 2. BÖLÜM: YATIRIM PERFORMANSI & BÜTÇE SAĞLIĞI
                         col.Item().Row(row =>
                         {
                             // Sol: Yatırım Detayı
@@ -139,7 +137,7 @@ namespace Kumparam.UI.Services
                                 {
                                     double needsPct = (double)(needsTotal / totalIncome) * 100;
                                     double wantsPct = (double)(wantsTotal / totalIncome) * 100;
-                                    double savingsPct = (double)(savingsTotal / totalIncome) * 100; // Harcama bazlı birikim
+                                    double savingsPct = (double)(savingsTotal / totalIncome) * 100;
 
                                     c.Item().Component(new BudgetBar("İhtiyaçlar", needsPct, 50, Colors.Green.Medium));
                                     c.Item().Component(new BudgetBar("İstekler", wantsPct, 30, Colors.Orange.Medium));
@@ -152,18 +150,11 @@ namespace Kumparam.UI.Services
                             });
                         });
 
-                        col.Item().PaddingVertical(20);
-
-                        // 3. BÖLÜM: YAPAY ZEKA YORUMU (Placeholder)
-                        col.Item().Background(Colors.Grey.Lighten5).Padding(10).BorderLeft(4).BorderColor(Colors.Teal.Medium).Column(c =>
-                        {
-                            c.Item().Text("Yapay Zeka Finansal Analizi").FontSize(11).Bold().FontColor(Colors.Teal.Darken2);
-                            c.Item().PaddingTop(5).Text("Bu rapor henüz yapay zeka tarafından analiz edilmemiştir. Gelecek sürümlerde burada portföyünüz ve harcamalarınız hakkında kişiselleştirilmiş tavsiyeler yer alacaktır.").FontSize(9).Italic();
-                        });
-
+                        // -- YAPAY ZEKA BÖLÜMÜ BURADAN SİLİNDİ --
+                        
                         col.Item().PaddingVertical(15).LineHorizontal(1).LineColor(Colors.Grey.Lighten2);
 
-                        // 4. BÖLÜM: İŞLEM DÖKÜMÜ (Tablo)
+                        // 3. BÖLÜM: İŞLEM DÖKÜMÜ (Tablo) - (Numarası kaydı)
                         col.Item().PaddingBottom(5).Text("İşlem Hareketleri").FontSize(12).SemiBold();
                         
                         col.Item().Table(table =>
@@ -201,7 +192,7 @@ namespace Kumparam.UI.Services
 
                                 static IContainer BlockStyle(IContainer container)
                                 {
-                                    return container.BorderBottom(1).BorderColor(Colors.Grey.Lighten3).PaddingVertical(2); // Padding biraz azaltıldı
+                                    return container.BorderBottom(1).BorderColor(Colors.Grey.Lighten3).PaddingVertical(2);
                                 }
                             }
                         });
@@ -272,13 +263,8 @@ namespace Kumparam.UI.Services
                     r.RelativeItem().AlignRight().Text($"%{Percent:0.0} / %{Target}").FontSize(9).FontColor(Colors.Grey.Darken1);
                 });
                 
-                // Basit bir bar çizimi (Maksimum 100 birim genişlik varsayalım)
-                // QuestPDF'te dinamik width zor olduğu için, basit bir çizgi kullanıyoruz.
-                // Veya dolu/boş kutu mantığı.
-                
                 c.Item().Height(5).Background(Colors.Grey.Lighten3).Row(r => 
                 {
-                    // Yüzde kadarını boya (Max %100)
                     double safePercent = Math.Min(Percent, 100);
                     if (safePercent > 0)
                     {
@@ -286,7 +272,7 @@ namespace Kumparam.UI.Services
                     }
                     if (safePercent < 100)
                     {
-                        r.RelativeItem((float)(100 - safePercent)); // Kalan boşluk
+                        r.RelativeItem((float)(100 - safePercent)); 
                     }
                 });
             });
