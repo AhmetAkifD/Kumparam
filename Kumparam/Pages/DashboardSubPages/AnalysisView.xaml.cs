@@ -18,6 +18,9 @@ using Microsoft.Win32;
 using Kumparam.UI.Services;
 using Kumparam.Core.Models;
 using Kumparam.UI.Helpers;
+using LiveChartsCore.SkiaSharpView.Painting; // Boyama işlemleri için
+using SkiaSharp; // Renkler (SKColors) için
+using LiveChartsCore.SkiaSharpView.WPF;
 
 namespace Kumparam.Pages.DashboardSubPages
 {
@@ -35,6 +38,21 @@ namespace Kumparam.Pages.DashboardSubPages
             _userRepository = new SqlUserRepository(connectionString);
 
             LoadCharts();
+            // 1. Tema değişim olayına ABONE OL
+            // "Dashboard'da tema değişirse, benim RefreshCharts metodumu çalıştır" diyoruz.
+            DashboardWindow.ThemeChanged += RefreshCharts;
+    
+            // Sayfa kapanırken abonelikten çıkmak için Unloaded olayını dinle
+            this.Unloaded += AnalysisView_Unloaded;
+        }
+        private void RefreshCharts()
+        {
+            // Grafikleri silip baştan çiziyoruz ki yeni renkleri (White/Black) alabilsin
+            LoadCharts();
+        }
+        private void AnalysisView_Unloaded(object sender, RoutedEventArgs e)
+        {
+            DashboardWindow.ThemeChanged -= RefreshCharts;
         }
 
         // ---------------------------------------------------------
@@ -92,6 +110,13 @@ namespace Kumparam.Pages.DashboardSubPages
         {
             try
             {
+                // 1. ÖNCE DOĞRU BOYAYI HAZIRLIYORUZ (KARANLIK/AYDINLIK KONTROLÜ)
+                bool isDark = Kumparam.Properties.Settings.Default.IsDarkMode;
+                var textPaint = new SolidColorPaint(isDark ? SKColors.White : SKColors.Black) 
+                { 
+                    SKTypeface = SKTypeface.FromFamilyName("Arial") 
+                };
+
                 var allTransactions = _userRepository.GetAllTransactions(_currentUserId);
 
                 // --- 1. PASTA GRAFİK ---
@@ -114,7 +139,7 @@ namespace Kumparam.Pages.DashboardSubPages
                             Name = item.Category,
                             InnerRadius = 25,
                             DataLabelsSize = 12,
-                            DataLabelsPaint = new SolidColorPaint(SKColors.Black),
+                            DataLabelsPaint = textPaint, // Siyah yerine dinamik boya
                             DataLabelsPosition = LiveChartsCore.Measure.PolarLabelsPosition.Outer,
                             DataLabelsFormatter = point => point.PrimaryValue > 0 ? $"{point.PrimaryValue:N0}₺" : string.Empty
                         });
@@ -123,6 +148,9 @@ namespace Kumparam.Pages.DashboardSubPages
                     {
                         Series = pieSeries,
                         LegendPosition = LiveChartsCore.Measure.LegendPosition.Right,
+                        LegendTextPaint = textPaint,
+                        AnimationsSpeed = TimeSpan.Zero, 
+                        EasingFunction = null
                     };
                 }
                 else
@@ -168,7 +196,8 @@ namespace Kumparam.Pages.DashboardSubPages
                             Fill = new SolidColorPaint(SKColors.MediumSeaGreen),
                             MaxBarWidth = 25,
                             StackGroup = 0,
-                            DataLabelsFormatter = point => point.PrimaryValue > 0 ? $"{point.PrimaryValue:N0}₺" : string.Empty
+                            DataLabelsFormatter = point => point.PrimaryValue > 0 ? $"{point.PrimaryValue:N0}₺" : string.Empty,
+                            DataLabelsPaint = textPaint // Veri etiketleri rengi
                         },
                         new StackedColumnSeries<decimal>
                         {
@@ -177,7 +206,8 @@ namespace Kumparam.Pages.DashboardSubPages
                             Fill = new SolidColorPaint(SKColors.IndianRed),
                             MaxBarWidth = 25,
                             StackGroup = 0,
-                            DataLabelsFormatter = point => point.PrimaryValue > 0 ? $"{point.PrimaryValue:N0}₺" : string.Empty
+                            DataLabelsFormatter = point => point.PrimaryValue > 0 ? $"{point.PrimaryValue:N0}₺" : string.Empty,
+                            DataLabelsPaint = textPaint
                         },
                         new StackedColumnSeries<decimal>
                         {
@@ -186,13 +216,18 @@ namespace Kumparam.Pages.DashboardSubPages
                             Fill = new SolidColorPaint(SKColors.DodgerBlue),
                             MaxBarWidth = 25,
                             StackGroup = 1,
-                            DataLabelsFormatter = point => point.PrimaryValue > 0 ? $"{point.PrimaryValue:N0}₺" : string.Empty
+                            DataLabelsFormatter = point => point.PrimaryValue > 0 ? $"{point.PrimaryValue:N0}₺" : string.Empty,
+                            DataLabelsPaint = textPaint
                         }
                     },
-                    XAxes = new Axis[] { new Axis { Labels = labels.ToArray(), TextSize = 12, LabelsPaint = new SolidColorPaint(SKColors.Black) } },
-                    YAxes = new Axis[] { new Axis { Labeler = value => value.ToString("N0") + "₺", TextSize = 12 } },
+                    // EKSENLERİ VE LEJANTI GÜNCELLEDİK
+                    XAxes = new Axis[] { new Axis { Labels = labels.ToArray(), TextSize = 12, LabelsPaint = textPaint } },
+                    YAxes = new Axis[] { new Axis { Labeler = value => value.ToString("N0") + "₺", TextSize = 12, LabelsPaint = textPaint } },
                     LegendPosition = LiveChartsCore.Measure.LegendPosition.Bottom,
-                    ZoomMode = LiveChartsCore.Measure.ZoomAndPanMode.None
+                    LegendTextPaint = textPaint, 
+                    ZoomMode = LiveChartsCore.Measure.ZoomAndPanMode.None,
+                    AnimationsSpeed = TimeSpan.Zero,
+                    EasingFunction = null
                 };
 
                 // --- 3. YIĞILMIŞ SÜTUN (Aylık Kategori Detayı) ---
@@ -202,7 +237,7 @@ namespace Kumparam.Pages.DashboardSubPages
                     .GroupBy(t => t.Category)
                     .Select(g => new { Cat = g.Key, Total = g.Sum(t => t.Amount) })
                     .OrderByDescending(x => x.Total)
-                    .Where(x => x.Total > 0)       // sadece toplamı sıfırdan büyük olan kategoriler
+                    .Where(x => x.Total > 0)
                     .Take(5)
                     .Select(x => x.Cat)
                     .ToList();
@@ -219,7 +254,6 @@ namespace Kumparam.Pages.DashboardSubPages
                         catValues.Add(sum);
                     }
 
-                    // eğer bu kategori için tüm aylar sıfırsa ekleme
                     if (catValues.Any(v => v > 0))
                     {
                         stackedSeries.Add(new StackedColumnSeries<decimal>
@@ -228,6 +262,7 @@ namespace Kumparam.Pages.DashboardSubPages
                             Values = catValues.ToArray(),
                             MaxBarWidth = 40,
                             DataLabelsSize = 10,
+                            DataLabelsPaint = textPaint,
                             DataLabelsFormatter = point => point.PrimaryValue > 0 ? $"{point.PrimaryValue:N0}₺" : string.Empty
                         });
                     }
@@ -254,6 +289,7 @@ namespace Kumparam.Pages.DashboardSubPages
                         Fill = new SolidColorPaint(SKColors.Gray),
                         MaxBarWidth = 40,
                         DataLabelsSize = 10,
+                        DataLabelsPaint = textPaint,
                         DataLabelsFormatter = point => point.PrimaryValue > 0 ? $"{point.PrimaryValue:N0}₺" : string.Empty
                     });
                 }
@@ -261,10 +297,13 @@ namespace Kumparam.Pages.DashboardSubPages
                 StackedChartContainer.Content = new CartesianChart
                 {
                     Series = stackedSeries,
-                    XAxes = new Axis[] { new Axis { Labels = labels.ToArray(), TextSize = 12, LabelsPaint = new SolidColorPaint(SKColors.Black) } },
-                    YAxes = new Axis[] { new Axis { Labeler = value => value.ToString("N0") + "₺", TextSize = 12 } },
+                    XAxes = new Axis[] { new Axis { Labels = labels.ToArray(), TextSize = 12, LabelsPaint = textPaint } },
+                    YAxes = new Axis[] { new Axis { Labeler = value => value.ToString("N0") + "₺", TextSize = 12, LabelsPaint = textPaint } },
                     LegendPosition = LiveChartsCore.Measure.LegendPosition.Right,
-                    ZoomMode = LiveChartsCore.Measure.ZoomAndPanMode.None
+                    LegendTextPaint = textPaint,
+                    ZoomMode = LiveChartsCore.Measure.ZoomAndPanMode.None,
+                    AnimationsSpeed = TimeSpan.Zero,
+                    EasingFunction = null
                 };
 
                 // --- 4. WATERFALL (Bu Ayın Bütçe Akışı) ---
@@ -276,7 +315,6 @@ namespace Kumparam.Pages.DashboardSubPages
 
                 var waterfallSeries = new List<ISeries>();
 
-                // Sütun 1: Gelir (ekle, ama tooltip için gösterim sadece >0 olacak)
                 if (thisMonthIncome > 0)
                 {
                     waterfallSeries.Add(new StackedColumnSeries<decimal>
@@ -287,11 +325,11 @@ namespace Kumparam.Pages.DashboardSubPages
                         Stroke = new SolidColorPaint(SKColors.White) { StrokeThickness = 2 },
                         MaxBarWidth = 50,
                         StackGroup = 0,
+                        DataLabelsPaint = textPaint,
                         DataLabelsFormatter = point => point.PrimaryValue > 0 ? $"{point.PrimaryValue:N0}₺" : string.Empty
                     });
                 }
 
-                // Sütun 2: Giderler (Top 4 + Diğer) - sadece >0 olanları ekle
                 var expensesGroups = thisMonthTrans.Where(t => t.Type == "Expense")
                     .GroupBy(t => t.Category)
                     .Select(g => new { Cat = g.Key, Sum = g.Sum(t => t.Amount) })
@@ -310,6 +348,7 @@ namespace Kumparam.Pages.DashboardSubPages
                         MaxBarWidth = 50,
                         StackGroup = 0,
                         Stroke = new SolidColorPaint(SKColors.White) { StrokeThickness = 1 },
+                        DataLabelsPaint = textPaint,
                         DataLabelsFormatter = point => point.PrimaryValue > 0 ? $"{point.PrimaryValue:N0}₺" : string.Empty
                     });
                 }
@@ -324,11 +363,11 @@ namespace Kumparam.Pages.DashboardSubPages
                         MaxBarWidth = 50,
                         StackGroup = 0,
                         Stroke = new SolidColorPaint(SKColors.White) { StrokeThickness = 1 },
+                        DataLabelsPaint = textPaint,
                         DataLabelsFormatter = point => point.PrimaryValue > 0 ? $"{point.PrimaryValue:N0}₺" : string.Empty
                     });
                 }
 
-                // Sütun 3: Kalan (ekle yalnızca gerçek değeri göster)
                 if (thisMonthRemaining != 0)
                 {
                     waterfallSeries.Add(new StackedColumnSeries<decimal>
@@ -339,6 +378,7 @@ namespace Kumparam.Pages.DashboardSubPages
                         MaxBarWidth = 50,
                         StackGroup = 0,
                         Stroke = new SolidColorPaint(SKColors.White) { StrokeThickness = 2 },
+                        DataLabelsPaint = textPaint,
                         DataLabelsFormatter = point => point.PrimaryValue > 0 ? $"{point.PrimaryValue:N0}₺" : string.Empty
                     });
                 }
@@ -346,10 +386,13 @@ namespace Kumparam.Pages.DashboardSubPages
                 WaterfallChartContainer.Content = new CartesianChart
                 {
                     Series = waterfallSeries,
-                    XAxes = new Axis[] { new Axis { Labels = new[] { "Toplam Gelir", "Harcamalar", "Kalan Bakiye" }, TextSize = 13, LabelsPaint = new SolidColorPaint(SKColors.Black) } },
-                    YAxes = new Axis[] { new Axis { Labeler = value => value.ToString("N0") + "₺", TextSize = 12 } },
+                    XAxes = new Axis[] { new Axis { Labels = new[] { "Toplam Gelir", "Harcamalar", "Kalan Bakiye" }, TextSize = 13, LabelsPaint = textPaint } },
+                    YAxes = new Axis[] { new Axis { Labeler = value => value.ToString("N0") + "₺", TextSize = 12, LabelsPaint = textPaint } },
                     LegendPosition = LiveChartsCore.Measure.LegendPosition.Right,
-                    ZoomMode = LiveChartsCore.Measure.ZoomAndPanMode.None
+                    LegendTextPaint = textPaint,
+                    ZoomMode = LiveChartsCore.Measure.ZoomAndPanMode.None,
+                    AnimationsSpeed = TimeSpan.Zero,
+                    EasingFunction = null
                 };
 
                 // --- 5. ÇİZGİ GRAFİK ---
@@ -362,13 +405,17 @@ namespace Kumparam.Pages.DashboardSubPages
                             Name = "Toplam Bakiye", Values = balanceValues.ToArray(),
                             Fill = new SolidColorPaint(SKColors.Gold.WithAlpha(50)), Stroke = new SolidColorPaint(SKColors.Goldenrod) { StrokeThickness = 4 },
                             GeometrySize = 12, GeometryStroke = new SolidColorPaint(SKColors.Orange), GeometryFill = new SolidColorPaint(SKColors.White), LineSmoothness = 0.5,
+                            DataLabelsPaint = textPaint,
                             DataLabelsFormatter = point => point.PrimaryValue > 0 ? $"{point.PrimaryValue:N0}₺" : string.Empty
                         }
                     },
-                    XAxes = new Axis[] { new Axis { Labels = labels.ToArray(), TextSize = 13, LabelsPaint = new SolidColorPaint(SKColors.Black) } },
-                    YAxes = new Axis[] { new Axis { Labeler = value => value.ToString("N0") + "₺", TextSize = 12 } },
+                    XAxes = new Axis[] { new Axis { Labels = labels.ToArray(), TextSize = 13, LabelsPaint = textPaint } },
+                    YAxes = new Axis[] { new Axis { Labeler = value => value.ToString("N0") + "₺", TextSize = 12, LabelsPaint = textPaint } },
                     TooltipPosition = LiveChartsCore.Measure.TooltipPosition.Top,
-                    ZoomMode = LiveChartsCore.Measure.ZoomAndPanMode.None
+                    LegendTextPaint = textPaint,
+                    ZoomMode = LiveChartsCore.Measure.ZoomAndPanMode.None,
+                    AnimationsSpeed = TimeSpan.Zero,
+                    EasingFunction = null
                 };
 
                 // --- 6. GÜNLÜK HARCAMA ---
@@ -385,12 +432,16 @@ namespace Kumparam.Pages.DashboardSubPages
                         new ColumnSeries<decimal>
                         {
                             Name = "Toplam Harcama", Values = dayValues.ToArray(), Fill = new SolidColorPaint(SKColors.SlateBlue), MaxBarWidth = 50, Rx = 10, Ry = 10,
+                            DataLabelsPaint = textPaint,
                             DataLabelsFormatter = point => point.PrimaryValue > 0 ? $"{point.PrimaryValue:N0}₺" : string.Empty
                         }
                     },
-                    XAxes = new Axis[] { new Axis { Labels = turkishDays, TextSize = 13, LabelsPaint = new SolidColorPaint(SKColors.Black) } },
-                    YAxes = new Axis[] { new Axis { Labeler = value => value.ToString("N0") + "₺", TextSize = 12 } },
-                    ZoomMode = LiveChartsCore.Measure.ZoomAndPanMode.None
+                    XAxes = new Axis[] { new Axis { Labels = turkishDays, TextSize = 13, LabelsPaint = textPaint } },
+                    YAxes = new Axis[] { new Axis { Labeler = value => value.ToString("N0") + "₺", TextSize = 12, LabelsPaint = textPaint } },
+                    LegendTextPaint = textPaint,
+                    ZoomMode = LiveChartsCore.Measure.ZoomAndPanMode.None,
+                    AnimationsSpeed = TimeSpan.Zero,
+                    EasingFunction = null
                 };
 
                 CalculateBudgetRule(allTransactions);
@@ -510,6 +561,17 @@ namespace Kumparam.Pages.DashboardSubPages
 
             if (savingsPercent < 20) PbSavings.Foreground = System.Windows.Media.Brushes.Orange;
             else PbSavings.Foreground = System.Windows.Media.Brushes.DodgerBlue;
+        }
+        // Temaya göre yazı rengini belirleyen yardımcı metot
+        private SolidColorPaint GetTextPaint()
+        {
+            bool isDark = Kumparam.Properties.Settings.Default.IsDarkMode;
+    
+            // Karanlıksa BEYAZ, Aydınlıksa KOYU GRİ boya döndür
+            return new SolidColorPaint(isDark ? SKColors.White : SKColors.DarkSlateGray) 
+            { 
+                SKTypeface = SKTypeface.FromFamilyName("Arial") // İstersen font da seçebilirsin
+            };
         }
     }
 }

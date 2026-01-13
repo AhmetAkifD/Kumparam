@@ -9,7 +9,7 @@
              TextElement.Foreground="{DynamicResource MaterialDesignBody}"
              FontFamily="{DynamicResource MaterialDesignFont}">
 
-    <materialDesign:Card Margin="20" Padding="20" Style="{StaticResource DashboardCardStyle}" VerticalAlignment="Stretch">
+    <materialDesign:Card Margin="20" Style="{StaticResource DashboardCardStyle}" VerticalAlignment="Stretch">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
@@ -17,7 +17,6 @@
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
-            <!-- ÜST BAR -->
             <DockPanel LastChildFill="False" Margin="0,0,0,20">
                 <Button Style="{StaticResource MaterialDesignIconForegroundButton}" 
                         HorizontalAlignment="Left" Click="BackButton_Click" ToolTip="Kapat / Geri Dön">
@@ -27,7 +26,6 @@
                            VerticalAlignment="Center" Margin="10,0,0,0"/>
             </DockPanel>
 
-            <!-- TABLO -->
             <DataGrid Grid.Row="1" x:Name="DeletedGrid" AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
                       HeadersVisibility="Column" SelectionMode="Single" SelectionUnit="FullRow">
                 <DataGrid.Columns>
@@ -43,27 +41,23 @@
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
 
-                    <!-- İŞLEMLER -->
                     <DataGridTemplateColumn Header="İşlemler" Width="Auto">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal">
-                                    <!-- Geri Yükle -->
                                     <Button Style="{StaticResource MaterialDesignIconForegroundButton}"
                                             Tag="{Binding Description}" 
                                             Click="RestoreButton_Click"
                                             ToolTip="Geri Yükle"
                                             Margin="0,0,10,0">
-                                        <materialDesign:PackIcon Kind="RestoreFromTrash" Foreground="Green"/>
+                                        <materialDesign:PackIcon Kind="RestoreFromTrash" Foreground="#66BB6A"/>
                                     </Button>
 
-                                    <!-- Kalıcı Sil (Gibi Görünen Buton) -->
-                                    <!-- İkon tekrar Kırmızı Çöp Kovası yapıldı -->
                                     <Button Style="{StaticResource MaterialDesignIconForegroundButton}"
                                             Tag="{Binding Description}" 
                                             Click="PurgeButton_Click"
                                             ToolTip="Kalıcı Olarak Sil">
-                                        <materialDesign:PackIcon Kind="DeleteForever" Foreground="Red"/>
+                                        <materialDesign:PackIcon Kind="DeleteForever" Foreground="#EF5350"/>
                                     </Button>
                                 </StackPanel>
                             </DataTemplate>
@@ -72,7 +66,6 @@
                 </DataGrid.Columns>
             </DataGrid>
 
-            <!-- DİPNOT -->
             <TextBlock Grid.Row="2" Text="* Geri yüklenen işlemler bakiyenize tekrar dahil edilecektir." 
                        Opacity="0.6" FontStyle="Italic" Margin="0,10,0,0" HorizontalAlignment="Center"/>
         </Grid>

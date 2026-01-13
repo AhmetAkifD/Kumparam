@@ -6,12 +6,15 @@ using Kumparam.Core.Models;
 using Kumparam.Core.Interfaces;
 using Kumparam.Data.Repositories;
 using Kumparam.Pages.DashboardSubPages; 
+using MaterialDesignThemes.Wpf;
+
 
 namespace Kumparam.Pages;
 
 public partial class DashboardWindow : Window
 {
     private readonly User _currentUser;
+    public static event Action ThemeChanged;
 
     public DashboardWindow(User user)
     {
@@ -37,6 +40,10 @@ public partial class DashboardWindow : Window
             WelcomeText.Text = _currentUser.Email;
         }
         NavigateTo(new SummaryView(_currentUser.UserId));
+        //bool isDark = Properties.Settings.Default.IsDarkMode;
+        bool isDark = Properties.Settings.Default.IsDarkMode;
+        ModifyTheme(isDark);
+        ThemeToggle.IsChecked = isDark;
         CheckScreenResolution();
         if (_currentUser.IsAdmin)
         {
@@ -136,5 +143,30 @@ public partial class DashboardWindow : Window
             this.Width = targetMinW;
             this.Height = targetMinH;
         }
+    }
+    private void ModifyTheme(bool isDarkTheme)
+    {
+        var paletteHelper = new PaletteHelper();
+        var theme = paletteHelper.GetTheme();
+
+        // Temayı ayarla (Dark veya Light)
+        theme.SetBaseTheme(isDarkTheme ? BaseTheme.Dark : BaseTheme.Light);
+    
+        // Uygula
+        paletteHelper.SetTheme(theme);
+    }
+    
+    private void ThemeToggle_Click(object sender, RoutedEventArgs e)
+    {
+        // ToggleButton'ın o anki durumu (True = Dark, False = Light)
+        bool isDark = ThemeToggle.IsChecked == true;
+
+        // Temayı değiştir
+        ModifyTheme(isDark);
+
+        // Ayarı hafızaya kaydet
+        Properties.Settings.Default.IsDarkMode = isDark;
+        Properties.Settings.Default.Save();
+        ThemeChanged?.Invoke();
     }
 }

@@ -5,29 +5,24 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              mc:Ignorable="d" 
-             d:DesignHeight="700" d:DesignWidth="1000"
+             d:DesignHeight="800" d:DesignWidth="1000"
              TextElement.Foreground="{DynamicResource MaterialDesignBody}"
              FontFamily="{DynamicResource MaterialDesignFont}">
 
     <Grid Margin="20">
         <Grid.ColumnDefinitions>
-            <!-- SOL: Kimlik Kartı (Sabit Genişlik) -->
             <ColumnDefinition Width="320"/>
-            <!-- SAĞ: Ayarlar (Esnek) -->
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <!-- SOL KOLON: PROFİL KARTI -->
-        <materialDesign:Card Grid.Column="0" Margin="0,0,20,0" UniformCornerRadius="15" materialDesign:ElevationAssist.Elevation="Dp3" VerticalAlignment="Top">
-            <StackPanel VerticalAlignment="Center" Margin="20">
+        <materialDesign:Card Grid.Column="0" Style="{StaticResource DashboardCardStyle}" Margin="0,0,20,0" VerticalAlignment="Top">
+            <StackPanel VerticalAlignment="Center" Margin="10">
                 
-                <!-- Avatar (İsim Baş Harfleri) -->
                 <Border Width="120" Height="120" CornerRadius="60" Background="{DynamicResource PrimaryHueMidBrush}" Margin="0,0,0,15">
                     <TextBlock x:Name="TxtInitials" Text="UK" FontSize="48" FontWeight="Bold" 
                                Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 </Border>
 
-                <!-- İsim ve Mail -->
                 <TextBlock x:Name="TxtFullName" Text="Yükleniyor..." Style="{StaticResource MaterialDesignHeadline5TextBlock}" 
                            HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" FontWeight="Bold"/>
                 
@@ -36,7 +31,6 @@
 
                 <Separator Margin="20,0"/>
 
-                <!-- Üyelik Rozeti -->
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,20,0,10">
                     <materialDesign:PackIcon Kind="WalletMembership" VerticalAlignment="Center" Margin="0,0,8,0" Foreground="{DynamicResource SecondaryHueMidBrush}" Width="24" Height="24"/>
     
@@ -45,12 +39,10 @@
             </StackPanel>
         </materialDesign:Card>
 
-        <!-- SAĞ KOLON: AYARLAR VE BUTONLAR -->
-        <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto">
+        <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto" Padding="0,0,10,0">
             <StackPanel>
                 
-                <!-- 1. KİŞİSEL BİLGİLER -->
-                <materialDesign:Card UniformCornerRadius="8" Padding="20" Margin="0,0,0,20" materialDesign:ElevationAssist.Elevation="Dp2">
+                <materialDesign:Card Style="{StaticResource DashboardCardStyle}" Margin="0,0,0,20">
                     <StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
                             <materialDesign:PackIcon Kind="AccountEdit" Width="24" Height="24" Foreground="{DynamicResource PrimaryHueMidBrush}"/>
@@ -62,28 +54,36 @@
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <TextBox x:Name="FirstNameTextBox" Grid.Column="0" materialDesign:HintAssist.Hint="Ad" Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,10,0"/>
-                            <TextBox x:Name="LastNameTextBox" Grid.Column="1" materialDesign:HintAssist.Hint="Soyad" Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="10,0,0,0"/>
+                            <TextBox x:Name="FirstNameTextBox" Grid.Column="0" materialDesign:HintAssist.Hint="Ad" Margin="0,0,10,0"/>
+                            <TextBox x:Name="LastNameTextBox" Grid.Column="1" materialDesign:HintAssist.Hint="Soyad" Margin="10,0,0,0"/>
                         </Grid>
 
-                        <Button Content="BİLGİLERİ GÜNCELLE" Click="UpdateProfile_Click" Margin="0,15,0,0" HorizontalAlignment="Right" Style="{StaticResource MaterialDesignRaisedButton}" Foreground="White"/>
+                        <Button Content="BİLGİLERİ GÜNCELLE" Click="UpdateProfile_Click" 
+                                Margin="0,15,0,0" 
+                                HorizontalAlignment="Right" 
+                                Style="{StaticResource MaterialDesignRaisedButton}"
+                                Foreground="{DynamicResource MaterialDesignPaper}"/>
                     </StackPanel>
                 </materialDesign:Card>
 
-                <!-- 2. ARAÇLAR -->
-                <materialDesign:Card UniformCornerRadius="8" Padding="20" Margin="0,0,0,20" materialDesign:ElevationAssist.Elevation="Dp2">
+                <materialDesign:Card Style="{StaticResource DashboardCardStyle}" Margin="0,0,0,20">
                     <StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
-                            <materialDesign:PackIcon Kind="Tools" Width="24" Height="24" Foreground="Orange"/>
+                            <materialDesign:PackIcon Kind="Tools" Width="24" Height="24" Foreground="#FFA726"/>
                             <TextBlock Text="Araçlar" Style="{StaticResource MaterialDesignHeadline6TextBlock}" Margin="10,0,0,0"/>
                         </StackPanel>
 
                         <Grid>
-                             <!-- Geri Dönüşüm Kutusu Butonu -->
-                            <Button Style="{StaticResource MaterialDesignOutlinedButton}" Height="50"
-                                    BorderBrush="Orange" Foreground="White" Background="Orange" Click="OpenRecycleBin_Click" HorizontalAlignment="Left">
+                             <Button Style="{StaticResource MaterialDesignRaisedButton}" Height="50"
+                                     Background="#FFA726"
+                                     BorderBrush="#FFA726" 
+                                     Foreground="{DynamicResource MaterialDesignPaper}" 
+                                    Click="OpenRecycleBin_Click" HorizontalAlignment="Left">
                                 <StackPanel Orientation="Horizontal">
-                                    <materialDesign:PackIcon Kind="DeleteRestore" Width="24" Height="24" Margin="0,0,10,0"/>
+                                    <materialDesign:PackIcon 
+                                        Kind="DeleteRestore" 
+                                        Width="24" Height="24" 
+                                        Margin="0,0,10,0"/>
                                     <TextBlock Text="Geri Dönüşüm Kutusu" VerticalAlignment="Center" FontWeight="Bold"/>
                                 </StackPanel>
                             </Button>
@@ -91,73 +91,83 @@
                     </StackPanel>
                 </materialDesign:Card>
 
-                <!-- 3. GÜVENLİK (Expander) -->
-                <materialDesign:Card UniformCornerRadius="8" Margin="0,0,0,20" materialDesign:ElevationAssist.Elevation="Dp2">
-                    <Expander Header="Şifre İşlemleri" IsExpanded="False" Padding="10">
-                        <StackPanel Margin="10">
-    <Grid Margin="0,0,0,10">
-        <PasswordBox x:Name="OldPasswordBox" materialDesign:HintAssist.Hint="Mevcut Şifre" 
-                     Style="{StaticResource MaterialDesignOutlinedPasswordBox}" 
-                     VerticalAlignment="Center"/>
-        <TextBox x:Name="OldPasswordVisibleBox" materialDesign:HintAssist.Hint="Mevcut Şifre" 
-                 Style="{StaticResource MaterialDesignOutlinedTextBox}" 
-                 Visibility="Collapsed" VerticalAlignment="Center"/>
-        <ToggleButton Style="{StaticResource MaterialDesignActionToggleButton}"
-                      HorizontalAlignment="Right" VerticalAlignment="Center"
-                      Width="32" Height="32" Margin="0,0,8,0"
-                      Click="ToggleOldPassword_Click">
-            <materialDesign:PackIcon Kind="Eye" />
-            <materialDesign:ToggleButtonAssist.OnContent>
-                <materialDesign:PackIcon Kind="EyeOff" />
-            </materialDesign:ToggleButtonAssist.OnContent>
-        </ToggleButton>
-    </Grid>
+                <materialDesign:Card Style="{StaticResource DashboardCardStyle}" Margin="0,0,0,20">
+                    <Expander Header="Şifre İşlemleri" IsExpanded="False" Padding="0">
+                        <StackPanel Margin="0,15,0,0">
+                            <Grid Margin="0,0,0,10">
+                                <PasswordBox x:Name="OldPasswordBox" materialDesign:HintAssist.Hint="Mevcut Şifre" 
+                                             Style="{StaticResource MaterialDesignOutlinedPasswordBox}" 
+                                             VerticalAlignment="Center"/>
+                                <TextBox x:Name="OldPasswordVisibleBox" materialDesign:HintAssist.Hint="Mevcut Şifre" 
+                                         Visibility="Collapsed" VerticalAlignment="Center"/>
+                                <ToggleButton Style="{StaticResource MaterialDesignActionToggleButton}"
+                                              HorizontalAlignment="Right" VerticalAlignment="Center"
+                                              Width="32" Height="32" Margin="0,0,8,0"
+                                              Click="ToggleOldPassword_Click">
+                                    <materialDesign:PackIcon Kind="Eye" />
+                                    <materialDesign:ToggleButtonAssist.OnContent>
+                                        <materialDesign:PackIcon Kind="EyeOff" />
+                                    </materialDesign:ToggleButtonAssist.OnContent>
+                                </ToggleButton>
+                            </Grid>
 
-    <Grid Margin="0,0,0,10">
-        <PasswordBox x:Name="NewPasswordBox" materialDesign:HintAssist.Hint="Yeni Şifre" 
-                     Style="{StaticResource MaterialDesignOutlinedPasswordBox}" 
-                     VerticalAlignment="Center"/>
-        <TextBox x:Name="NewPasswordVisibleBox" materialDesign:HintAssist.Hint="Yeni Şifre" 
-                 Style="{StaticResource MaterialDesignOutlinedTextBox}" 
-                 Visibility="Collapsed" VerticalAlignment="Center"/>
-        <ToggleButton Style="{StaticResource MaterialDesignActionToggleButton}"
-                      HorizontalAlignment="Right" VerticalAlignment="Center"
-                      Width="32" Height="32" Margin="0,0,8,0"
-                      Click="ToggleNewPassword_Click">
-            <materialDesign:PackIcon Kind="Eye" />
-            <materialDesign:ToggleButtonAssist.OnContent>
-                <materialDesign:PackIcon Kind="EyeOff" />
-            </materialDesign:ToggleButtonAssist.OnContent>
-        </ToggleButton>
-    </Grid>
-    
-    <Button Content="ŞİFREYİ DEĞİŞTİR" Style="{StaticResource MaterialDesignOutlinedButton}" 
-            BorderBrush="{DynamicResource PrimaryHueMidBrush}" Foreground="{DynamicResource PrimaryHueMidBrush}" 
-            HorizontalAlignment="Right" Click="ChangePassword_Click"/>
-</StackPanel>
+                            <Grid Margin="0,0,0,10">
+                                <PasswordBox x:Name="NewPasswordBox" materialDesign:HintAssist.Hint="Yeni Şifre" 
+                                             Style="{StaticResource MaterialDesignOutlinedPasswordBox}" 
+                                             VerticalAlignment="Center"/>
+                                <TextBox x:Name="NewPasswordVisibleBox" materialDesign:HintAssist.Hint="Yeni Şifre" 
+                                         Visibility="Collapsed" VerticalAlignment="Center"/>
+                                <ToggleButton Style="{StaticResource MaterialDesignActionToggleButton}"
+                                              HorizontalAlignment="Right" VerticalAlignment="Center"
+                                              Width="32" Height="32" Margin="0,0,8,0"
+                                              Click="ToggleNewPassword_Click">
+                                    <materialDesign:PackIcon Kind="Eye" />
+                                    <materialDesign:ToggleButtonAssist.OnContent>
+                                        <materialDesign:PackIcon Kind="EyeOff" />
+                                    </materialDesign:ToggleButtonAssist.OnContent>
+                                </ToggleButton>
+                            </Grid>
+                            
+                            <Button Content="ŞİFREYİ DEĞİŞTİR" Style="{StaticResource MaterialDesignOutlinedButton}" 
+                                    BorderBrush="{DynamicResource PrimaryHueMidBrush}" Foreground="{DynamicResource PrimaryHueMidBrush}" 
+                                    HorizontalAlignment="Right" Click="ChangePassword_Click"/>
+                        </StackPanel>
                     </Expander>
                 </materialDesign:Card>
 
-                <!-- 4. TEHLİKELİ BÖLGE -->
-                <materialDesign:Card UniformCornerRadius="8" Padding="20" Background="#FFEBEE" materialDesign:ElevationAssist.Elevation="Dp2">
-                    <StackPanel>
-                        <DockPanel LastChildFill="False" Margin="0,0,0,10">
-                            <materialDesign:PackIcon Kind="Warning" Foreground="Red" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                            <TextBlock Text="Tehlikeli Bölge" FontWeight="Bold" Foreground="Red" FontSize="16" VerticalAlignment="Center"/>
-                        </DockPanel>
-    
-                        <TextBlock Text="Tüm finansal verilerinizi (İşlemler, Yatırımlar, Hedefler) kalıcı olarak siler." 
-                                   TextWrapping="Wrap" Margin="0,0,0,5" Opacity="0.7"/>
-                        <Button Content="TÜM VERİLERİ SIFIRLA" Background="#EF5350" BorderBrush="#EF5350" Foreground="White" 
-                                HorizontalAlignment="Left" Click="ResetData_Click" Margin="0,0,0,20"/>
+                <materialDesign:Card Style="{StaticResource DashboardCardStyle}">
+                    <Border BorderBrush="#EF5350" BorderThickness="1" CornerRadius="8" Padding="15">
+                        <StackPanel>
+                            <DockPanel LastChildFill="False" Margin="0,0,0,10">
+                                <materialDesign:PackIcon Kind="Warning" Foreground="#EF5350" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                <TextBlock Text="Tehlikeli Bölge" FontWeight="Bold" Foreground="#EF5350" FontSize="16" VerticalAlignment="Center"/>
+                            </DockPanel>
+        
+                            <TextBlock Text="Tüm finansal verilerinizi (İşlemler, Yatırımlar, Hedefler) kalıcı olarak siler." 
+                                       TextWrapping="Wrap" 
+                                       Margin="0,0,0,5" 
+                                       Opacity="0.7"/>
+                            
+                            <Button Content="TÜM VERİLERİ SIFIRLA" 
+                                    Style="{StaticResource MaterialDesignRaisedButton}"
+                                    BorderBrush="#EF5350" 
+                                    Background="#EF5350" 
+                                    Foreground="{DynamicResource MaterialDesignPaper}"
+                                    HorizontalAlignment="Left" Click="ResetData_Click" Margin="0,0,0,20"/>
 
-                        <Separator Margin="0,0,0,15"/>
+                            <Separator Margin="0,0,0,15"/>
 
-                        <TextBlock Text="Hesabınızı ve tüm verilerinizi kalıcı olarak siler." 
-                                   TextWrapping="Wrap" Margin="0,0,0,5" Opacity="0.7"/>
-                        <Button Content="HESABI KALICI OLARAK SİL" Background="DarkRed" BorderBrush="DarkRed" Foreground="White" 
-                                HorizontalAlignment="Left" Click="DeleteAccount_Click"/>
-                    </StackPanel>
+                            <TextBlock Text="Hesabınızı ve tüm verilerinizi kalıcı olarak siler." 
+                                       TextWrapping="Wrap" Margin="0,0,0,5" Opacity="0.7"/>
+                            
+                            <Button Content="HESABI KALICI OLARAK SİL" 
+                                    Style="{StaticResource MaterialDesignRaisedButton}"
+                                    Background="#D32F2F" 
+                                    BorderBrush="#D32F2F" 
+                                    Foreground="{DynamicResource MaterialDesignPaper}"
+                                    HorizontalAlignment="Left" Click="DeleteAccount_Click"/>
+                        </StackPanel>
+                    </Border>
                 </materialDesign:Card>
 
             </StackPanel>

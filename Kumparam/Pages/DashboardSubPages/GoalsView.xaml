@@ -11,49 +11,43 @@
              FontFamily="{DynamicResource MaterialDesignFont}">
 
     <UserControl.Resources>
-        <!-- Converter Tanımlamaları -->
         <local:DeadlineToRemainingDaysConverter x:Key="DeadlineToRemainingDaysConverter"/>
         <local:DeadlineToColorConverter x:Key="DeadlineToColorConverter"/>
     </UserControl.Resources>
 
     <Grid Margin="20">
         <Grid.ColumnDefinitions>
-            <!-- SOL TARAF: FORM (350px sabit) -->
             <ColumnDefinition Width="350"/>
-            <!-- SAĞ TARAF: LİSTE (Kalan alan) -->
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <!-- SOL PANEL: YENİ HEDEF EKLEME -->
-        <materialDesign:Card Grid.Column="0" UniformCornerRadius="10" Padding="20" Margin="0,0,20,0" VerticalAlignment="Top" 
-                             materialDesign:ElevationAssist.Elevation="Dp2">
+        <materialDesign:Card Grid.Column="0" Style="{StaticResource DashboardCardStyle}" Margin="0,0,20,0" VerticalAlignment="Top">
             <StackPanel>
                 <TextBlock Text="🎯 Yeni Hedef" Style="{StaticResource MaterialDesignHeadline6TextBlock}" Margin="0,0,0,15"/>
 
                 <TextBox x:Name="TitleTextBox" materialDesign:HintAssist.Hint="Hedef Başlığı" 
-                         Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,10"/>
+                         Margin="0,10"/>
 
                 <TextBox x:Name="TargetAmountTextBox" materialDesign:HintAssist.Hint="Hedeflenen Tutar (₺)" 
-                         Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,10"/>
+                         Margin="0,10"/>
 
                 <TextBox x:Name="CurrentAmountTextBox" materialDesign:HintAssist.Hint="Başlangıç Tutarı (Opsiyonel)" 
-                         Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,10" Text="0"/>
+                         Margin="0,10" Text="0"/>
 
                 <DatePicker x:Name="DeadlineDatePicker" materialDesign:HintAssist.Hint="Hedef Tarih" 
-                            Style="{StaticResource MaterialDesignOutlinedDatePicker}" Margin="0,10"/>
+                            Margin="0,10"/>
 
                 <TextBox x:Name="DescriptionTextBox" materialDesign:HintAssist.Hint="Notlar..." 
-                         Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,10"
+                         Margin="0,10"
                          Height="80" TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Auto"
                          KeyDown="DescriptionTextBox_OnKeyDown"/>
 
-                <Button Content="KAYDET" Style="{StaticResource MaterialDesignRaisedButton}" 
+                <Button Content="KAYDET"
                         Margin="0,20,0,0" Height="45" Click="SaveGoal_Click"
                         materialDesign:ButtonAssist.CornerRadius="5"/>
             </StackPanel>
         </materialDesign:Card>
 
-        <!-- SAĞ PANEL: HEDEFLER LİSTESİ -->
         <Border Grid.Column="1" Background="Transparent" Padding="10">
             <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,0,10,0">
                 <StackPanel>
@@ -62,91 +56,72 @@
                     <ItemsControl x:Name="GoalsList">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <materialDesign:Card Margin="0,0,0,15" Padding="15" UniformCornerRadius="12" 
-                                                     materialDesign:ElevationAssist.Elevation="Dp2">
+                                <materialDesign:Card Style="{StaticResource DashboardCardStyle}" Margin="0,0,0,15">
                                     <Grid>
                                         <Grid.RowDefinitions>
-                                            <RowDefinition Height="Auto"/> <!-- Başlık -->
-                                            <RowDefinition Height="Auto"/> <!-- Progress Bar -->
-                                            <RowDefinition Height="Auto"/> <!-- Detaylar -->
-                                            <RowDefinition Height="Auto"/> <!-- Butonlar -->
-                                        </Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/> <RowDefinition Height="Auto"/> <RowDefinition Height="Auto"/> <RowDefinition Height="Auto"/> </Grid.RowDefinitions>
 
-                                        <!-- 1. Satır: Başlık ve Tarih -->
                                         <DockPanel Grid.Row="0" LastChildFill="False">
-                                            <!-- Başlık (Sola Yaslı) -->
                                             <TextBlock Text="{Binding Title}" FontWeight="Bold" FontSize="18" VerticalAlignment="Center" DockPanel.Dock="Left"/>
                                             
-                                            <!-- Tarih (En Sağa Yaslı) -->
                                             <TextBlock Text="{Binding Deadline, StringFormat='{}{0:dd.MM.yyyy}'}" 
                                                        FontSize="12" Opacity="0.6" VerticalAlignment="Center" DockPanel.Dock="Right"/>
                                             
-                                            <!-- Kalan Gün (Tarihin Solunda) -->
-                                            <!-- HEM METİN HEM RENK CONVERTER KULLANDIK -->
                                             <TextBlock Text="{Binding Deadline, Converter={StaticResource DeadlineToRemainingDaysConverter}}" 
                                                        Foreground="{Binding Deadline, Converter={StaticResource DeadlineToColorConverter}}"
                                                        FontSize="12" FontWeight="Bold" 
                                                        VerticalAlignment="Center" Margin="0,0,10,0" DockPanel.Dock="Right"/>
                                         </DockPanel>
 
-                                        <!-- 2. Satır: İlerleme Çubuğu (Turuncu) -->
                                         <Grid Grid.Row="1" Margin="0,15,0,5">
                                             <ProgressBar Value="{Binding CurrentAmount}" Maximum="{Binding TargetAmount}" Height="15" 
-                                                         Background="#E0E0E0" Foreground="Orange" 
+                                                         Background="{DynamicResource MaterialDesignDivider}" 
+                                                         Foreground="#FFA726" 
                                                          BorderBrush="Transparent" BorderThickness="0"/>
                                         </Grid>
 
-                                        <!-- 3. Satır: Tutar Bilgileri -->
                                         <DockPanel Grid.Row="2" Margin="0,0,0,15">
-                                            <!-- Sol: Biriken / Hedef -->
                                             <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
-                                                <TextBlock Text="{Binding CurrentAmount, StringFormat='{}{0:N0} ₺'}" FontWeight="Bold" Foreground="Green"/>
+                                                <TextBlock Text="{Binding CurrentAmount, StringFormat='{}{0:N0} ₺'}" FontWeight="Bold" Foreground="#66BB6A"/>
                                                 <TextBlock Text=" / " Opacity="0.5"/>
                                                 <TextBlock Text="{Binding TargetAmount, StringFormat='{}{0:N0} ₺'}" Opacity="0.7"/>
                                             </StackPanel>
                                             
-                                            <!-- Sağ: Yüzde -->
                                             <TextBlock Text="{Binding ProgressPercentage, StringFormat='{}%{0:0.0}'}" 
-                                                       DockPanel.Dock="Right" FontWeight="Bold" Foreground="{DynamicResource SecondaryHueMidBrush}"/>
+                                                       DockPanel.Dock="Right" FontWeight="Bold" Foreground="#FFA726"/>
                                         </DockPanel>
 
-                                        <!-- 4. Satır: Açıklama ve Butonlar -->
                                         <Grid Grid.Row="3">
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="*"/>
                                                 <ColumnDefinition Width="Auto"/>
                                             </Grid.ColumnDefinitions>
 
-                                            <!-- Açıklama -->
                                             <TextBlock Grid.Column="0" Text="{Binding Description}" TextTrimming="CharacterEllipsis" 
                                                        Opacity="0.5" FontStyle="Italic" VerticalAlignment="Center" Margin="0,0,10,0"/>
 
-                                            <!-- Aksiyon Butonları -->
                                             <StackPanel Grid.Column="1" Orientation="Horizontal">
                                                 
-                                                <!-- Para Ekle Butonu -->
                                                 <Button Style="{StaticResource MaterialDesignIconButton}"
                                                         ToolTip="Para Ekle"
                                                         Tag="{Binding}" Click="AddMoney_Click"
-                                                        Foreground="Green"
+                                                        Foreground="#66BB6A"
                                                         Width="40" Height="40" Margin="0,0,5,0">
                                                     <materialDesign:PackIcon Kind="CashPlus" Width="28" Height="28"/>
                                                 </Button>
 
-                                                <!-- Para Çekme Butonu (Kırmızı) -->
                                                 <Button Style="{StaticResource MaterialDesignIconButton}"
                                                         ToolTip="Para Çek (İade Al)"
                                                         Tag="{Binding}" Click="RemoveMoney_Click"
-                                                        Foreground="Red"
+                                                        Foreground="#EF5350"
                                                         Width="40" Height="40" Margin="0,0,5,0">
                                                     <materialDesign:PackIcon Kind="CashMinus" Width="28" Height="28"/>
                                                 </Button>
 
-                                                <!-- Sil Butonu -->
                                                 <Button Style="{StaticResource MaterialDesignIconButton}"
                                                         ToolTip="Sil"
                                                         Tag="{Binding}" Click="DeleteGoal_Click"
-                                                        Foreground="Red"
+                                                        Foreground="#EF5350"
                                                         Width="40" Height="40">
                                                     <materialDesign:PackIcon Kind="Delete" Width="26" Height="26"/>
                                                 </Button>

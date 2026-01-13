@@ -12,12 +12,6 @@
         Style="{StaticResource MaterialDesignWindow}">
 
     <Window.Resources>
-        <!-- 
-        =================================================================
-        YEREL STİL TANIMLAMASI (Sadece Bu Pencere İçin)
-        =================================================================
-        Bu stil, sol menüdeki butonların ve ikonların rengini ZORLA Beyaz yapar.
-        -->
         <Style x:Key="SidebarButtonStyle" TargetType="Button" BasedOn="{StaticResource MaterialDesignFlatButton}">
             <Setter Property="Height" Value="50"/>
             <Setter Property="HorizontalContentAlignment" Value="Left"/>
@@ -170,7 +164,19 @@
 
                 <!-- Sağ Üst Köşe (Profil ve Bildirimler) -->
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,30,0">
-
+                    <ToggleButton x:Name="ThemeToggle"
+                                  Style="{StaticResource MaterialDesignSwitchToggleButton}"
+                                  ToolTip="Karanlık Modu Aç/Kapat"
+                                  Margin="0,0,20,0"
+                                  Click="ThemeToggle_Click">
+                        <materialDesign:PackIcon Kind="WeatherNight" RenderTransformOrigin=".5,.5">
+                            <materialDesign:PackIcon.RenderTransform>
+                                <RotateTransform Angle="180" /> </materialDesign:PackIcon.RenderTransform>
+                        </materialDesign:PackIcon>
+                        <materialDesign:ToggleButtonAssist.OnContent>
+                            <materialDesign:PackIcon Kind="WeatherSunny" />
+                        </materialDesign:ToggleButtonAssist.OnContent>
+                    </ToggleButton>
                     <!-- Bildirim Zili -->
                     <materialDesign:Badged Badge="3" Margin="0,0,20,0">
                         <Button Style="{StaticResource MaterialDesignIconForegroundButton}" ToolTip="Bildirimler">

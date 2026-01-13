@@ -50,6 +50,15 @@ public partial class MainWindow : Window
             DbConnectionStatusTextBlock.Text = "❌ Kritik Hata: " + ex.Message;
             DbConnectionStatusTextBlock.Foreground = Brushes.Red;
         }
+        // TEMA AYARINI YÜKLE
+        // Daha önce kaydedilen ayarı okuyoruz
+        bool isDark = Kumparam.Properties.Settings.Default.IsDarkMode;
+    
+        // Toggle butonunun durumunu güncelle (Checked = Dark Mode)
+        ThemeToggle.IsChecked = isDark;
+    
+        // Uygulamanın temasını ayarla
+        App.ModifyTheme(isDark);
     }
     
     private async void KayitEkraniniGoster_Click(object sender, RoutedEventArgs e)
@@ -317,5 +326,17 @@ public partial class MainWindow : Window
         toTrans.BeginAnimation(TranslateTransform.XProperty, animTo);
 
         return tcs.Task;
+    }
+    private void ThemeToggle_Click(object sender, RoutedEventArgs e)
+    {
+        // Toggle basılıysa (True) -> Karanlık Mod, değilse -> Aydınlık Mod
+        bool isDark = ThemeToggle.IsChecked == true;
+
+        // 1. Temayı değiştir
+        App.ModifyTheme(isDark);
+
+        // 2. Ayarı hafızaya kaydet
+        Kumparam.Properties.Settings.Default.IsDarkMode = isDark;
+        Kumparam.Properties.Settings.Default.Save();
     }
 }
