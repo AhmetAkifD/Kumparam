@@ -197,7 +197,7 @@ public partial class AdminView : UserControl
             
             var config = new ScrapingConfig
             {
-                Symbol = SymbolTextBox.Text.ToUpper(),
+                Symbol = SymbolTextBox.Text.Trim(),
                 Description = DescTextBox.Text,
                 TargetUrl = UrlTextBox.Text,
                 HtmlPath_Selling = XPathSellingBox.Text, // YENİ

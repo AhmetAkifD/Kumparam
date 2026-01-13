@@ -1,9 +1,8 @@
-﻿// WebScrapingService.cs GÜNCEL HALİ:
-
-using System;
+﻿using System;
 using System.Globalization;
 using System.Net.Http;
 using System.Threading.Tasks;
+using System.Linq;
 using HtmlAgilityPack;
 using Kumparam.Core.Interfaces;
 
@@ -12,39 +11,60 @@ namespace Kumparam.Data.Services
     public class WebScrapingService : IFinancialDataService
     {
         private readonly HttpClient _httpClient;
-        private readonly IUserRepository _userRepository; // YENİ: Veritabanı erişimi
+        private readonly IUserRepository _userRepository;
 
-        // Constructor değişti: Artık repository istiyor
         public WebScrapingService(IUserRepository userRepository)
         {
+            _userRepository = userRepository;
+            
             _httpClient = new HttpClient();
-            _httpClient.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36");
-            // Tarayıcı Taklidi (User-Agent)
+            // Header ayarları (Admin panelindeki gibi güçlü taklit)
             _httpClient.DefaultRequestHeaders.Clear();
             _httpClient.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
             _httpClient.DefaultRequestHeaders.Add("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8");
             _httpClient.DefaultRequestHeaders.Add("Accept-Language", "tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7");
-            
-            _userRepository = userRepository;
         }
 
         public async Task<decimal> GetPriceAsync(string symbol)
         {
-            var config = _userRepository.GetScrapingConfig(symbol);
-            if (config == null || !config.IsActive) return 0;
+            if (string.IsNullOrWhiteSpace(symbol)) return 0;
 
-            // SATIŞ İÇİN: HtmlPath_Selling kullan
-            return await ScrapeData(config.TargetUrl, config.HtmlPath_Selling);
+            // Arama yaparken veritabanı ayarı neyse onu bulsun (Büyük/Küçük harf duyarsız arama yapıyoruz)
+            var configs = _userRepository.GetAllScrapingConfigs();
+            var config = configs.FirstOrDefault(c => c.Symbol.Equals(symbol.Trim(), StringComparison.OrdinalIgnoreCase));
+
+            if (config == null || !config.IsActive) return 0;
+            string dbSymbol = config.Symbol.Trim(); 
+
+            string finalUrl = config.TargetUrl.Replace("[CODE]", dbSymbol).Replace("[LINK-ADI]", dbSymbol);
+            string finalXPath = config.HtmlPath_Selling.Replace("[CODE]", dbSymbol).Replace("[LINK-ADI]", dbSymbol);
+
+            return await ScrapeData(finalUrl, finalXPath);
         }
 
         public async Task<decimal> GetBuyingPriceAsync(string symbol)
         {
-            var config = _userRepository.GetScrapingConfig(symbol);
+            if (string.IsNullOrWhiteSpace(symbol)) return 0;
+
+            var configs = _userRepository.GetAllScrapingConfigs();
+            var config = configs.FirstOrDefault(c => c.Symbol.Equals(symbol.Trim(), StringComparison.OrdinalIgnoreCase));
+
             if (config == null || !config.IsActive) return 0;
 
-            // ALIŞ İÇİN: HtmlPath_Buying kullan
-            return await ScrapeData(config.TargetUrl, config.HtmlPath_Buying);
+            // Veritabanındaki sembolü esas al
+            string dbSymbol = config.Symbol.Trim();
+
+            string finalUrl = config.TargetUrl.Replace("[CODE]", dbSymbol).Replace("[LINK-ADI]", dbSymbol);
+    
+            string rawXPath = !string.IsNullOrWhiteSpace(config.HtmlPath_Buying) 
+                ? config.HtmlPath_Buying 
+                : config.HtmlPath_Selling;
+
+            string finalXPath = rawXPath.Replace("[CODE]", dbSymbol).Replace("[LINK-ADI]", dbSymbol);
+
+            return await ScrapeData(finalUrl, finalXPath);
         }
+
         private async Task<decimal> ScrapeData(string url, string xpath)
         {
             try
@@ -57,12 +77,12 @@ namespace Kumparam.Data.Services
         
                 if (priceNode != null)
                 {
-                    string priceText = priceNode.InnerText.Trim();
-                    // Temizlik
-                    priceText = priceText.Replace("TL", "").Replace("$", "").Replace("%", "").Trim();
-
+                    string rawText = priceNode.InnerText;
+                    string cleanText = new string(rawText.Where(c => char.IsDigit(c) || c == ',' || c == '.').ToArray());
+                    cleanText = cleanText.Replace(".", "");
+                    
                     var culture = new CultureInfo("tr-TR");
-                    if (decimal.TryParse(priceText, NumberStyles.Any, culture, out decimal price))
+                    if (decimal.TryParse(cleanText, NumberStyles.Any, culture, out decimal price))
                     {
                         return price;
                     }
