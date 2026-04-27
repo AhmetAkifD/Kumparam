@@ -66,7 +66,6 @@
 
                 <TextBlock x:Name="HataMesajiTextBlock"
                            Text="E-posta veya şifre hatalı!"
-                           Foreground="{DynamicResource MaterialDesign.Brush.Error}"
                            FontWeight="Bold"
                            HorizontalAlignment="Center"
                            Margin="0,5"
