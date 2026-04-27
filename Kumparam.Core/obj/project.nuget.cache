@@ -1,0 +1,13 @@
+{
+  "version": 2,
+  "dgSpecHash": "58v9Vp3Drqs=",
+  "success": true,
+  "projectFilePath": "C:\\RiderProjects\\Kumparam\\Kumparam.Core\\Kumparam.Core.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\ahmet\\.nuget\\packages\\materialdesigncolors\\5.3.0\\materialdesigncolors.5.3.0.nupkg.sha512",
+    "C:\\Users\\ahmet\\.nuget\\packages\\materialdesignthemes\\5.2.0\\materialdesignthemes.5.2.0.nupkg.sha512",
+    "C:\\Users\\ahmet\\.nuget\\packages\\microsoft.xaml.behaviors.wpf\\1.1.39\\microsoft.xaml.behaviors.wpf.1.1.39.nupkg.sha512",
+    "C:\\Users\\ahmet\\.nuget\\packages\\questpdf\\2025.12.0\\questpdf.2025.12.0.nupkg.sha512"
+  ],
+  "logs": []
+}

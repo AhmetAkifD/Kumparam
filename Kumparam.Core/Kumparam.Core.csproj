@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0-windows</TargetFramework>
+        <Nullable>enable</Nullable>
+        <UseWPF>true</UseWPF>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <UserSecretsId>9b2877df-73fb-4951-8760-6aafc0f5e9ab</UserSecretsId>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="MaterialDesignColors" Version="5.3.0" />
+      <PackageReference Include="MaterialDesignThemes" Version="5.2.0" />
+      <PackageReference Include="QuestPDF" Version="2025.12.0" />
+    </ItemGroup>
+
+</Project>

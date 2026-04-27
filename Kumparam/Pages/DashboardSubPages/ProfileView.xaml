@@ -129,7 +129,7 @@
                             </Grid>
                             
                             <Button Content="ŞİFREYİ DEĞİŞTİR" Style="{StaticResource MaterialDesignOutlinedButton}" 
-                                    BorderBrush="{DynamicResource PrimaryHueMidBrush}" Foreground="{DynamicResource PrimaryHueMidBrush}" 
+                                    BorderBrush="{DynamicResource PrimaryHueMidBrush}" 
                                     HorizontalAlignment="Right" Click="ChangePassword_Click"/>
                         </StackPanel>
                     </Expander>
