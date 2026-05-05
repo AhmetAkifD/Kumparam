@@ -192,35 +192,38 @@ public partial class AdminView : UserControl
 
         try
         {
-            string tag = ((ComboBoxItem)SourceTypeComboBox.SelectedItem).Tag.ToString()!;
-            string dbSourceType = tag == "TCMB" ? "TCMB" : "Web";
-            
+            // En üstte tanımladığını varsaydığım BankSourceComboBox'tan veriyi al
+            string dbSourceType = "Web";
+            if (BankSourceComboBox.SelectedItem is ComboBoxItem item)
+            {
+                dbSourceType = item.Tag?.ToString() ?? "Web";
+            }
+
             var config = new ScrapingConfig
             {
                 Symbol = SymbolTextBox.Text.Trim(),
                 Description = DescTextBox.Text,
                 TargetUrl = UrlTextBox.Text,
-                HtmlPath_Selling = XPathSellingBox.Text, // YENİ
-                HtmlPath_Buying = XPathBuyingBox.Text,   // YENİ
-                SourceType = dbSourceType,
+                HtmlPath_Selling = XPathSellingBox.Text, 
+                HtmlPath_Buying = XPathBuyingBox.Text,   
+                SourceType = dbSourceType, 
                 IsActive = ActiveCheckBox.IsChecked == true
             };
 
             if (_selectedConfig == null)
             {
-                // Yeni Ekle
                 _userRepository.AddScrapingConfig(config);
                 MessageBox.Show("Yeni ayar eklendi. ✅");
             }
             else
             {
-                // Güncelle (Sembol değişmemeli veya ID ile kontrol edilmeli, burada basit update yapıyoruz)
+                config.ConfigId = _selectedConfig.ConfigId; // Bunu unutmamak lazım
                 _userRepository.UpdateScrapingConfig(config);
                 MessageBox.Show("Ayar güncellendi. ✅");
             }
 
             LoadConfigs();
-            NewConfig_Click(null, null); // Formu temizle
+            NewConfig_Click(null, null); 
         }
         catch (Exception ex)
         {
@@ -313,6 +316,47 @@ public partial class AdminView : UserControl
                     XPathSellingBox.Clear();
                     DescTextBox.Clear();
                     break;
+            }
+        }
+    }
+    private void BankSourceComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        // KALKAN: Sayfa yüklenmeden arayüz objeleri null iken çalışmasını engeller
+        if (!this.IsLoaded || SourceTypeComboBox == null || UrlTextBox == null) return;
+
+        if (BankSourceComboBox.SelectedItem is ComboBoxItem item)
+        {
+            string tag = item.Tag?.ToString() ?? "Web";
+
+            if (tag == "ZiraatBankasi")
+            {
+                // Ziraat şablonunu otomatik doldur ve alttaki detaylı ComboBox'ı gizle
+                SourceTypeComboBox.Visibility = Visibility.Collapsed;
+            
+                UrlTextBox.Text = "https://www.ziraatbank.com.tr/tr/fiyatlar-ve-oranlar";
+                XPathBuyingBox.Text = "//td[contains(text(), '[CODE]')]/following-sibling::td[1]";
+                XPathSellingBox.Text = "//td[contains(text(), '[CODE]')]/following-sibling::td[2]";
+            
+                if (string.IsNullOrWhiteSpace(DescTextBox.Text)) 
+                    DescTextBox.Text = "Ziraat Bankası - ";
+            
+                UrlTextBox.IsEnabled = true;
+                XPathBuyingBox.IsEnabled = true;
+                XPathSellingBox.IsEnabled = true;
+            }
+            else
+            {
+                // Diğer web siteleri (Web) seçilirse alt şablonları tekrar göster
+                SourceTypeComboBox.Visibility = Visibility.Visible;
+            
+                // Eğer yeni ekleme modundaysak alanları temizle ki eski Ziraat verileri kalmasın
+                if (_selectedConfig == null)
+                {
+                    SourceTypeComboBox.SelectedIndex = 5; // Özel/Diğer
+                    UrlTextBox.Clear();
+                    XPathBuyingBox.Clear();
+                    XPathSellingBox.Clear();
+                }
             }
         }
     }

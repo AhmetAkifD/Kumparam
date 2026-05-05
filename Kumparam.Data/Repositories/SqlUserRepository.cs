@@ -400,9 +400,9 @@ namespace Kumparam.Data.Repositories
         {
             using (var connection = new SqlConnection(_connectionString))
             {
-                // CurrentPrice ÇIKARILDI
-                var sql = @"INSERT INTO Investments (UserId, Name, Symbol, Quantity, BuyingPrice, PurchaseDate) 
-                            VALUES (@UserId, @Name, @Symbol, @Quantity, @BuyingPrice, @PurchaseDate)";
+                // Source eklendi
+                var sql = @"INSERT INTO Investments (UserId, Name, Symbol, Quantity, BuyingPrice, PurchaseDate, Source) 
+                    VALUES (@UserId, @Name, @Symbol, @Quantity, @BuyingPrice, @PurchaseDate, @Source)";
 
                 using (var cmd = new SqlCommand(sql, connection))
                 {
@@ -411,8 +411,8 @@ namespace Kumparam.Data.Repositories
                     cmd.Parameters.AddWithValue("@Symbol", investment.Symbol ?? (object)DBNull.Value);
                     cmd.Parameters.AddWithValue("@Quantity", investment.Quantity);
                     cmd.Parameters.AddWithValue("@BuyingPrice", investment.BuyingPrice);
-                    // CurrentPrice PARAMETRESİ SİLİNDİ
                     cmd.Parameters.AddWithValue("@PurchaseDate", investment.PurchaseDate);
+                    cmd.Parameters.AddWithValue("@Source", investment.Source ?? "Web");
 
                     connection.Open();
                     cmd.ExecuteNonQuery();
@@ -425,7 +425,6 @@ namespace Kumparam.Data.Repositories
             using (var connection = new SqlConnection(_connectionString))
             {
                 var sql = "SELECT * FROM Investments WHERE UserId = @UserId ORDER BY PurchaseDate DESC";
-
                 using (var cmd = new SqlCommand(sql, connection))
                 {
                     cmd.Parameters.AddWithValue("@UserId", userId);
@@ -443,11 +442,9 @@ namespace Kumparam.Data.Repositories
                                 Quantity = (decimal)reader["Quantity"],
                                 BuyingPrice = (decimal)reader["BuyingPrice"],
                                 PurchaseDate = (DateTime)reader["PurchaseDate"],
-                                
-                                // CurrentPrice ARTIK VERİTABANINDAN GELMİYOR!
-                                // Varsayılan olarak 0 veya BuyingPrice atayabiliriz,
-                                // ama asıl değer birazdan TCMB'den gelecek.
-                                CurrentPrice = (decimal)reader["BuyingPrice"] 
+                                CurrentPrice = (decimal)reader["BuyingPrice"],
+                                // Veritabanından Source bilgisini okuyoruz (Yoksa Web varsay)
+                                Source = reader["Source"] != DBNull.Value ? reader["Source"].ToString() : "Web"
                             });
                         }
                     }
@@ -673,50 +670,57 @@ namespace Kumparam.Data.Repositories
             using (var connection = new SqlConnection(_connectionString))
             {
                 var sql = @"INSERT INTO ScrapingConfigs 
-                    (Symbol, TargetUrl, HtmlPath_Buying, HtmlPath_Selling, IsActive, Description, SourceType) 
-                    VALUES 
-                    (@Symbol, @TargetUrl, @HtmlPath_Buying, @HtmlPath_Selling, @IsActive, @Description, @SourceType)";
-                
+            (Symbol, TargetUrl, HtmlPath_Buying, HtmlPath_Selling, IsActive, Description, SourceType) 
+            VALUES 
+            (@Symbol, @TargetUrl, @HtmlPath_Buying, @HtmlPath_Selling, @IsActive, @Description, @SourceType)";
+        
                 using (var cmd = new SqlCommand(sql, connection))
                 {
                     cmd.Parameters.AddWithValue("@Symbol", config.Symbol);
                     cmd.Parameters.AddWithValue("@TargetUrl", config.TargetUrl);
-                    cmd.Parameters.AddWithValue("@HtmlPath_Buying", config.HtmlPath_Buying);
-                    cmd.Parameters.AddWithValue("@HtmlPath_Selling", config.HtmlPath_Selling);
+                    cmd.Parameters.AddWithValue("@HtmlPath_Buying", config.HtmlPath_Buying ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@HtmlPath_Selling", config.HtmlPath_Selling ?? (object)DBNull.Value);
                     cmd.Parameters.AddWithValue("@IsActive", config.IsActive);
                     cmd.Parameters.AddWithValue("@Description", config.Description ?? (object)DBNull.Value);
-                    cmd.Parameters.AddWithValue("@SourceType", "Web");
+                    // DÜZELTME: Artık direkt nesneden okuyor!
+                    cmd.Parameters.AddWithValue("@SourceType", config.SourceType ?? "Web");
+            
                     connection.Open();
                     cmd.ExecuteNonQuery();
                 }
             }
         }
+        
         public void UpdateScrapingConfig(ScrapingConfig config)
         {
             using (var connection = new SqlConnection(_connectionString))
             {
                 var sql = @"UPDATE ScrapingConfigs 
-                    SET TargetUrl = @TargetUrl, 
-                        HtmlPath_Buying = @HtmlPath_Buying, 
-                        HtmlPath_Selling = @HtmlPath_Selling, 
-                        IsActive = @IsActive, 
-                        Description = @Description,
-                        SourceType = @SourceType
-                    WHERE Symbol = @Symbol";
+            SET TargetUrl = @TargetUrl, 
+                HtmlPath_Buying = @HtmlPath_Buying, 
+                HtmlPath_Selling = @HtmlPath_Selling, 
+                IsActive = @IsActive, 
+                Description = @Description,
+                SourceType = @SourceType
+            WHERE Symbol = @Symbol";
+            
                 using (var cmd = new SqlCommand(sql, connection))
                 {
                     cmd.Parameters.AddWithValue("@Symbol", config.Symbol);
                     cmd.Parameters.AddWithValue("@TargetUrl", config.TargetUrl);
-                    cmd.Parameters.AddWithValue("@HtmlPath_Buying", config.HtmlPath_Buying);
-                    cmd.Parameters.AddWithValue("@HtmlPath_Selling", config.HtmlPath_Selling);
+                    cmd.Parameters.AddWithValue("@HtmlPath_Buying", config.HtmlPath_Buying ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@HtmlPath_Selling", config.HtmlPath_Selling ?? (object)DBNull.Value);
                     cmd.Parameters.AddWithValue("@IsActive", config.IsActive);
                     cmd.Parameters.AddWithValue("@Description", config.Description ?? (object)DBNull.Value);
-                    cmd.Parameters.AddWithValue("@SourceType", "Web");
+                    // DÜZELTME: Artık direkt nesneden okuyor!
+                    cmd.Parameters.AddWithValue("@SourceType", config.SourceType ?? "Web");
+            
                     connection.Open();
                     cmd.ExecuteNonQuery();
                 }
             }
         }
+        
         public void DeleteScrapingConfig(int configId)
         {
             using (var connection = new SqlConnection(_connectionString))

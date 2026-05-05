@@ -25,7 +25,13 @@
         <materialDesign:Card Grid.Column="0" Style="{StaticResource DashboardCardStyle}" Margin="0,0,20,0" VerticalAlignment="Top">
             <StackPanel>
                 <TextBlock Text="Yeni Yatırım Ekle" Style="{StaticResource HeaderTextStyle}"/>
-
+                <ComboBox x:Name="BankSourceComboBox" 
+                          materialDesign:HintAssist.Hint="Banka / Kaynak Seçimi"
+                          Margin="0,10"
+                          SelectionChanged="BankSourceComboBox_SelectionChanged">
+                    <ComboBoxItem Content="Diğer Siteler (Web)" Tag="Web" IsSelected="True"/>
+                    <ComboBoxItem Content="Ziraat Bankası" Tag="ZiraatBankasi"/>
+                </ComboBox>
                 <ComboBox x:Name="InvestmentComboBox" 
                           materialDesign:HintAssist.Hint="Yatırım Aracı"
                           Margin="0,10"

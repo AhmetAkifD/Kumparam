@@ -16,5 +16,5 @@ C:\RiderProjects\Kumparam\Kumparam\App.xaml
 233-913005783
 Pages\DashboardSubPages\AdminView.xaml;Pages\DashboardSubPages\AnalysisView.xaml;Pages\DashboardSubPages\GoalsView.xaml;Pages\DashboardSubPages\IncomeExpenseView.xaml;Pages\DashboardSubPages\InvestmentsView.xaml;Pages\DashboardSubPages\ProfileView.xaml;Pages\DashboardSubPages\RecycleBinView.xaml;Pages\DashboardSubPages\SummaryView.xaml;Pages\DashboardSubPages\TransactionsView.xaml;Pages\DashboardWindow.xaml;Pages\MainWindow.xaml;Pages\SimpleInputWindow.xaml;Windows\AutoSaveWindow.xaml;Windows\CustomMessageBox.xaml;Windows\ReportDialogView.xaml;
 
-True
+False
 

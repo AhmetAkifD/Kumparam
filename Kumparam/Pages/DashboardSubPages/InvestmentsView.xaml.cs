@@ -46,7 +46,7 @@ public partial class InvestmentsView : UserControl
         // _scrapingService = new WebScrapingService(_userRepository);
 
         // 1. ComboBox Seçeneklerini Yükle
-        LoadDynamicOptions();
+        LoadDynamicOptions("Web");
 
         // 2. Portföyü Yükle
         _ = LoadPortfolioAsync();
@@ -58,27 +58,31 @@ public partial class InvestmentsView : UserControl
     public InvestmentsView() { InitializeComponent(); }
 
     // --- 1. COMBOBOX DOLDURMA (Veritabanından) ---
-    private void LoadDynamicOptions()
+    private void LoadDynamicOptions(string source)
     {
+        // KALKAN GÜNCELLENDİ: Sadece veritabanı bağlantısı yoksa durdur. IsLoaded kontrolünü sildik.
+        if (_userRepository == null) return; 
+
         try
         {
             var allConfigs = _userRepository.GetAllScrapingConfigs();
+            if (allConfigs == null) return; 
+
             InvestmentOptions = new List<InvestmentOption>();
 
             foreach (var config in allConfigs)
             {
-                if (config.IsActive)
+                if (config != null && config.IsActive && config.SourceType == source)
                 {
                     InvestmentOptions.Add(new InvestmentOption
                     {
                         Symbol = config.Symbol,
-                        Name = config.Description ?? config.Symbol,
-                        SourceType = "Web" // Artık hepsi Web Scraping
+                        Name = config.Description ?? config.Symbol ?? "Bilinmeyen",
+                        SourceType = config.SourceType
                     });
                 }
             }
-            
-            // ComboBox'ı yenile
+        
             InvestmentComboBox.ItemsSource = InvestmentOptions;
             InvestmentComboBox.DisplayMemberPath = "Name"; 
             InvestmentComboBox.SelectedValuePath = "Symbol";
@@ -95,15 +99,26 @@ public partial class InvestmentsView : UserControl
         try
         {
             var rawInvestments = _userRepository.GetInvestments(_currentUserId);
+    
+            if (rawInvestments == null || !rawInvestments.Any()) 
+            {
+                PortfolioItems = new ObservableCollection<PortfolioItem>();
+                PortfolioGrid.ItemsSource = PortfolioItems;
+                CalculatePortfolioSummary();
+                return;
+            }
 
             var groupedList = rawInvestments
-                .GroupBy(x => x.Symbol)
+                .Where(x => x != null) 
+                // YENİ: Ziraat ve Web'i ayrı satırlarda tutmak için
+                .GroupBy(x => new { Symbol = x.Symbol ?? "Bilinmiyor", Source = x.Source ?? "Web" })
                 .Select(g => new PortfolioItem
                 {
-                    Symbol = g.Key,
-                    Name = g.First().Name,
+                    Symbol = g.Key.Symbol,
+                    SourceType = g.Key.Source,
+                    Name = g.First().Name ?? g.Key.Symbol,
                     TotalQuantity = g.Sum(x => x.Quantity),
-                    AverageCost = g.Sum(x => x.Quantity * x.BuyingPrice) / g.Sum(x => x.Quantity),
+                    AverageCost = g.Sum(x => x.Quantity) > 0 ? g.Sum(x => x.Quantity * x.BuyingPrice) / g.Sum(x => x.Quantity) : 0,
                     CurrentPrice = null
                 })
                 .ToList();
@@ -111,12 +126,8 @@ public partial class InvestmentsView : UserControl
             PortfolioItems = new ObservableCollection<PortfolioItem>(groupedList);
             PortfolioGrid.ItemsSource = PortfolioItems;
 
-            // YENİ: Veriler ekrana gelir gelmez Maliyeti hesapla ve göster.
-            // (Fiyatlar henüz gelmediği için "Hesaplanıyor..." yazacak ama Maliyet doğru görünecek)
             CalculatePortfolioSummary();
-
-            // Sonra fiyatları çekmeye başla
-            await UpdatePricesAsync();
+            await UpdatePricesAsync(); // Buradaki GetPriceAsync metoduna item.SourceType yollamayı unutma!
         }
         catch (Exception ex)
         {
@@ -323,16 +334,11 @@ public partial class InvestmentsView : UserControl
                 if (price > 0)
                 {
                     CurrentPriceTextBox.Text = $"{price:N2} ₺";
-                
-                    // --- İŞTE ÇÖZÜM BURASI ---
-                    // "Rengi siyah yap" DEMİYORUZ.
-                    // "Rengi, temanın Body (Yazı) rengine bağla" diyoruz.
                     CurrentPriceTextBox.SetResourceReference(Control.ForegroundProperty, "MaterialDesignBody");
                 }
                 else
                 {
                     CurrentPriceTextBox.Text = "Fiyat Alınamadı";
-                    // Hata durumunda kırmızı yapabilirsin istersen
                     CurrentPriceTextBox.Foreground = System.Windows.Media.Brushes.Red; 
                 }
             }
@@ -475,6 +481,28 @@ public partial class InvestmentsView : UserControl
         var dashboard = Window.GetWindow(this) as DashboardWindow;
         dashboard.MainContentArea.Content = new InvestmentsView(_currentUserId);
     }
+    
+    private void BankSourceComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        // KALKAN: Sayfa yüklenmeden arayüz objeleri null iken veya veritabanı yokken çalışmasını engeller
+        if (!this.IsLoaded || _userRepository == null) return;
+
+        if (BankSourceComboBox.SelectedItem is ComboBoxItem item)
+        {
+            // Seçilen öğenin Tag değerini (Web veya ZiraatBankasi) al
+            string tag = item.Tag?.ToString() ?? "Web";
+
+            // Yatırım araçları (InvestmentComboBox) listesini bu yeni kaynağa göre güncelle
+            LoadDynamicOptions(tag);
+
+            // Kaynak değiştiği için alttaki eski seçimleri ve kutuları temizle
+            if (InvestmentComboBox != null) InvestmentComboBox.SelectedIndex = -1;
+            if (SymbolTextBox != null) SymbolTextBox.Clear();
+            // Eğer miktar veya güncel fiyat kutuların varsa onları da burada temizleyebilirsin:
+            // if (CurrentPriceTextBox != null) CurrentPriceTextBox.Clear();
+            // if (QuantityTextBox != null) QuantityTextBox.Clear();
+        }
+    }
 }
 
 // --- YARDIMCI SINIFLAR (Namespace İçine Taşındı - Dışarıda Olmalı) ---
@@ -490,6 +518,7 @@ public class PortfolioItem : INotifyPropertyChanged
 {
     public string Symbol { get; set; }
     public string Name { get; set; }
+    public string SourceType { get; set; }
     public decimal TotalQuantity { get; set; }
     public decimal AverageCost { get; set; } // Birim Maliyet (Hesaplama için lazım ama göstermeyeceğiz)
     

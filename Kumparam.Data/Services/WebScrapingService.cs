@@ -25,42 +25,50 @@ namespace Kumparam.Data.Services
             _httpClient.DefaultRequestHeaders.Add("Accept-Language", "tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7");
         }
 
-        public async Task<decimal> GetPriceAsync(string symbol)
+        public async Task<decimal> GetPriceAsync(string symbol, string sourceType = "Web")
         {
             if (string.IsNullOrWhiteSpace(symbol)) return 0;
 
-            // Arama yaparken veritabanı ayarı neyse onu bulsun (Büyük/Küçük harf duyarsız arama yapıyoruz)
             var configs = _userRepository.GetAllScrapingConfigs();
-            var config = configs.FirstOrDefault(c => c.Symbol.Equals(symbol.Trim(), StringComparison.OrdinalIgnoreCase));
+            if (configs == null) return 0;
+
+            // Hem Sembolü hem de Kaynağı (Ziraat/Web) kontrol et
+            var config = configs.FirstOrDefault(c => 
+                !string.IsNullOrEmpty(c.Symbol) && 
+                c.Symbol.Equals(symbol.Trim(), StringComparison.OrdinalIgnoreCase) &&
+                c.SourceType == sourceType);
 
             if (config == null || !config.IsActive) return 0;
-            string dbSymbol = config.Symbol.Trim(); 
 
-            string finalUrl = config.TargetUrl.Replace("[CODE]", dbSymbol).Replace("[LINK-ADI]", dbSymbol);
-            string finalXPath = config.HtmlPath_Selling.Replace("[CODE]", dbSymbol).Replace("[LINK-ADI]", dbSymbol);
+            string dbSymbol = config.Symbol.Trim(); 
+            string finalUrl = config.TargetUrl?.Replace("[CODE]", dbSymbol).Replace("[LINK-ADI]", dbSymbol) ?? "";
+            string finalXPath = config.HtmlPath_Selling?.Replace("[CODE]", dbSymbol).Replace("[LINK-ADI]", dbSymbol) ?? "";
 
             return await ScrapeData(finalUrl, finalXPath);
         }
 
-        public async Task<decimal> GetBuyingPriceAsync(string symbol)
+        public async Task<decimal> GetBuyingPriceAsync(string symbol, string sourceType = "Web")
         {
             if (string.IsNullOrWhiteSpace(symbol)) return 0;
 
             var configs = _userRepository.GetAllScrapingConfigs();
-            var config = configs.FirstOrDefault(c => c.Symbol.Equals(symbol.Trim(), StringComparison.OrdinalIgnoreCase));
+            if (configs == null) return 0;
+
+            var config = configs.FirstOrDefault(c => 
+                !string.IsNullOrEmpty(c.Symbol) && 
+                c.Symbol.Equals(symbol.Trim(), StringComparison.OrdinalIgnoreCase) &&
+                c.SourceType == sourceType);
 
             if (config == null || !config.IsActive) return 0;
 
-            // Veritabanındaki sembolü esas al
             string dbSymbol = config.Symbol.Trim();
+            string finalUrl = config.TargetUrl?.Replace("[CODE]", dbSymbol).Replace("[LINK-ADI]", dbSymbol) ?? "";
 
-            string finalUrl = config.TargetUrl.Replace("[CODE]", dbSymbol).Replace("[LINK-ADI]", dbSymbol);
-    
             string rawXPath = !string.IsNullOrWhiteSpace(config.HtmlPath_Buying) 
                 ? config.HtmlPath_Buying 
                 : config.HtmlPath_Selling;
 
-            string finalXPath = rawXPath.Replace("[CODE]", dbSymbol).Replace("[LINK-ADI]", dbSymbol);
+            string finalXPath = rawXPath?.Replace("[CODE]", dbSymbol).Replace("[LINK-ADI]", dbSymbol) ?? "";
 
             return await ScrapeData(finalUrl, finalXPath);
         }

@@ -52,7 +52,14 @@
         <materialDesign:Card Grid.Column="1" Style="{StaticResource DashboardCardStyle}" VerticalAlignment="Top">
             <StackPanel>
                 <TextBlock Text="Ayar Düzenle / Test Et" Style="{StaticResource HeaderTextStyle}"/>
-
+                <ComboBox x:Name="BankSourceComboBox"
+                          materialDesign:HintAssist.Hint="Ana Kaynak (Banka/Sistem)"
+                          Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                          Margin="0,10"
+                          SelectionChanged="BankSourceComboBox_SelectionChanged">
+                    <ComboBoxItem Content="Diğer Siteler (doviz.com, TEFAS vb.)" Tag="Web" IsSelected="True"/>
+                    <ComboBoxItem Content="Ziraat Bankası" Tag="ZiraatBankasi"/>
+                </ComboBox>
                 <TextBox x:Name="SymbolTextBox" materialDesign:HintAssist.Hint="Sembol (Örn: GLD)" 
                          Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,10"/>
                 <ComboBox x:Name="SourceTypeComboBox"
