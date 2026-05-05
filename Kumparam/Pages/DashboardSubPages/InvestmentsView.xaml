@@ -31,6 +31,8 @@
                           SelectionChanged="BankSourceComboBox_SelectionChanged">
                     <ComboBoxItem Content="Diğer Siteler (Web)" Tag="Web" IsSelected="True"/>
                     <ComboBoxItem Content="Ziraat Bankası" Tag="ZiraatBankasi"/>
+                    <ComboBoxItem Content="Halkbank" Tag="Halkbank"/>
+                    <ComboBoxItem Content="Yapı Kredi Bankası" Tag="YapiKrediBankasi"></ComboBoxItem>
                 </ComboBox>
                 <ComboBox x:Name="InvestmentComboBox" 
                           materialDesign:HintAssist.Hint="Yatırım Aracı"

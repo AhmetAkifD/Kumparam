@@ -59,6 +59,8 @@
                           SelectionChanged="BankSourceComboBox_SelectionChanged">
                     <ComboBoxItem Content="Diğer Siteler (doviz.com, TEFAS vb.)" Tag="Web" IsSelected="True"/>
                     <ComboBoxItem Content="Ziraat Bankası" Tag="ZiraatBankasi"/>
+                    <ComboBoxItem Content="Halkbank" Tag="Halkbank"/>
+                    <ComboBoxItem Content="Yapı Kredi Bankası" Tag="YapiKrediBankasi"></ComboBoxItem>
                 </ComboBox>
                 <TextBox x:Name="SymbolTextBox" materialDesign:HintAssist.Hint="Sembol (Örn: GLD)" 
                          Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,10"/>

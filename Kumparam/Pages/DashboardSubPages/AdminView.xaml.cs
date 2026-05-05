@@ -344,6 +344,42 @@ public partial class AdminView : UserControl
                 XPathBuyingBox.IsEnabled = true;
                 XPathSellingBox.IsEnabled = true;
             }
+            else if (tag == "Halkbank")
+            {
+                SourceTypeComboBox.Visibility = Visibility.Collapsed;
+    
+                // Halkbank'ın kendi döviz/altın sayfası URL'si
+                UrlTextBox.Text = "https://www.halkbank.com.tr/tr/piyasalar"; 
+    
+                // Halkbank'ın tablosuna uygun XPath şablonları (Ziraat'ten farklı olabilir, incelemek lazım)
+                XPathBuyingBox.Text = "//td[contains(text(), '[CODE]')]/following-sibling::td[1]"; 
+                XPathSellingBox.Text = "//td[contains(text(), '[CODE]')]/following-sibling::td[2]";
+    
+                if (string.IsNullOrWhiteSpace(DescTextBox.Text)) 
+                    DescTextBox.Text = "Halkbank - ";
+        
+                UrlTextBox.IsEnabled = true;
+                XPathBuyingBox.IsEnabled = true;
+                XPathSellingBox.IsEnabled = true;
+            }
+            else if (tag == "YapiKrediBankasi")
+            {
+                SourceTypeComboBox.Visibility = Visibility.Collapsed;
+    
+                // Halkbank'ın kendi döviz/altın sayfası URL'si
+                UrlTextBox.Text = "https://www.yapikredi.com.tr/yatirimci-kosesi/doviz-bilgileri"; 
+    
+                // Halkbank'ın tablosuna uygun XPath şablonları (Ziraat'ten farklı olabilir, incelemek lazım)
+                XPathBuyingBox.Text = "//*[@id=\"currencyResultContent\"]/tr[satır]/td[3]"; 
+                XPathSellingBox.Text = "//*[@id=\"currencyResultContent\"]/tr[satır]/td[4]";
+    
+                if (string.IsNullOrWhiteSpace(DescTextBox.Text)) 
+                    DescTextBox.Text = "Yapı Kredi Bankası - ";
+        
+                UrlTextBox.IsEnabled = true;
+                XPathBuyingBox.IsEnabled = true;
+                XPathSellingBox.IsEnabled = true;
+            }
             else
             {
                 // Diğer web siteleri (Web) seçilirse alt şablonları tekrar göster
