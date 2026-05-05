@@ -10,11 +10,11 @@ none
 false
 TRACE;DEBUG;NET;NET8_0;NETCOREAPP;WINDOWS;WINDOWS7_0;NET5_0_OR_GREATER;NET6_0_OR_GREATER;NET7_0_OR_GREATER;NET8_0_OR_GREATER;NETCOREAPP3_0_OR_GREATER;NETCOREAPP3_1_OR_GREATER;WİNDOWS7_0_OR_GREATER
 C:\RiderProjects\Kumparam\Kumparam\App.xaml
-141807255321
+15-2034374748
 
-201127452297
+21-535306108
 233-913005783
-Pages\DashboardSubPages\AdminView.xaml;Pages\DashboardSubPages\AnalysisView.xaml;Pages\DashboardSubPages\GoalsView.xaml;Pages\DashboardSubPages\IncomeExpenseView.xaml;Pages\DashboardSubPages\InvestmentsView.xaml;Pages\DashboardSubPages\ProfileView.xaml;Pages\DashboardSubPages\RecycleBinView.xaml;Pages\DashboardSubPages\SummaryView.xaml;Pages\DashboardSubPages\TransactionsView.xaml;Pages\DashboardWindow.xaml;Pages\MainWindow.xaml;Pages\SimpleInputWindow.xaml;Windows\CustomMessageBox.xaml;Windows\ReportDialogView.xaml;
+Pages\DashboardSubPages\AdminView.xaml;Pages\DashboardSubPages\AnalysisView.xaml;Pages\DashboardSubPages\GoalsView.xaml;Pages\DashboardSubPages\IncomeExpenseView.xaml;Pages\DashboardSubPages\InvestmentsView.xaml;Pages\DashboardSubPages\ProfileView.xaml;Pages\DashboardSubPages\RecycleBinView.xaml;Pages\DashboardSubPages\SummaryView.xaml;Pages\DashboardSubPages\TransactionsView.xaml;Pages\DashboardWindow.xaml;Pages\MainWindow.xaml;Pages\SimpleInputWindow.xaml;Windows\AutoSaveWindow.xaml;Windows\CustomMessageBox.xaml;Windows\ReportDialogView.xaml;
 
 True
 

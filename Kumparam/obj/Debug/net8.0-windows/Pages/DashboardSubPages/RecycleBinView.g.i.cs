@@ -63,7 +63,7 @@ namespace Kumparam.Pages.DashboardSubPages {
                 return;
             }
             _contentLoaded = true;
-            System.Uri resourceLocater = new System.Uri("/Kumparam;V1.0.0.0;component/pages/dashboardsubpages/recyclebinview.xaml", System.UriKind.Relative);
+            System.Uri resourceLocater = new System.Uri("/Kumparam;component/pages/dashboardsubpages/recyclebinview.xaml", System.UriKind.Relative);
             
             #line 1 "..\..\..\..\..\Pages\DashboardSubPages\RecycleBinView.xaml"
             System.Windows.Application.LoadComponent(this, resourceLocater);

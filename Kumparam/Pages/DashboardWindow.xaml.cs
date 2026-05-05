@@ -15,6 +15,7 @@ public partial class DashboardWindow : Window
 {
     private readonly User _currentUser;
     public static event Action ThemeChanged;
+    private readonly IUserRepository _userRepository;
 
     public DashboardWindow(User user)
     {
@@ -24,6 +25,8 @@ public partial class DashboardWindow : Window
         // 1. Veritabanı bağlantısını hazırla
         string connectionString = ConfigurationManager.ConnectionStrings["KumparamDB"].ConnectionString;
         IUserRepository userRepository = new SqlUserRepository(connectionString);
+        _userRepository = new SqlUserRepository(connectionString);
+        ProcessScheduledTasks(); // Otomatik işlemleri kontrol et ve uygula
 
         // 2. Kullanıcının profil bilgilerini çek (Ad, Soyad vb.)
         var userProfile = userRepository.GetUserProfile(_currentUser.UserId);
@@ -168,5 +171,76 @@ public partial class DashboardWindow : Window
         Properties.Settings.Default.IsDarkMode = isDark;
         Properties.Settings.Default.Save();
         ThemeChanged?.Invoke();
+    }
+
+    private void ProcessScheduledTasks()
+    {
+        try
+        {
+            // 1. ADIM: Otomatik Gelir/Gider İşlemleri
+            var autoTransactions = _userRepository.GetAutoTransactions(_currentUser.UserId);
+            foreach (var auto in autoTransactions)
+            {
+                // SAATİ BOŞVER, SADECE TARİHİ KARŞILAŞTIR (.Date)
+                while (auto.NextRunDate.Date <= DateTime.Now.Date)
+                {
+                    var newTrans = new Transaction
+                    {
+                        UserId = auto.UserId,
+                        Amount = auto.Amount,
+                        Type = auto.Type,
+                        Category = auto.Category,
+                        Description = $"{auto.Description} (Otomatik)",
+                        TransactionDate = auto.NextRunDate.Date
+                    };
+                    _userRepository.AddTransaction(newTrans);
+
+                    // Periyodu ilerlet
+                    auto.NextRunDate = CalculateNextRunDate(auto.NextRunDate, auto.Frequency);
+                }
+                // Veritabanını döngü bittikten sonra 1 kere güncelle (Spam'ı engeller)
+                _userRepository.UpdateAutoTransactionNextRun(auto.AutoId, auto.NextRunDate);
+            }
+
+            // 2. ADIM: Hedeflere Otomatik Para Aktarımı
+            var goalAutomations = _userRepository.GetGoalAutomations(_currentUser.UserId);
+            foreach (var goalAuto in goalAutomations)
+            {
+                while (goalAuto.NextRunDate.Date <= DateTime.Now.Date)
+                {
+                    _userRepository.UpdateGoalAmount(goalAuto.GoalId, goalAuto.Amount);
+
+                    var goalTrans = new Transaction
+                    {
+                        UserId = goalAuto.UserId,
+                        Amount = goalAuto.Amount,
+                        Type = "Expense",
+                        Category = "Birikim",
+                        Description = $"{goalAuto.GoalTitle} Hedefi İçin Otomatik Aktarım",
+                        TransactionDate = goalAuto.NextRunDate.Date
+                    };
+                    _userRepository.AddTransaction(goalTrans);
+
+                    goalAuto.NextRunDate = CalculateNextRunDate(goalAuto.NextRunDate, goalAuto.Frequency);
+                }
+                _userRepository.UpdateGoalAutomationNextRun(goalAuto.AutomationId, goalAuto.NextRunDate);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Otomatik işlemler sırasında hata: " + ex.Message);
+        }
+    }
+
+    // Tarih hesaplama yardımcı metodu
+    private DateTime CalculateNextRunDate(DateTime currentDate, string frequency)
+    {
+        return frequency switch
+        {
+            "Daily" => currentDate.AddDays(1),
+            "Weekly" => currentDate.AddDays(7),
+            "Monthly" => currentDate.AddMonths(1),
+            _ => currentDate.AddMonths(1)
+        };
     }
 }

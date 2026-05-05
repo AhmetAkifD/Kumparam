@@ -71,7 +71,7 @@ namespace Kumparam {
                 return;
             }
             _contentLoaded = true;
-            System.Uri resourceLocater = new System.Uri("/Kumparam;V1.0.0.0;component/pages/simpleinputwindow.xaml", System.UriKind.Relative);
+            System.Uri resourceLocater = new System.Uri("/Kumparam;component/pages/simpleinputwindow.xaml", System.UriKind.Relative);
             
             #line 1 "..\..\..\..\Pages\SimpleInputWindow.xaml"
             System.Windows.Application.LoadComponent(this, resourceLocater);

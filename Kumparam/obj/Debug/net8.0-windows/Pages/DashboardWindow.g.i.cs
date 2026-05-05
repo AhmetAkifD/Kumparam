@@ -87,7 +87,7 @@ namespace Kumparam.Pages {
                 return;
             }
             _contentLoaded = true;
-            System.Uri resourceLocater = new System.Uri("/Kumparam;V1.0.0.0;component/pages/dashboardwindow.xaml", System.UriKind.Relative);
+            System.Uri resourceLocater = new System.Uri("/Kumparam;component/pages/dashboardwindow.xaml", System.UriKind.Relative);
             
             #line 1 "..\..\..\..\Pages\DashboardWindow.xaml"
             System.Windows.Application.LoadComponent(this, resourceLocater);

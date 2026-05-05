@@ -165,3 +165,5 @@ C:\RiderProjects\Kumparam\Kumparam\obj\Debug\net8.0-windows\refint\Kumparam.dll
 C:\RiderProjects\Kumparam\Kumparam\obj\Debug\net8.0-windows\Kumparam.pdb
 C:\RiderProjects\Kumparam\Kumparam\obj\Debug\net8.0-windows\Kumparam.genruntimeconfig.cache
 C:\RiderProjects\Kumparam\Kumparam\obj\Debug\net8.0-windows\ref\Kumparam.dll
+C:\RiderProjects\Kumparam\Kumparam\obj\Debug\net8.0-windows\Windows\AutoSaveWindow.baml
+C:\RiderProjects\Kumparam\Kumparam\obj\Debug\net8.0-windows\Windows\AutoSaveWindow.g.cs

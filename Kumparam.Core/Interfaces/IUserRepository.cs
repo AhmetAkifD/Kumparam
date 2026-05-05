@@ -47,5 +47,15 @@ namespace Kumparam.Core.Interfaces
         void PermanentlyDeleteTransaction(int deletedId);
         void DeleteUser(Guid currentUserId);
         List<string> GetCategories();
+        // Otomatik İşlemler (AutoTransactions)
+        void AddAutoTransaction(AutoTransaction autoTrans);
+        List<AutoTransaction> GetAutoTransactions(Guid userId);
+        void DeleteAutoTransaction(Guid autoId);
+        void UpdateAutoTransactionNextRun(Guid autoId, DateTime nextRunDate);
+        // Hedef Otomasyonu (GoalAutomations)
+        void AddGoalAutomation(GoalAutomation automation);
+        List<GoalAutomation> GetGoalAutomations(Guid userId);
+        void DeleteGoalAutomation(Guid automationId);
+        void UpdateGoalAutomationNextRun(Guid automationId, DateTime nextRunDate);
     }
 }

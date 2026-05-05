@@ -19,7 +19,8 @@ namespace Kumparam.UI.Services
             QuestPDF.Settings.License = LicenseType.Community;
         }
 
-        public void GeneratePdf(string filePath, UserProfile user, List<Transaction> transactions, List<Investment> investments, List<Goal> goals, string reportPeriod)
+        // DİKKAT: Metodun sonuna 'string aiAnalysisText' eklendi!
+        public void GeneratePdf(string filePath, UserProfile user, List<Transaction> transactions, List<Investment> investments, List<Goal> goals, string reportPeriod, string aiAnalysisText = "")
         {
             // --- 1. HESAPLAMALAR ---
 
@@ -30,22 +31,22 @@ namespace Kumparam.UI.Services
 
             // Yatırım Durumu
             decimal totalInvestmentCost = investments.Sum(i => i.TotalCost);
-            decimal totalInvestmentValue = investments.Sum(i => i.CurrentTotalValue); 
+            decimal totalInvestmentValue = investments.Sum(i => i.CurrentTotalValue);
             decimal investmentProfit = totalInvestmentValue - totalInvestmentCost;
-            
+
             // Hedef Durumu
             decimal totalGoalSaved = goals.Sum(g => g.CurrentAmount);
             decimal totalGoalTarget = goals.Sum(g => g.TargetAmount);
 
             // 50/30/20 Analizi
             decimal needsTotal = 0, wantsTotal = 0, savingsTotal = 0;
-            
+
             foreach (var expense in transactions.Where(t => t.Type == "Expense"))
             {
                 var type = BudgetHelper.GetBudgetType(expense.Category);
                 if (type == BudgetType.Needs) needsTotal += expense.Amount;
                 else if (type == BudgetType.Wants) wantsTotal += expense.Amount;
-                else savingsTotal += expense.Amount; 
+                else savingsTotal += expense.Amount;
             }
 
             // --- 2. PDF OLUŞTURMA ---
@@ -106,7 +107,7 @@ namespace Kumparam.UI.Services
                             {
                                 c.Item().Text("Yatırım Performansı").FontSize(11).SemiBold();
                                 c.Item().PaddingVertical(5).LineHorizontal(1).LineColor(Colors.Grey.Lighten3);
-                                
+
                                 c.Item().Row(r => {
                                     r.RelativeItem().Text("Maliyet:");
                                     r.RelativeItem().AlignRight().Text($"{totalInvestmentCost:N2} ₺");
@@ -115,10 +116,10 @@ namespace Kumparam.UI.Services
                                     r.RelativeItem().Text("Güncel Değer:");
                                     r.RelativeItem().AlignRight().Text($"{totalInvestmentValue:N2} ₺");
                                 });
-                                
+
                                 var profitColor = investmentProfit >= 0 ? Colors.Green.Darken2 : Colors.Red.Darken2;
                                 var profitSign = investmentProfit >= 0 ? "+" : "";
-                                
+
                                 c.Item().PaddingTop(5).Row(r => {
                                     r.RelativeItem().Text("Net Kâr/Zarar:").Bold();
                                     r.RelativeItem().AlignRight().Text($"{profitSign}{investmentProfit:N2} ₺").FontColor(profitColor).Bold();
@@ -150,13 +151,25 @@ namespace Kumparam.UI.Services
                             });
                         });
 
-                        // -- YAPAY ZEKA BÖLÜMÜ BURADAN SİLİNDİ --
-                        
+                        // 🤖 YAPAY ZEKA BÖLÜMÜ
+                        if (!string.IsNullOrWhiteSpace(aiAnalysisText))
+                        {
+                            col.Item().PaddingTop(15).Column(aiCol =>
+                            {
+                                aiCol.Item().Text("Yapay Zeka Finansal Analizi").FontSize(12).SemiBold().FontColor(Colors.Indigo.Darken2);
+                                aiCol.Item().PaddingTop(5)
+                                     .Background(Colors.Indigo.Lighten5)
+                                     .BorderLeft(4).BorderColor(Colors.Indigo.Medium)
+                                     .Padding(10)
+                                     .Text(aiAnalysisText).FontSize(10).FontColor(Colors.Black);
+                            });
+                        }
+
                         col.Item().PaddingVertical(15).LineHorizontal(1).LineColor(Colors.Grey.Lighten2);
 
-                        // 3. BÖLÜM: İŞLEM DÖKÜMÜ (Tablo) - (Numarası kaydı)
+                        // 3. BÖLÜM: İŞLEM DÖKÜMÜ (Tablo)
                         col.Item().PaddingBottom(5).Text("İşlem Hareketleri").FontSize(12).SemiBold();
-                        
+
                         col.Item().Table(table =>
                         {
                             table.ColumnsDefinition(columns =>
@@ -262,8 +275,8 @@ namespace Kumparam.UI.Services
                     r.RelativeItem().Text(Label).FontSize(9);
                     r.RelativeItem().AlignRight().Text($"%{Percent:0.0} / %{Target}").FontSize(9).FontColor(Colors.Grey.Darken1);
                 });
-                
-                c.Item().Height(5).Background(Colors.Grey.Lighten3).Row(r => 
+
+                c.Item().Height(5).Background(Colors.Grey.Lighten3).Row(r =>
                 {
                     double safePercent = Math.Min(Percent, 100);
                     if (safePercent > 0)
@@ -272,7 +285,7 @@ namespace Kumparam.UI.Services
                     }
                     if (safePercent < 100)
                     {
-                        r.RelativeItem((float)(100 - safePercent)); 
+                        r.RelativeItem((float)(100 - safePercent));
                     }
                 });
             });

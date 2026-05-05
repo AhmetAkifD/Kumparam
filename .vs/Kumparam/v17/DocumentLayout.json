@@ -1,12 +1,182 @@
 {
   "Version": 1,
   "WorkspaceRootPath": "C:\\RiderProjects\\Kumparam\\",
-  "Documents": [],
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{C9E5BB6A-74ED-48B6-BCC2-D2FB895A0D07}|Kumparam.Data\\Kumparam.Data.csproj|c:\\riderprojects\\kumparam\\kumparam.data\\services\\aianalysisservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{C9E5BB6A-74ED-48B6-BCC2-D2FB895A0D07}|Kumparam.Data\\Kumparam.Data.csproj|solutionrelative:kumparam.data\\services\\aianalysisservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C9E5BB6A-74ED-48B6-BCC2-D2FB895A0D07}|Kumparam.Data\\Kumparam.Data.csproj|c:\\riderprojects\\kumparam\\kumparam.data\\services\\pdfreportservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{C9E5BB6A-74ED-48B6-BCC2-D2FB895A0D07}|Kumparam.Data\\Kumparam.Data.csproj|solutionrelative:kumparam.data\\services\\pdfreportservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C9E5BB6A-74ED-48B6-BCC2-D2FB895A0D07}|Kumparam.Data\\Kumparam.Data.csproj|c:\\riderprojects\\kumparam\\kumparam.data\\repositories\\sqluserrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{C9E5BB6A-74ED-48B6-BCC2-D2FB895A0D07}|Kumparam.Data\\Kumparam.Data.csproj|solutionrelative:kumparam.data\\repositories\\sqluserrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C73CA593-6ABA-4F4B-9453-02C8E84762FD}|Kumparam\\Kumparam.csproj|c:\\riderprojects\\kumparam\\kumparam\\windows\\reportdialogview.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{C73CA593-6ABA-4F4B-9453-02C8E84762FD}|Kumparam\\Kumparam.csproj|solutionrelative:kumparam\\windows\\reportdialogview.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C73CA593-6ABA-4F4B-9453-02C8E84762FD}|Kumparam\\Kumparam.csproj|c:\\riderprojects\\kumparam\\kumparam\\windows\\reportdialogview.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
+      "RelativeMoniker": "D:0:0:{C73CA593-6ABA-4F4B-9453-02C8E84762FD}|Kumparam\\Kumparam.csproj|solutionrelative:kumparam\\windows\\reportdialogview.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C73CA593-6ABA-4F4B-9453-02C8E84762FD}|Kumparam\\Kumparam.csproj|c:\\riderprojects\\kumparam\\kumparam\\pages\\dashboardsubpages\\goalsview.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{C73CA593-6ABA-4F4B-9453-02C8E84762FD}|Kumparam\\Kumparam.csproj|solutionrelative:kumparam\\pages\\dashboardsubpages\\goalsview.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C73CA593-6ABA-4F4B-9453-02C8E84762FD}|Kumparam\\Kumparam.csproj|c:\\riderprojects\\kumparam\\kumparam\\pages\\dashboardsubpages\\goalsview.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
+      "RelativeMoniker": "D:0:0:{C73CA593-6ABA-4F4B-9453-02C8E84762FD}|Kumparam\\Kumparam.csproj|solutionrelative:kumparam\\pages\\dashboardsubpages\\goalsview.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C73CA593-6ABA-4F4B-9453-02C8E84762FD}|Kumparam\\Kumparam.csproj|c:\\riderprojects\\kumparam\\kumparam\\windows\\autosavewindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{C73CA593-6ABA-4F4B-9453-02C8E84762FD}|Kumparam\\Kumparam.csproj|solutionrelative:kumparam\\windows\\autosavewindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C73CA593-6ABA-4F4B-9453-02C8E84762FD}|Kumparam\\Kumparam.csproj|c:\\riderprojects\\kumparam\\kumparam\\windows\\autosavewindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
+      "RelativeMoniker": "D:0:0:{C73CA593-6ABA-4F4B-9453-02C8E84762FD}|Kumparam\\Kumparam.csproj|solutionrelative:kumparam\\windows\\autosavewindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C73CA593-6ABA-4F4B-9453-02C8E84762FD}|Kumparam\\Kumparam.csproj|c:\\riderprojects\\kumparam\\kumparam\\pages\\dashboardwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{C73CA593-6ABA-4F4B-9453-02C8E84762FD}|Kumparam\\Kumparam.csproj|solutionrelative:kumparam\\pages\\dashboardwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
   "DocumentGroupContainers": [
     {
       "Orientation": 0,
       "VerticalTabListWidth": 256,
-      "DocumentGroups": []
+      "DocumentGroups": [
+        {
+          "DockedWidth": 103,
+          "SelectedChildIndex": 2,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{1c4feeaa-4718-4aa9-859d-94ce25d182ba}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "PdfReportService.cs",
+              "DocumentMoniker": "C:\\RiderProjects\\Kumparam\\Kumparam.Data\\Services\\PdfReportService.cs",
+              "RelativeDocumentMoniker": "Kumparam.Data\\Services\\PdfReportService.cs",
+              "ToolTip": "C:\\RiderProjects\\Kumparam\\Kumparam.Data\\Services\\PdfReportService.cs",
+              "RelativeToolTip": "Kumparam.Data\\Services\\PdfReportService.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAACUBAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-28T11:08:15.584Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "AiAnalysisService.cs",
+              "DocumentMoniker": "C:\\RiderProjects\\Kumparam\\Kumparam.Data\\Services\\AiAnalysisService.cs",
+              "RelativeDocumentMoniker": "Kumparam.Data\\Services\\AiAnalysisService.cs",
+              "ToolTip": "C:\\RiderProjects\\Kumparam\\Kumparam.Data\\Services\\AiAnalysisService.cs",
+              "RelativeToolTip": "Kumparam.Data\\Services\\AiAnalysisService.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA8AAABRAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-28T09:08:12.216Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "ReportDialogView.xaml.cs",
+              "DocumentMoniker": "C:\\RiderProjects\\Kumparam\\Kumparam\\Windows\\ReportDialogView.xaml.cs",
+              "RelativeDocumentMoniker": "Kumparam\\Windows\\ReportDialogView.xaml.cs",
+              "ToolTip": "C:\\RiderProjects\\Kumparam\\Kumparam\\Windows\\ReportDialogView.xaml.cs",
+              "RelativeToolTip": "Kumparam\\Windows\\ReportDialogView.xaml.cs",
+              "ViewState": "AgIAAIcAAAAAAAAAAAAkwKEAAAA/AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-28T08:38:22.529Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "ReportDialogView.xaml",
+              "DocumentMoniker": "C:\\RiderProjects\\Kumparam\\Kumparam\\Windows\\ReportDialogView.xaml",
+              "RelativeDocumentMoniker": "Kumparam\\Windows\\ReportDialogView.xaml",
+              "ToolTip": "C:\\RiderProjects\\Kumparam\\Kumparam\\Windows\\ReportDialogView.xaml",
+              "RelativeToolTip": "Kumparam\\Windows\\ReportDialogView.xaml",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
+              "WhenOpened": "2026-04-28T08:38:09.265Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "GoalsView.xaml",
+              "DocumentMoniker": "C:\\RiderProjects\\Kumparam\\Kumparam\\Pages\\DashboardSubPages\\GoalsView.xaml",
+              "RelativeDocumentMoniker": "Kumparam\\Pages\\DashboardSubPages\\GoalsView.xaml",
+              "ToolTip": "C:\\RiderProjects\\Kumparam\\Kumparam\\Pages\\DashboardSubPages\\GoalsView.xaml",
+              "RelativeToolTip": "Kumparam\\Pages\\DashboardSubPages\\GoalsView.xaml",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
+              "WhenOpened": "2026-04-28T08:35:26.751Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "SqlUserRepository.cs",
+              "DocumentMoniker": "C:\\RiderProjects\\Kumparam\\Kumparam.Data\\Repositories\\SqlUserRepository.cs",
+              "RelativeDocumentMoniker": "Kumparam.Data\\Repositories\\SqlUserRepository.cs",
+              "ToolTip": "C:\\RiderProjects\\Kumparam\\Kumparam.Data\\Repositories\\SqlUserRepository.cs",
+              "RelativeToolTip": "Kumparam.Data\\Repositories\\SqlUserRepository.cs",
+              "ViewState": "AgIAAEYBAAAAAAAAAADgv1oBAAAUAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-28T08:35:17.482Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "GoalsView.xaml.cs",
+              "DocumentMoniker": "C:\\RiderProjects\\Kumparam\\Kumparam\\Pages\\DashboardSubPages\\GoalsView.xaml.cs",
+              "RelativeDocumentMoniker": "Kumparam\\Pages\\DashboardSubPages\\GoalsView.xaml.cs",
+              "ToolTip": "C:\\RiderProjects\\Kumparam\\Kumparam\\Pages\\DashboardSubPages\\GoalsView.xaml.cs",
+              "RelativeToolTip": "Kumparam\\Pages\\DashboardSubPages\\GoalsView.xaml.cs",
+              "ViewState": "AgIAAL4AAAAAAAAAAAAcwNoAAAAJAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-28T08:25:32.339Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "AutoSaveWindow.xaml.cs",
+              "DocumentMoniker": "C:\\RiderProjects\\Kumparam\\Kumparam\\Windows\\AutoSaveWindow.xaml.cs",
+              "RelativeDocumentMoniker": "Kumparam\\Windows\\AutoSaveWindow.xaml.cs",
+              "ToolTip": "C:\\RiderProjects\\Kumparam\\Kumparam\\Windows\\AutoSaveWindow.xaml.cs",
+              "RelativeToolTip": "Kumparam\\Windows\\AutoSaveWindow.xaml.cs",
+              "ViewState": "AgIAAAcAAAAAAAAAAAA1wCYAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-28T08:24:51.569Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "AutoSaveWindow.xaml",
+              "DocumentMoniker": "C:\\RiderProjects\\Kumparam\\Kumparam\\Windows\\AutoSaveWindow.xaml",
+              "RelativeDocumentMoniker": "Kumparam\\Windows\\AutoSaveWindow.xaml",
+              "ToolTip": "C:\\RiderProjects\\Kumparam\\Kumparam\\Windows\\AutoSaveWindow.xaml",
+              "RelativeToolTip": "Kumparam\\Windows\\AutoSaveWindow.xaml",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
+              "WhenOpened": "2026-04-28T08:24:20.7Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "DashboardWindow.xaml.cs",
+              "DocumentMoniker": "C:\\RiderProjects\\Kumparam\\Kumparam\\Pages\\DashboardWindow.xaml.cs",
+              "RelativeDocumentMoniker": "Kumparam\\Pages\\DashboardWindow.xaml.cs",
+              "ToolTip": "C:\\RiderProjects\\Kumparam\\Kumparam\\Pages\\DashboardWindow.xaml.cs",
+              "RelativeToolTip": "Kumparam\\Pages\\DashboardWindow.xaml.cs",
+              "ViewState": "AgIAAKMAAAAAAAAAAAAswLAAAAAFAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-28T08:23:07.466Z"
+            }
+          ]
+        }
+      ]
     }
   ]
 }

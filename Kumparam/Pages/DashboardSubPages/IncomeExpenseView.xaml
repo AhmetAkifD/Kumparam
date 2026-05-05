@@ -31,6 +31,14 @@
                           materialDesign:HintAssist.Hint="Kategori" 
                           Margin="0,10"
                           IsEditable="False"/>
+                <ComboBox x:Name="FrequencyComboBox" 
+                          materialDesign:HintAssist.Hint="İşlem Sıklığı" 
+                          Margin="0,10">
+                    <ComboBoxItem Content="Tek Seferlik" Tag="Once" IsSelected="True"/>
+                    <ComboBoxItem Content="Her Gün Tekrarla" Tag="Daily"/>
+                    <ComboBoxItem Content="Her Hafta Tekrarla" Tag="Weekly"/>
+                    <ComboBoxItem Content="Her Ay Tekrarla" Tag="Monthly"/>
+                </ComboBox>
 
                 <DatePicker x:Name="TransactionDatePicker" materialDesign:HintAssist.Hint="İşlem Tarihi" 
                             Margin="0,10"/>

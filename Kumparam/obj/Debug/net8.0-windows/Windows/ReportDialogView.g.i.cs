@@ -71,7 +71,7 @@ namespace Kumparam.Pages.DashboardSubPages {
                 return;
             }
             _contentLoaded = true;
-            System.Uri resourceLocater = new System.Uri("/Kumparam;V1.0.0.0;component/windows/reportdialogview.xaml", System.UriKind.Relative);
+            System.Uri resourceLocater = new System.Uri("/Kumparam;component/windows/reportdialogview.xaml", System.UriKind.Relative);
             
             #line 1 "..\..\..\..\Windows\ReportDialogView.xaml"
             System.Windows.Application.LoadComponent(this, resourceLocater);

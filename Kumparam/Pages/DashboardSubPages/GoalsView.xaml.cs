@@ -1,4 +1,9 @@
-﻿using System;
+﻿using Kumparam.Core;
+using Kumparam.Core.Interfaces;
+using Kumparam.Core.Models;
+using Kumparam.Data;
+using Kumparam.Data.Repositories;
+using System;
 using System.Configuration;
 using System.Globalization;
 using System.Windows;
@@ -6,10 +11,6 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media; // Renkler için (Brush)
-using Kumparam.Core;
-using Kumparam.Core.Interfaces;
-using Kumparam.Data;
-using Kumparam.Data.Repositories;
 
 namespace Kumparam.Pages.DashboardSubPages
 {
@@ -29,22 +30,70 @@ namespace Kumparam.Pages.DashboardSubPages
             LoadGoals();
         }
 
-        public GoalsView()
-        {
-            InitializeComponent();
-        }
+        public GoalsView() { InitializeComponent(); }
 
         private void LoadGoals()
         {
             try
             {
                 var goals = _userRepository.GetGoals(_currentUserId);
+                var automations = _userRepository.GetGoalAutomations(_currentUserId);
+
+                foreach (var goal in goals)
+                {
+                    // Bu hedefe bağlı aktif otomasyonları hesapla
+                    var goalAutos = automations.Where(a => a.GoalId == goal.GoalId && a.IsActive).ToList();
+                    decimal dailySaving = 0;
+
+                    foreach (var auto in goalAutos)
+                    {
+                        dailySaving += auto.Frequency switch
+                        {
+                            "Daily" => auto.Amount,
+                            "Weekly" => auto.Amount / 7m,
+                            "Monthly" => auto.Amount / 30m,
+                            _ => 0
+                        };
+                    }
+
+                    decimal remainingAmount = goal.TargetAmount - goal.CurrentAmount;
+
+                    if (remainingAmount <= 0)
+                    {
+                        goal.Description = "✅ Bu hedefe başarıyla ulaşıldı!";
+                    }
+                    else if (dailySaving > 0)
+                    {
+                        int daysLeft = (int)Math.Ceiling(remainingAmount / dailySaving);
+                        string timeText = FormatTimeLeft(daysLeft);
+                        // Tahmin metnini açıklamanın sonuna ekliyoruz (XAML'da tek binding için kolaylık)
+                        goal.Description = string.IsNullOrWhiteSpace(goal.Description)
+                            ? $"📅 Tahmini: {timeText} sonra ulaşılacak."
+                            : $"{goal.Description}\n📅 Tahmini: {timeText} sonra ulaşılacak.";
+                    }
+                    else
+                    {
+                        goal.Description = string.IsNullOrWhiteSpace(goal.Description)
+                            ? "⚠️ Otomatik birikim tanımlanmamış."
+                            : $"{goal.Description}\n⚠️ Otomatik birikim tanımlanmamış.";
+                    }
+                }
+
+                GoalsList.ItemsSource = null; // Listeyi zorla yenile
                 GoalsList.ItemsSource = goals;
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Hata: {ex.Message}");
             }
+        }
+
+        private string FormatTimeLeft(int totalDays)
+        {
+            if (totalDays < 30) return $"{totalDays} gün";
+            int months = totalDays / 30;
+            int days = totalDays % 30;
+            return days == 0 ? $"{months} ay" : $"{months} ay {days} gün";
         }
 
         private void SaveGoal_Click(object sender, RoutedEventArgs e)
@@ -122,15 +171,16 @@ namespace Kumparam.Pages.DashboardSubPages
             if (sender is Button btn && btn.Tag is Goal goal)
             {
                 var result = MessageBox.Show($"'{goal.Title}' hedefini silmek istediğinize emin misiniz?\n" +
-                                             $"({goal.CurrentAmount:N2} ₺ bakiyenize iade edilecek.)", 
-                    "Silme ve İade Onayı", 
-                    MessageBoxButton.YesNo, 
+                                             $"({goal.CurrentAmount:N2} ₺ bakiyenize iade edilecek.)",
+                    "Silme ve İade Onayı",
+                    MessageBoxButton.YesNo,
                     MessageBoxImage.Warning);
 
                 if (result == MessageBoxResult.Yes)
                 {
                     try
                     {
+                        // 1. İçerideki parayı ana bakiyeye iade et
                         if (goal.CurrentAmount > 0)
                         {
                             var transaction = new Transaction
@@ -145,7 +195,18 @@ namespace Kumparam.Pages.DashboardSubPages
                             _userRepository.AddTransaction(transaction);
                         }
 
+                        // --- 2. YENİ EKLENEN KISIM: Bağlı Otomasyonları Sil ---
+                        var linkedAutomations = _userRepository.GetGoalAutomations(_currentUserId)
+                                                               .Where(a => a.GoalId == goal.GoalId).ToList();
+                        foreach (var auto in linkedAutomations)
+                        {
+                            _userRepository.DeleteGoalAutomation(auto.AutomationId);
+                        }
+                        // --------------------------------------------------------
+
+                        // 3. Son olarak hedefin kendisini sil
                         _userRepository.DeleteGoal(goal.GoalId);
+
                         LoadGoals();
                         MessageBox.Show("Hedef silindi ve bakiye hesabınıza iade edildi. 💸");
                     }
@@ -250,6 +311,72 @@ namespace Kumparam.Pages.DashboardSubPages
                     }
                 }
             }
+        }
+        private void AutoSave_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button btn && btn.Tag is Goal goal)
+            {
+                // YENİ PENCEREYİ ÇAĞIR
+                var dialog = new Windows.AutoSaveWindow();
+
+                if (dialog.ShowDialog() == true)
+                {
+                    try
+                    {
+                        // Önce bu hedefe ait var olan eski otomasyonları temizle
+                        var existingAutos = _userRepository.GetGoalAutomations(_currentUserId)
+                                                           .Where(a => a.GoalId == goal.GoalId).ToList();
+                        foreach (var oldAuto in existingAutos)
+                        {
+                            _userRepository.DeleteGoalAutomation(oldAuto.AutomationId);
+                        }
+
+                        // Eğer "SİL/İPTAL" butonuna basıldıysa sadece silmiş olduk, yeni kayıt atma.
+                        if (dialog.IsCancelled)
+                        {
+                            MessageBox.Show("Otomatik birikim iptal edildi.");
+                        }
+                        else
+                        {
+                            // "KAYDET"e basıldıysa yeni otomasyonu oluştur
+                            var newAuto = new GoalAutomation
+                            {
+                                UserId = _currentUserId,
+                                GoalId = goal.GoalId,
+                                Amount = dialog.Amount,
+                                Frequency = dialog.Frequency,
+                                NextRunDate = CalculateNextRunDate(DateTime.Now, dialog.Frequency),
+                                IsActive = true
+                            };
+
+                            _userRepository.AddGoalAutomation(newAuto);
+
+                            // Frekans metnini Türkçeleştirip gösterelim
+                            string freqText = dialog.Frequency == "Daily" ? "her gün" : dialog.Frequency == "Weekly" ? "her hafta" : "her ay";
+                            MessageBox.Show($"Başarılı! Bu hedefe {freqText} {dialog.Amount:N2} ₺ eklenecek. 🔄");
+                        }
+
+                        // UI'ı ve Tahminleme metnini yenile
+                        LoadGoals();
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"İşlem hatası: {ex.Message}");
+                    }
+                }
+            }
+        }
+
+        // Bu metot eğer dosyanda yoksa AutoSave_Click'in altına ekle
+        private DateTime CalculateNextRunDate(DateTime currentDate, string frequency)
+        {
+            return frequency switch
+            {
+                "Daily" => currentDate.AddDays(1),
+                "Weekly" => currentDate.AddDays(7),
+                "Monthly" => currentDate.AddMonths(1),
+                _ => currentDate.AddMonths(1)
+            };
         }
     }
 

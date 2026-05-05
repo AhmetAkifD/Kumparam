@@ -987,5 +987,186 @@ namespace Kumparam.Data.Repositories
             }
             return list;
         }
+        // --- OTOMATİK İŞLEMLER (AUTOTRANSACTIONS) ---
+
+        public void AddAutoTransaction(AutoTransaction autoTrans)
+        {
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                var sql = @"INSERT INTO AutoTransactions 
+                    (AutoId, UserId, Amount, Type, Category, Description, Frequency, NextRunDate, IsActive) 
+                    VALUES (@AutoId, @UserId, @Amount, @Type, @Category, @Description, @Frequency, @NextRunDate, @IsActive)";
+
+                using (var cmd = new SqlCommand(sql, connection))
+                {
+                    cmd.Parameters.AddWithValue("@AutoId", autoTrans.AutoId);
+                    cmd.Parameters.AddWithValue("@UserId", autoTrans.UserId);
+                    cmd.Parameters.AddWithValue("@Amount", autoTrans.Amount);
+                    cmd.Parameters.AddWithValue("@Type", autoTrans.Type);
+                    cmd.Parameters.AddWithValue("@Category", autoTrans.Category ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@Description", autoTrans.Description ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@Frequency", autoTrans.Frequency);
+                    cmd.Parameters.AddWithValue("@NextRunDate", autoTrans.NextRunDate);
+                    cmd.Parameters.AddWithValue("@IsActive", autoTrans.IsActive);
+
+                    connection.Open();
+                    cmd.ExecuteNonQuery();
+                }
+            }
+        }
+
+        public List<AutoTransaction> GetAutoTransactions(Guid userId)
+        {
+            var list = new List<AutoTransaction>();
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                var sql = "SELECT * FROM AutoTransactions WHERE UserId = @UserId AND IsActive = 1";
+                using (var cmd = new SqlCommand(sql, connection))
+                {
+                    cmd.Parameters.AddWithValue("@UserId", userId);
+                    connection.Open();
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            list.Add(new AutoTransaction
+                            {
+                                AutoId = (Guid)reader["AutoId"],
+                                UserId = (Guid)reader["UserId"],
+                                Amount = (decimal)reader["Amount"],
+                                Type = reader["Type"].ToString(),
+                                Category = reader["Category"].ToString(),
+                                Description = reader["Description"].ToString(),
+                                Frequency = reader["Frequency"].ToString(),
+                                NextRunDate = (DateTime)reader["NextRunDate"],
+                                IsActive = (bool)reader["IsActive"]
+                            });
+                        }
+                    }
+                }
+            }
+            return list;
+        }
+
+        public void DeleteAutoTransaction(Guid autoId)
+        {
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                var sql = "DELETE FROM AutoTransactions WHERE AutoId = @AutoId";
+                using (var cmd = new SqlCommand(sql, connection))
+                {
+                    cmd.Parameters.AddWithValue("@AutoId", autoId);
+                    connection.Open();
+                    cmd.ExecuteNonQuery();
+                }
+            }
+        }
+
+        public void UpdateAutoTransactionNextRun(Guid autoId, DateTime nextRunDate)
+        {
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                var sql = "UPDATE AutoTransactions SET NextRunDate = @NextRunDate WHERE AutoId = @AutoId";
+                using (var cmd = new SqlCommand(sql, connection))
+                {
+                    cmd.Parameters.AddWithValue("@NextRunDate", nextRunDate);
+                    cmd.Parameters.AddWithValue("@AutoId", autoId);
+                    connection.Open();
+                    cmd.ExecuteNonQuery();
+                }
+            }
+        }
+
+        // --- HEDEF OTOMASYONU (GOALAUTOMATIONS) ---
+
+        public void AddGoalAutomation(GoalAutomation automation)
+        {
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                var sql = @"INSERT INTO GoalAutomations 
+                    (AutomationId, UserId, GoalId, Amount, Frequency, NextRunDate, IsActive) 
+                    VALUES (@AutomationId, @UserId, @GoalId, @Amount, @Frequency, @NextRunDate, @IsActive)";
+
+                using (var cmd = new SqlCommand(sql, connection))
+                {
+                    cmd.Parameters.AddWithValue("@AutomationId", automation.AutomationId);
+                    cmd.Parameters.AddWithValue("@UserId", automation.UserId);
+                    cmd.Parameters.AddWithValue("@GoalId", automation.GoalId);
+                    cmd.Parameters.AddWithValue("@Amount", automation.Amount);
+                    cmd.Parameters.AddWithValue("@Frequency", automation.Frequency);
+                    cmd.Parameters.AddWithValue("@NextRunDate", automation.NextRunDate);
+                    cmd.Parameters.AddWithValue("@IsActive", automation.IsActive);
+
+                    connection.Open();
+                    cmd.ExecuteNonQuery();
+                }
+            }
+        }
+
+        public List<GoalAutomation> GetGoalAutomations(Guid userId)
+        {
+            var list = new List<GoalAutomation>();
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                // Hedef ismini de çekmek için JOIN kullanıyoruz
+                var sql = @"SELECT ga.*, g.Title as GoalTitle 
+                    FROM GoalAutomations ga
+                    INNER JOIN Goals g ON ga.GoalId = g.GoalId
+                    WHERE ga.UserId = @UserId AND ga.IsActive = 1";
+
+                using (var cmd = new SqlCommand(sql, connection))
+                {
+                    cmd.Parameters.AddWithValue("@UserId", userId);
+                    connection.Open();
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            list.Add(new GoalAutomation
+                            {
+                                AutomationId = (Guid)reader["AutomationId"],
+                                UserId = (Guid)reader["UserId"],
+                                GoalId = (Guid)reader["GoalId"],
+                                Amount = (decimal)reader["Amount"],
+                                Frequency = reader["Frequency"].ToString(),
+                                NextRunDate = (DateTime)reader["NextRunDate"],
+                                IsActive = (bool)reader["IsActive"],
+                                GoalTitle = reader["GoalTitle"].ToString()
+                            });
+                        }
+                    }
+                }
+            }
+            return list;
+        }
+
+        public void DeleteGoalAutomation(Guid automationId)
+        {
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                var sql = "DELETE FROM GoalAutomations WHERE AutomationId = @AutomationId";
+                using (var cmd = new SqlCommand(sql, connection))
+                {
+                    cmd.Parameters.AddWithValue("@AutomationId", automationId);
+                    connection.Open();
+                    cmd.ExecuteNonQuery();
+                }
+            }
+        }
+
+        public void UpdateGoalAutomationNextRun(Guid automationId, DateTime nextRunDate)
+        {
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                var sql = "UPDATE GoalAutomations SET NextRunDate = @NextRunDate WHERE AutomationId = @AutomationId";
+                using (var cmd = new SqlCommand(sql, connection))
+                {
+                    cmd.Parameters.AddWithValue("@NextRunDate", nextRunDate);
+                    cmd.Parameters.AddWithValue("@AutomationId", automationId);
+                    connection.Open();
+                    cmd.ExecuteNonQuery();
+                }
+            }
+        }
     }
 }

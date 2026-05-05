@@ -81,21 +81,17 @@ namespace Kumparam.Pages.DashboardSubPages
 
         private async void BtnGenerate_Click(object sender, RoutedEventArgs e)
         {
-            // YÜKLEME EKRANINI GÖSTER
             LoadingOverlay.Visibility = Visibility.Visible;
-            
-            // UI'ın donmaması ve Loading animasyonunun dönmesi için kısa bir bekleme
-            await Task.Delay(100); 
+            await Task.Delay(100);
 
             try
             {
                 DateTime endDate = DateTime.Now;
 
                 // 1. İŞLEMLERİ ÇEK VE FİLTRELE
-                // Bu işlemler veritabanından olduğu için hızlıdır ama yine de Task içinde yapılabilir
                 var allTransactions = await Task.Run(() => _userRepository.GetAllTransactions(_currentUserId));
-                
-                var filteredTransactions = allTransactions.Where(t => 
+
+                var filteredTransactions = allTransactions.Where(t =>
                     t.TransactionDate >= _startDate && t.TransactionDate <= endDate
                 ).ToList();
 
@@ -110,28 +106,37 @@ namespace Kumparam.Pages.DashboardSubPages
                 List<Investment> investments = await Task.Run(() => _userRepository.GetInvestments(_currentUserId));
                 List<Goal> goals = await Task.Run(() => _userRepository.GetGoals(_currentUserId));
 
-                // ==========================================================
-                // YATIRIM FİYATLARINI GÜNCELLEME (Web Scraping Simülasyonu)
-                // ==========================================================
-                // Burası asıl vakit alan kısım olacak.
-                // await Task.Delay(2000); // Test için 2 saniye bekletme (Scraping simülasyonu)
-                
-                
-                try {
+                // 3. YATIRIM FİYATLARINI GÜNCELLEME
+                try
+                {
                     var scraper = new WebScrapingService(_userRepository);
-                    foreach(var item in investments) {
-                         if (!string.IsNullOrEmpty(item.Symbol)) {
-                             decimal price = await scraper.GetPriceAsync(item.Symbol);
-                             if(price > 0) item.CurrentPrice = price;
-                         }
+                    foreach (var item in investments)
+                    {
+                        if (!string.IsNullOrEmpty(item.Symbol))
+                        {
+                            decimal price = await scraper.GetPriceAsync(item.Symbol);
+                            if (price > 0) item.CurrentPrice = price;
+                        }
                     }
-                } catch (Exception ex) {
+                }
+                catch (Exception ex)
+                {
                     System.Diagnostics.Debug.WriteLine("Fiyat güncelleme hatası: " + ex.Message);
                 }
-                
-                // ==========================================================
 
-                // Yükleme ekranını kapatıp dosya diyaloğunu açalım
+                // 4. YENİ EKLENEN KISIM: YAPAY ZEKA ANALİZİ
+                string aiAnalysisText = "";
+                try
+                {
+                    var aiService = new AiAnalysisService();
+                    aiAnalysisText = await aiService.GenerateFinancialAdviceAsync(filteredTransactions, investments, goals);
+                }
+                catch (Exception ex)
+                {
+                    aiAnalysisText = "Yapay zeka analizi şu anda oluşturulamıyor.";
+                    System.Diagnostics.Debug.WriteLine("AI Hatası: " + ex.Message);
+                }
+
                 LoadingOverlay.Visibility = Visibility.Collapsed;
 
                 string fileName = $"Kumparam_Rapor_{_periodLabel}_{DateTime.Now:yyyyMMdd}.pdf";
@@ -145,18 +150,16 @@ namespace Kumparam.Pages.DashboardSubPages
 
                 if (saveFileDialog.ShowDialog() == true)
                 {
-                    // PDF oluşturma işlemi de büyük veriyle uzun sürebilir, tekrar loading gösterebilirsin
-                    // Ama genelde QuestPDF çok hızlıdır.
-                    
                     var userProfile = _userRepository.GetUserProfile(_currentUserId);
                     var pdfService = new PdfReportService();
-                    
-                    string reportPeriodText = _periodLabel == "Tum_Zamanlar" 
-                        ? "Tüm Zamanlar" 
+
+                    string reportPeriodText = _periodLabel == "Tum_Zamanlar"
+                        ? "Tüm Zamanlar"
                         : $"Dönem: {_startDate:dd.MM.yyyy} - {endDate:dd.MM.yyyy}";
 
-                    // PDF işlemini de Task içinde yapalım ki UI donmasın
-                    await Task.Run(() => pdfService.GeneratePdf(saveFileDialog.FileName, userProfile, filteredTransactions, investments, goals, reportPeriodText));
+                    // DİKKAT: GeneratePdf metoduna aiAnalysisText parametresini de ekledik.
+                    // (PdfReportService sınıfında da bu parametreyi karşılayacak küçük bir değişiklik yapacağız)
+                    await Task.Run(() => pdfService.GeneratePdf(saveFileDialog.FileName, userProfile, filteredTransactions, investments, goals, reportPeriodText, aiAnalysisText));
 
                     MessageBox.Show("Rapor başarıyla oluşturuldu! 📄", "Başarılı", MessageBoxButton.OK, MessageBoxImage.Information);
                     CloseWindow();

@@ -1,4 +1,10 @@
-﻿using System;
+﻿using Kumparam.Core;
+using Kumparam.Core.Interfaces;
+using Kumparam.Core.Models;
+using Kumparam.Data;
+using Kumparam.Data.Repositories;
+using MaterialDesignThemes.Wpf; // İkonlar için gerekli
+using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
@@ -6,11 +12,6 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
-using Kumparam.Core;
-using Kumparam.Core.Interfaces;
-using Kumparam.Data;
-using Kumparam.Data.Repositories;
-using MaterialDesignThemes.Wpf; // İkonlar için gerekli
 
 namespace Kumparam.Pages.DashboardSubPages;
 
@@ -264,9 +265,9 @@ public partial class IncomeExpenseView : UserControl
 
     private void SaveButton_Click(object sender, RoutedEventArgs e)
     {
-        if (InputTypeComboBox.SelectedItem == null || 
-            string.IsNullOrWhiteSpace(AmountTextBox.Text) || 
-            CategoryComboBox.SelectedItem == null) // <--- DEĞİŞTİ
+        if (InputTypeComboBox.SelectedItem == null ||
+            string.IsNullOrWhiteSpace(AmountTextBox.Text) ||
+            CategoryComboBox.SelectedItem == null)
         {
             MessageBox.Show("Lütfen Tipi, Tutarı ve Kategoriyi seçin.");
             return;
@@ -276,23 +277,64 @@ public partial class IncomeExpenseView : UserControl
         {
             var type = ((ComboBoxItem)InputTypeComboBox.SelectedItem).Tag.ToString();
             string selectedCategory = CategoryComboBox.SelectedItem.ToString();
+            DateTime transactionDate = TransactionDatePicker.SelectedDate ?? DateTime.Now;
+            string description = DescriptionTextBox.Text;
+
+            // 1. Her halükarda işlemi Transactions tablosuna normal olarak kaydet
             _userRepository.AddTransaction(new Transaction
             {
                 UserId = _currentUserId,
                 Amount = amount,
                 Type = type!,
                 Category = selectedCategory,
-                Description = DescriptionTextBox.Text,
-                TransactionDate = TransactionDatePicker.SelectedDate ?? DateTime.Now
+                Description = description,
+                TransactionDate = transactionDate
             });
 
-            MessageBox.Show("Kaydedildi!");
-        
-            AmountTextBox.Clear(); 
+            // 2. YENİ: Eğer 'Tek Seferlik' dışında bir seçenek seçildiyse Otomatik İşlem de oluştur
+            if (FrequencyComboBox.SelectedItem is ComboBoxItem freqItem)
+            {
+                string frequency = freqItem.Tag.ToString();
+                if (frequency != "Once") // 'Once' değilse, yani Daily, Weekly veya Monthly ise
+                {
+                    // Bir sonraki çalışma zamanını hesapla
+                    DateTime nextRun = frequency switch
+                    {
+                        "Daily" => transactionDate.AddDays(1),
+                        "Weekly" => transactionDate.AddDays(7),
+                        "Monthly" => transactionDate.AddMonths(1),
+                        _ => transactionDate.AddMonths(1)
+                    };
+
+                    // AutoTransactions tablosuna kaydet
+                    var autoTrans = new AutoTransaction
+                    {
+                        UserId = _currentUserId,
+                        Amount = amount,
+                        Type = type!,
+                        Category = selectedCategory,
+                        Description = description,
+                        Frequency = frequency,
+                        NextRunDate = nextRun,
+                        IsActive = true
+                    };
+                    _userRepository.AddAutoTransaction(autoTrans);
+                }
+            }
+
+            MessageBox.Show("İşlem başarıyla kaydedildi!");
+
+            // Formu Temizle
+            AmountTextBox.Clear();
             DescriptionTextBox.Clear();
-            CategoryComboBox.SelectedIndex = -1; // <--- DEĞİŞTİ
-        
+            CategoryComboBox.SelectedIndex = -1;
+            FrequencyComboBox.SelectedIndex = 0; // Tek Seferlik seçeneğine geri dön
+
             LoadTransactions();
+        }
+        else
+        {
+            MessageBox.Show("Lütfen geçerli bir tutar giriniz.");
         }
     }
 }
